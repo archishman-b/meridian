@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<!-- saved from url=(0080)file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — Product Vision &amp; Architecture Blueprint v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Meridian — Product Vision &amp; Architecture Blueprint v2_files/css2" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#10151e;--surface2:#161b25;--surface3:#1c2230;
+  --border:#1c2230;--border2:#2a3142;
+  --text:#e6e8ee;--text2:#c0c8d8;--muted:#9ba6ba;--dim:#5d6679;
+  --teal:#22d3b8;--teal-dim:rgba(34,211,184,0.10);--teal-bd:rgba(34,211,184,0.22);
+  --amber:#f5a524;--amber-dim:rgba(245,165,36,0.10);--amber-bd:rgba(245,165,36,0.22);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.10);--purple-bd:rgba(167,139,250,0.22);
+  --coral:#fb7185;--coral-dim:rgba(251,113,133,0.10);--coral-bd:rgba(251,113,133,0.22);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.10);--blue-bd:rgba(96,165,250,0.22);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.10);--green-bd:rgba(74,222,128,0.22);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --max:860px;--sidebar:224px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7}
+.shell{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;
+  border-right:1px solid var(--border);background:var(--surface);
+  padding:28px 0 40px;display:flex;flex-direction:column;z-index:10}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sb-brand{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sb-logo{font-family:var(--mono);font-size:13px;color:var(--teal);letter-spacing:0.06em;margin-bottom:2px}
+.sb-doc{font-size:11px;color:var(--dim);line-height:1.4}
+.sb-version{display:inline-block;font-family:var(--mono);font-size:9px;color:var(--amber);
+  background:var(--amber-dim);border:1px solid var(--amber-bd);padding:1px 6px;border-radius:3px;margin-top:4px}
+.nav-section{padding:6px 18px 2px;font-size:9px;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--dim);margin-top:10px}
+.nav-link{display:flex;align-items:center;gap:7px;padding:5px 18px;font-size:11.5px;
+  color:var(--muted);text-decoration:none;transition:all 0.12s;border-left:2px solid transparent}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--teal);border-left-color:var(--teal);background:var(--teal-dim)}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.nav-link.active .nav-dot{background:var(--teal)}
+
+/* Main */
+.main{margin-left:var(--sidebar);flex:1}
+.content{max-width:var(--max);margin:0 auto;padding:0 48px 120px}
+
+/* Hero */
+.hero{padding:72px 48px 56px;max-width:var(--max);margin:0 auto;border-bottom:1px solid var(--border)}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:0.1em;
+  text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero-eyebrow::before{content:'';display:inline-block;width:20px;height:1px;background:var(--teal)}
+.hero h1{font-family:var(--serif);font-size:56px;line-height:1.1;color:var(--text);
+  margin-bottom:8px;font-weight:400}
+.hero h1 em{font-style:italic;color:var(--teal)}
+.hero-tagline{font-size:18px;color:var(--muted);margin-bottom:20px;font-style:italic;
+  font-family:var(--serif)}
+.hero-sub{font-size:16px;color:var(--text2);line-height:1.7;max-width:600px;margin-bottom:32px}
+.hero-meta{display:flex;gap:28px;flex-wrap:wrap}
+.hm-item{display:flex;flex-direction:column;gap:2px}
+.hm-label{font-size:9px;font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.hm-value{font-size:12px;color:var(--text2)}
+
+/* Sections */
+section{padding:60px 0 36px;border-bottom:1px solid var(--border)}
+section:last-child{border-bottom:none}
+.section-label{font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:0.1em;
+  text-transform:uppercase;margin-bottom:8px}
+h2{font-family:var(--serif);font-size:36px;font-weight:400;line-height:1.15;
+  color:var(--text);margin-bottom:18px}
+h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:10px;margin-top:30px}
+h4{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);
+  letter-spacing:0.06em;text-transform:uppercase;margin-bottom:7px;margin-top:22px}
+p{color:var(--text2);margin-bottom:14px;line-height:1.75}
+p:last-child{margin-bottom:0}
+strong{color:var(--text);font-weight:500}
+em{color:var(--muted);font-style:italic}
+
+/* Callouts */
+.callout{border-left:3px solid var(--teal);background:var(--teal-dim);
+  border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0}
+.callout p{margin:0;font-size:14px}
+.callout strong{color:var(--teal)}
+.callout.amber{border-left-color:var(--amber);background:var(--amber-dim)}
+.callout.amber strong{color:var(--amber)}
+.callout.purple{border-left-color:var(--purple);background:var(--purple-dim)}
+.callout.purple strong{color:var(--purple)}
+.callout.coral{border-left-color:var(--coral);background:var(--coral-dim)}
+.callout.coral strong{color:var(--coral)}
+
+/* Cards */
+.card{background:var(--surface2);border:1px solid var(--border2);
+  border-radius:12px;padding:24px 28px;margin:20px 0}
+
+/* Principle list */
+.principle-list{display:flex;flex-direction:column;gap:0;margin:20px 0;
+  border:1px solid var(--border2);border-radius:10px;overflow:hidden}
+.principle-item{display:flex;gap:18px;padding:18px 22px;
+  border-bottom:1px solid var(--border);align-items:flex-start}
+.principle-item:last-child{border-bottom:none}
+.p-num{font-family:var(--mono);font-size:12px;color:var(--teal);flex-shrink:0;min-width:22px}
+.p-body h4{margin:0 0 4px;font-size:13px;font-weight:600;font-family:var(--sans);
+  color:var(--text);text-transform:none;letter-spacing:0}
+.p-body p{font-size:12px;margin:0;color:var(--muted)}
+
+/* Module grid */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:14px;margin:22px 0}
+.mc{background:var(--surface2);border:1px solid var(--border2);
+  border-radius:10px;padding:18px;transition:border-color 0.15s}
+.mc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px}
+.mc-icon{width:30px;height:30px;border-radius:7px;display:flex;
+  align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.mc-badge{font-family:var(--mono);font-size:9px;padding:2px 6px;
+  border-radius:3px;letter-spacing:0.05em;text-transform:uppercase}
+.mc h3{font-size:13px;font-weight:600;margin:0 0 5px;color:var(--text)}
+.mc p{font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+.mc-tags{display:flex;flex-wrap:wrap;gap:4px}
+.mc-tag{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px;
+  color:var(--muted);background:var(--surface3);border:1px solid var(--border2)}
+.mc-teal .mc-icon{background:var(--teal-dim);color:var(--teal)}
+.mc-teal .mc-badge{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-bd)}
+.mc-teal:hover{border-color:var(--teal-bd)}
+.mc-amber .mc-icon{background:var(--amber-dim);color:var(--amber)}
+.mc-amber .mc-badge{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bd)}
+.mc-amber:hover{border-color:var(--amber-bd)}
+.mc-purple .mc-icon{background:var(--purple-dim);color:var(--purple)}
+.mc-purple .mc-badge{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-bd)}
+.mc-purple:hover{border-color:var(--purple-bd)}
+.mc-coral .mc-icon{background:var(--coral-dim);color:var(--coral)}
+.mc-coral .mc-badge{background:var(--coral-dim);color:var(--coral);border:1px solid var(--coral-bd)}
+.mc-coral:hover{border-color:var(--coral-bd)}
+.mc-blue .mc-icon{background:var(--blue-dim);color:var(--blue)}
+.mc-blue .mc-badge{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-bd)}
+.mc-blue:hover{border-color:var(--blue-bd)}
+.mc-green .mc-icon{background:var(--green-dim);color:var(--green)}
+.mc-green .mc-badge{background:var(--green-dim);color:var(--green);border:1px solid var(--green-bd)}
+.mc-green:hover{border-color:var(--green-bd)}
+
+/* Phase table */
+.phase-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px}
+.phase-table th{text-align:left;padding:9px 12px;background:var(--surface2);
+  color:var(--muted);font-weight:500;font-size:10px;font-family:var(--mono);
+  letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border2)}
+.phase-table td{padding:11px 12px;vertical-align:top;border-bottom:1px solid var(--border);
+  color:var(--text2);line-height:1.55}
+.phase-table tr:last-child td{border-bottom:none}
+.ph-num{font-family:var(--mono);font-size:10px;color:var(--teal);white-space:nowrap}
+.ph-del{font-weight:500;color:var(--text);display:block;margin-bottom:2px}
+
+/* Code */
+pre{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:16px 18px;margin:14px 0;overflow-x:auto}
+code{font-family:var(--mono);font-size:12px;color:var(--teal)}
+pre code{color:var(--text2)}
+.k{color:var(--teal)}.s{color:var(--amber)}.c{color:var(--dim)}.num{color:var(--purple)}
+
+/* Persona grid */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.pc{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:18px}
+.pc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px}
+.pc-role{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:10px}
+.pc-need{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:8px;
+  padding-bottom:8px;border-bottom:1px solid var(--border)}
+.pc-gain{font-size:11px;color:var(--muted);font-style:italic;line-height:1.5}
+
+/* Canvas feature boxes */
+.feature-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.feat{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:20px}
+.feat h4{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text);
+  text-transform:none;letter-spacing:0;margin:0 0 6px}
+.feat p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+.feat-accent{border-color:var(--teal-bd);background:rgba(34,211,184,0.04)}
+
+/* Renova table */
+.renova-table{width:100%;border-collapse:collapse;font-size:12px;margin:16px 0}
+.renova-table th{text-align:left;padding:8px 12px;background:var(--surface2);
+  color:var(--muted);font-weight:500;font-size:10px;font-family:var(--mono);
+  letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border2)}
+.renova-table td{padding:9px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top;color:var(--text2);line-height:1.5}
+.renova-table tr:last-child td{border-bottom:none}
+.rt-mod{font-family:var(--mono);font-size:10px}
+.signal{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;
+  margin-top:3px;font-family:var(--mono)}
+.sig-g{background:var(--green-dim);color:var(--green);border:1px solid var(--green-bd)}
+.sig-a{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bd)}
+.sig-p{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-bd)}
+
+/* File tree */
+.tree{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:18px 20px;margin:16px 0;font-family:var(--mono);font-size:12px;line-height:2}
+.tree .dir{color:var(--teal)}
+.tree .file{color:var(--text2)}
+.tree .comment{color:var(--dim)}
+.tree .new{color:var(--amber)}
+
+/* CLAUDE.md box */
+.claude-md{background:#060b10;border:1px solid var(--teal-bd);border-radius:8px;
+  padding:20px 22px;margin:16px 0;font-family:var(--mono);font-size:11.5px;
+  line-height:1.8;color:var(--text2)}
+.claude-md .cm-h{color:var(--teal);font-weight:500}
+.claude-md .cm-sub{color:var(--amber)}
+.claude-md .cm-c{color:var(--dim)}
+.claude-md .cm-val{color:var(--purple)}
+
+/* Compute row */
+.compute-row{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;
+  align-items:start;padding:12px 0;border-bottom:1px solid var(--border);font-size:12px}
+.compute-row:last-child{border-bottom:none}
+.cr-label{font-family:var(--mono);font-size:10px;color:var(--teal)}
+.cr-desc{color:var(--text2);line-height:1.5}
+.cr-when{font-size:10px;color:var(--muted);text-align:right}
+
+/* Pipeline anatomy */
+.pipeline-anatomy{display:flex;flex-direction:column;gap:10px;margin:20px 0}
+.pa-row{display:flex;align-items:center;gap:0}
+.pa-node{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 16px;font-size:12px;color:var(--text2);min-width:140px;text-align:center}
+.pa-node strong{display:block;color:var(--text);font-size:13px;margin-bottom:1px}
+.pa-node.active{border-color:var(--teal-bd);background:var(--teal-dim)}
+.pa-node.active strong{color:var(--teal)}
+.pa-arrow{color:var(--dim);font-size:18px;padding:0 8px;flex-shrink:0}
+.pa-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+@media(max-width:900px){
+  .sidebar{display:none}.main{margin-left:0}
+  .content{padding:0 20px 80px}.hero{padding:40px 20px 36px}
+  .persona-grid,.feature-row{grid-template-columns:1fr}
+  .hero h1{font-size:38px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">Meridian</div>
+    <div class="sb-doc">Product Vision &amp;<br>Architecture Blueprint</div>
+    <span class="sb-version">v2 — definitive</span>
+  </div>
+
+  <span class="nav-section">Context</span>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#problem" class="nav-link active"><span class="nav-dot"></span>The problem</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#vision" class="nav-link"><span class="nav-dot"></span>Product vision</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#positioning" class="nav-link"><span class="nav-dot"></span>Positioning</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#users" class="nav-link"><span class="nav-dot"></span>Who it's for</a>
+
+  <span class="nav-section">Architecture</span>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#platform" class="nav-link"><span class="nav-dot"></span>Platform structure</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#repo" class="nav-link"><span class="nav-dot"></span>Repository structure</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#canvas" class="nav-link"><span class="nav-dot"></span>Canvas system</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#pipelines" class="nav-link"><span class="nav-dot"></span>Reusable pipelines</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#handoff" class="nav-link"><span class="nav-dot"></span>AppHandoff protocol</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#compute" class="nav-link"><span class="nav-dot"></span>Compute model</a>
+
+  <span class="nav-section">Modules</span>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#modules" class="nav-link"><span class="nav-dot"></span>Module registry</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#bridge" class="nav-link"><span class="nav-dot"></span>Meridian Bridge</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#price" class="nav-link"><span class="nav-dot"></span>Meridian Price</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#pulse" class="nav-link"><span class="nav-dot"></span>Meridian Pulse</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#ledger" class="nav-link"><span class="nav-dot"></span>Meridian Ledger</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#org" class="nav-link"><span class="nav-dot"></span>Meridian Org</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#field" class="nav-link"><span class="nav-dot"></span>Meridian Field</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#flow" class="nav-link"><span class="nav-dot"></span>Meridian Flow</a>
+
+  <span class="nav-section">Demo Universe</span>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#renova" class="nav-link"><span class="nav-dot"></span>Renova Home</a>
+
+  <span class="nav-section">Delivery</span>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#principles" class="nav-link"><span class="nav-dot"></span>Design principles</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#roadmap" class="nav-link"><span class="nav-dot"></span>Build roadmap</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#claudemd" class="nav-link"><span class="nav-dot"></span>CLAUDE.md template</a>
+  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#constraints" class="nav-link"><span class="nav-dot"></span>Constraints</a>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+<div class="hero">
+  <div class="hero-eyebrow">Definitive Blueprint — v2</div>
+  <h1>Meridian</h1>
+  <div class="hero-tagline">The point of clearest view</div>
+  <p class="hero-sub">A browser-native platform that transforms any dataset into a boardroom-ready strategic diagnostic — across pricing, consumer analytics, finance, HR, market intelligence, and supply chain — without code, licences, or a data engineering team.</p>
+  <div class="hero-meta">
+    <div class="hm-item"><span class="hm-label">Platform</span><span class="hm-value">Meridian</span></div>
+    <div class="hm-item"><span class="hm-label">Core module</span><span class="hm-value">Meridian Bridge (DataBridge ETL)</span></div>
+    <div class="hm-item"><span class="hm-label">Constraint</span><span class="hm-value">Zero server · Zero licence · Zero infrastructure</span></div>
+    <div class="hm-item"><span class="hm-label">Compute</span><span class="hm-value">Vanilla JS + Pyodide (WASM Python)</span></div>
+    <div class="hm-item"><span class="hm-label">Interaction</span><span class="hm-value">Canvas (Alteryx-style) + Panel UI, both</span></div>
+    <div class="hm-item"><span class="hm-label">Pipelines</span><span class="hm-value">localStorage + JSON export</span></div>
+    <div class="hm-item"><span class="hm-label">Demo org</span><span class="hm-value">Renova Home</span></div>
+    <div class="hm-item"><span class="hm-label">Status</span><span class="hm-value">Pre-build — stage gate before Phase 0</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════ 01 PROBLEM ══════════ -->
+<section id="problem">
+  <div class="section-label">01 — The Problem</div>
+  <h2>The gap that creates this product</h2>
+  <p>Twelve years of strategy and management consulting produces a very specific frustration. It is not that the analyses are hard. The frameworks — pocket price waterfall, CLTV cohort, margin bridge, churn propensity — are well understood by any manager who has run a commercial engagement. The frustration is structural: <strong>the person who understands the business question is almost never the same person who can execute the analysis.</strong></p>
+  <p>This is not a spreadsheet limitation. Excel is not the bottleneck. The bottleneck is infrastructure setup time, analyst queue lag, and the fact that SQL, Python, Tableau, Alteryx, and enterprise pricing tools sit behind access walls — institutional licences, data engineering pipelines, and analyst pools that only large consulting teams or enterprise clients can afford.</p>
+  <div class="callout">
+    <p><strong>The access gap:</strong> MBA-trained strategy professionals carry the analytical intelligence to ask the right questions. They lack the infrastructure to answer them independently. The result is either expensive teaming overhead, a weeks-long queue, or the question never getting answered rigorously at all.</p>
+  </div>
+  <div class="card">
+    <h3>Two engagements that made this concrete</h3>
+    <p>At Monitor Deloitte, a ~$50M pricing transformation for a US auto parts retailer required a dedicated analytics stack — SQL Server, Alteryx pipelines, Tableau dashboards — to isolate pocket price leakage across 200,000 SKUs. The analytical logic was clear within days. Getting clean, segmented data into the right shape took weeks of analyst time and infrastructure coordination.</p>
+    <p>At Mahindra, a multi-million customer dataset running on SQL Server with a dedicated consumer analytics pool produced CLTV models, propensity scores, and churn signals that were genuinely decision-relevant. But every iteration — every "what if we segment by tractor use case rather than region?" — went back into the queue. The insight was delayed by infrastructure, not thinking.</p>
+    <p><strong>Meridian is the answer to both of those situations.</strong></p>
+  </div>
+</section>
+
+<!-- ══════════ 02 VISION ══════════ -->
+<section id="vision">
+  <div class="section-label">02 — Product Vision</div>
+  <h2>A virtual consulting analyst. In a browser tab.</h2>
+  <p>Meridian is a suite of browser-native analytical modules, unified by a single data ingestion and ETL engine (Meridian Bridge), each module purpose-built for a specific engagement archetype a strategy consultant would recognise immediately.</p>
+  <p>The goal is not to replace the consultant. It is to <strong>eliminate the separation between strategic understanding and analytical execution</strong> — so the manager who knows what question to ask can answer it, without assembling a team, standing up infrastructure, or procuring a licence.</p>
+  <div class="callout amber">
+    <p><strong>The capstone proposition:</strong> Strategy consulting managers get leaner, faster teaming structures. SMEs and growth-stage businesses get consulting-grade analytics they could not otherwise afford. Both get the same outcome: from raw dataset to boardroom-ready diagnostic, in a single session, in a browser. <strong>No code. No licence. No data leaves the machine.</strong></p>
+  </div>
+  <h3>Four strategic bets — unchanged</h3>
+  <div class="principle-list">
+    <div class="principle-item"><span class="p-num">B1</span><div class="p-body"><h4>Business brain, not engineering brain</h4><p>Every UI decision, analytical frame, and label is designed for someone who thinks in business terms — engagement manager, commercial lead, brand P&amp;L owner. Never for a data scientist.</p></div></div>
+    <div class="principle-item"><span class="p-num">B2</span><div class="p-body"><h4>Full workflow coverage</h4><p>A tool that stops at the chart is half a tool. Every module covers the complete arc: data ingestion → transformation → analysis → diagnostic output → export-ready deliverable. Output is paste-able into a board deck without reformatting.</p></div></div>
+    <div class="principle-item"><span class="p-num">B3</span><div class="p-body"><h4>Zero-server architecture</h4><p>No server ever sees the user's data. An architectural fact, not a marketing claim. All computation runs in-browser: Vanilla JS, Web Workers, Pyodide (WASM Python).</p></div></div>
+    <div class="principle-item"><span class="p-num">B4</span><div class="p-body"><h4>Open-source consulting IP</h4><p>The analytical frameworks embedded in each module are real — drawn from commercial engagements. Build-in-public on GitHub means methodology is transparent and forkable.</p></div></div>
+  </div>
+</section>
+
+<!-- ══════════ 03 POSITIONING ══════════ -->
+<section id="positioning">
+  <div class="section-label">03 — Positioning &amp; Messaging</div>
+  <h2>The end of consulting decks without the insight behind them</h2>
+  <p>The landing page frame you approved: <em>"The end of consulting decks"</em> is the hero. The implicit promise is that the deck is not the hard part — the analysis behind it is. Meridian collapses the distance between the two.</p>
+  <div class="feature-row">
+    <div class="feat feat-accent">
+      <h4>For consulting managers</h4>
+      <p>Run the diagnostic yourself before the team onboards. The output is already deck-ready. Stop paying for analyst time on analyses you could execute in a session.</p>
+    </div>
+    <div class="feat feat-accent">
+      <h4>For in-house leads</h4>
+      <p>You have the data. You know the question. You've been blocked by infrastructure. Meridian removes the infrastructure. The analysis is yours to run, now, in the browser.</p>
+    </div>
+    <div class="feat">
+      <h4>For SMEs and growth-stage operators</h4>
+      <p>What a three-week consulting engagement produces — CLTV segmentation, pricing waterfall, margin bridge — available as a self-service workflow for a business that can't hire a consulting team.</p>
+    </div>
+    <div class="feat">
+      <h4>The Alteryx comparison</h4>
+      <p>Alteryx charges enterprise licences for drag-drop data workflows. Meridian does the same thing — ETL pipeline to analytical output — in a browser, free, with your data never leaving your machine.</p>
+    </div>
+  </div>
+  <div class="callout purple">
+    <p><strong>Key differentiator vs every other analytics tool:</strong> Meridian is not a generic BI tool you apply to a business problem. Each module <em>is</em> a business problem — pre-framed, methodology-consistent, output-ready. You do not configure an analysis from scratch. You load your data into a framework that already knows what question it is answering.</p>
+  </div>
+</section>
+
+<!-- ══════════ 04 USERS ══════════ -->
+<section id="users">
+  <div class="section-label">04 — Who It's For</div>
+  <h2>Four personas, two deployment contexts</h2>
+  <div class="persona-grid">
+    <div class="pc">
+      <div class="pc-name">Engagement Manager</div>
+      <div class="pc-role">Strategy / commercial consulting · Monitor Deloitte, Accenture archetype</div>
+      <div class="pc-need">Running a commercial diagnostic with a lean team or solo. Needs structured analytical output fast, without building infrastructure or waiting for analyst capacity.</div>
+      <div class="pc-gain">"I ran the pocket price analysis myself before the team even onboarded. The output was already deck-ready."</div>
+    </div>
+    <div class="pc">
+      <div class="pc-name">In-House Commercial Lead</div>
+      <div class="pc-role">VP Commercial / Head of Pricing / Chief of Staff</div>
+      <div class="pc-need">Owns pricing or growth strategy internally without a dedicated analytics team. Needs scenario analyses, segment diagnostics, and churn signals without engaging a consulting firm.</div>
+      <div class="pc-gain">"I ran the CLTV cohort segmentation before the board review. No analyst, no SQL, no licence."</div>
+    </div>
+    <div class="pc">
+      <div class="pc-name">SME / Growth-Stage Operator</div>
+      <div class="pc-role">Founder or MD · Cannot afford full consulting teams</div>
+      <div class="pc-need">Running a strategy workshop or commercial review without a consulting retainer. Needs frameworks and outputs that match what a good consulting team would produce.</div>
+      <div class="pc-gain">"This gave me what a three-week engagement would have produced. I used it to prep for our investor meeting."</div>
+    </div>
+    <div class="pc">
+      <div class="pc-name">Strategy Analyst</div>
+      <div class="pc-role">Analyst / Associate · Consulting or in-house strategy function</div>
+      <div class="pc-need">Building analytical outputs for senior stakeholders. Needs structured templates that enforce methodological rigour — the pocket price waterfall is actually a pocket price waterfall, not a bar chart someone labelled.</div>
+      <div class="pc-gain">"The framework forces me to map data correctly before it runs. The output is always methodology-consistent."</div>
+    </div>
+  </div>
+  <div class="callout amber">
+    <p><strong>The CFO's chief of staff use case (reusable pipelines):</strong> A recurring user — monthly board update, quarterly commercial review, annual pricing review — who needs to run the same analysis on new data without rebuilding the workflow each time. Meridian's pipeline save-and-replay feature is designed specifically for this persona. Build once, run on the next month's data in three clicks.</p>
+  </div>
+</section>
+
+<!-- ══════════ 05 PLATFORM ══════════ -->
+<section id="platform">
+  <div class="section-label">05 — Platform Architecture</div>
+  <h2>Hub and spoke. Canvas-first. Pipeline-aware.</h2>
+  <p>Meridian Bridge (the DataBridge ETL core) is the platform hub. Every analytical module is a downstream spoke. The interaction layer offers two views for every workflow: a <strong>canvas view</strong> (Alteryx-style drag-drop node graph) and a <strong>panel view</strong> (the current step-by-step UI). Both produce identical outputs. The user switches between them freely.</p>
+  <div class="principle-list">
+    <div class="principle-item"><span class="p-num">L1</span><div class="p-body"><h4>Platform core — Meridian Bridge</h4><p>All data ingestion, ETL pipeline, quality scoring, schema mapping, module routing. Produces the standardised AppHandoff payload consumed by every module.</p></div></div>
+    <div class="principle-item"><span class="p-num">L2</span><div class="p-body"><h4>Module layer — engagement-specific analytical tools</h4><p>Each module is a standalone HTML file. Receives the AppHandoff payload, runs its own analytical logic, produces export-ready outputs. No inter-module dependencies.</p></div></div>
+    <div class="principle-item"><span class="p-num">L3</span><div class="p-body"><h4>Canvas layer — unified workflow view</h4><p>An optional interaction mode that exposes the full platform as a node graph. ETL operations, schema mapping, analytical modules, and export steps are all nodes. The user connects them by drawing edges. The canvas is the pipeline.</p></div></div>
+    <div class="principle-item"><span class="p-num">L4</span><div class="p-body"><h4>Pipeline layer — save, name, replay</h4><p>Any workflow — in canvas or panel view — can be saved as a named pipeline. Pipelines store the full node configuration and schema map, not the data. Loaded on a new dataset, they replay the same analysis with zero reconfiguration.</p></div></div>
+    <div class="principle-item"><span class="p-num">L5</span><div class="p-body"><h4>Compute layer — tiered by complexity</h4><p>Vanilla JS for light analytics, Web Workers for heavy tabular operations (&gt;10K rows), Pyodide (WebAssembly Python) for ML model inference. No server call at any tier.</p></div></div>
+  </div>
+</section>
+
+<!-- ══════════ 06 REPO ══════════ -->
+<section id="repo">
+  <div class="section-label">06 — Repository Structure</div>
+  <h2>One new repo. The original stays untouched.</h2>
+  <p>The existing DataBridge repo remains live at its current GitHub Pages URL, unchanged, forever. A new repository — <code>meridian-platform</code> — contains the full platform. Meridian Bridge inside this repo is an extended working copy of DataBridge, not a reference to the original.</p>
+  <div class="tree">
+    <span class="dir">meridian-platform/</span><br>
+    <span class="file">├── CLAUDE.md</span>  <span class="comment">← Code session brain — see Section 15</span><br>
+    <span class="file">├── index.html</span>  <span class="comment">← Platform home, module router, pipeline library</span><br>
+    <span class="dir">├── bridge/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Bridge (extended DataBridge copy)</span><br>
+    <span class="dir">├── price/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Price (Pricing Analyser)</span><br>
+    <span class="dir">├── pulse/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Pulse (Consumer Analytics)</span><br>
+    <span class="dir">├── ledger/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Ledger (Finance)</span><br>
+    <span class="dir">├── org/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Org (HR &amp; Org Design)</span><br>
+    <span class="dir">├── field/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Field (Market Intelligence)</span><br>
+    <span class="dir">├── flow/</span><br>
+    <span class="file">│   └── index.html</span>  <span class="comment">← Meridian Flow (Supply Chain)</span><br>
+    <span class="dir">├── shared/</span><br>
+    <span class="new">│   ├── handoff.js</span>  <span class="comment">← AppHandoff protocol + shared constants</span><br>
+    <span class="new">│   ├── canvas.js</span>  <span class="comment">← Canvas engine, node registry, edge renderer</span><br>
+    <span class="new">│   └── pipelines.js</span>  <span class="comment">← Pipeline save/load/replay engine</span><br>
+    <span class="dir">└── demos/</span><br>
+    <span class="file">    └── renova/</span>  <span class="comment">← All six Renova Home demo datasets (CSV)</span>
+  </div>
+  <div class="callout">
+    <p><strong>GitHub Pages deployment:</strong> Each module subdirectory has its own <code>index.html</code>, so every module is directly accessible at <code>meridian-platform/price/</code>, <code>meridian-platform/pulse/</code>, etc. The platform home at <code>index.html</code> is the module router. A user can bookmark any module and go directly to it — they do not need the router.</p>
+  </div>
+  <div class="callout amber">
+    <p><strong>Chat → Code handoff:</strong> When the build reaches Phase 2 (Meridian Pulse, first Pyodide module), the <code>CLAUDE.md</code> file at the repo root activates Code sessions. Every Code session reads it first. It contains the product vision, AppHandoff schema, module interface contract, CDN stack, and pipeline architecture. The product intelligence lives in Chat; the implementation moves to Code. See Section 15 for the full <code>CLAUDE.md</code> template.</p>
+  </div>
+</section>
+
+<!-- ══════════ 07 CANVAS ══════════ -->
+<section id="canvas">
+  <div class="section-label">07 — Canvas System</div>
+  <h2>Alteryx-style drag-drop, across the full platform</h2>
+  <p>The canvas is not a feature added on top of the platform. It is an alternative interaction layer for the entire platform — from raw data ingestion through ETL transformation through analytical module through export. Every operation that exists in the panel UI also exists as a canvas node. The canvas is the pipeline, made visible.</p>
+  <div class="callout amber">
+    <p><strong>Design principle:</strong> Canvas and panel UI are two views of the same underlying data model. Switching from panel to canvas mid-workflow does not reset progress. The nodes on the canvas are the steps the user already configured in the panel. They are the same thing, rendered differently.</p>
+  </div>
+  <h3>Node types</h3>
+  <div class="module-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+    <div class="mc mc-teal">
+      <div class="mc-head"><div class="mc-icon">⊞</div><span class="mc-badge">source</span></div>
+      <h3>Data source nodes</h3>
+      <p>CSV upload, XLSX upload, demo dataset, sessionStorage receive. One per workflow.</p>
+    </div>
+    <div class="mc mc-teal">
+      <div class="mc-head"><div class="mc-icon">⟳</div><span class="mc-badge">transform</span></div>
+      <h3>ETL operation nodes</h3>
+      <p>Filter, aggregate, join, pivot, calculate, bin, rank, lag/lead. The full Bridge operation set.</p>
+    </div>
+    <div class="mc mc-amber">
+      <div class="mc-head"><div class="mc-icon">◈</div><span class="mc-badge">map</span></div>
+      <h3>Schema map nodes</h3>
+      <p>Maps columns to analytical dimensions. One per module destination. Required before any analysis node.</p>
+    </div>
+    <div class="mc mc-purple">
+      <div class="mc-head"><div class="mc-icon">⬟</div><span class="mc-badge">analyse</span></div>
+      <h3>Analysis nodes</h3>
+      <p>One per analytical output — Pocket Price Waterfall, CLTV Model, Margin Bridge, Churn Score, etc.</p>
+    </div>
+    <div class="mc mc-blue">
+      <div class="mc-head"><div class="mc-icon">◎</div><span class="mc-badge">visualise</span></div>
+      <h3>Visualisation nodes</h3>
+      <p>Chart, table, summary card. Connect to analysis nodes. Multiple visualisation nodes can read the same analysis output.</p>
+    </div>
+    <div class="mc mc-green">
+      <div class="mc-head"><div class="mc-icon">↗</div><span class="mc-badge">export</span></div>
+      <h3>Export nodes</h3>
+      <p>PDF report, XLSX data, PNG chart. Terminal nodes — no outgoing edges. Multiple allowed per workflow.</p>
+    </div>
+  </div>
+  <h3>Canvas interaction model</h3>
+  <div class="feature-row">
+    <div class="feat feat-accent">
+      <h4>Node palette sidebar</h4>
+      <p>All available nodes organised by category. Drag onto canvas to place. Nodes show required input ports and available output ports. Incompatible connections are rejected with an inline error.</p>
+    </div>
+    <div class="feat feat-accent">
+      <h4>Edge drawing</h4>
+      <p>Click an output port, drag to an input port to connect. Edges carry typed data — a schema-mapped output cannot connect to an analysis node with incompatible dimension requirements. Type mismatches shown visually.</p>
+    </div>
+    <div class="feat">
+      <h4>Node configuration panel</h4>
+      <p>Click any node to open its configuration in a side panel — the same UI as the panel view equivalent. Canvas and panel view share the same configuration component code.</p>
+    </div>
+    <div class="feat">
+      <h4>Run button</h4>
+      <p>Executes the full workflow from source to export nodes. Nodes light up sequentially as they complete. Errors surface inline on the node that failed. No silent failures.</p>
+    </div>
+  </div>
+  <h3>Example canvas workflow — Renova Home monthly pricing review</h3>
+  <div class="pipeline-anatomy">
+    <div class="pa-row">
+      <div class="pa-group">
+        <div class="pa-node"><strong>CSV Source</strong>renova_transactions.csv</div>
+        <div class="pa-arrow">→</div>
+        <div class="pa-node"><strong>Filter</strong>FY2024, exclude returns</div>
+        <div class="pa-arrow">→</div>
+        <div class="pa-node"><strong>Calculate</strong>pocket_price = list − disc_amt</div>
+        <div class="pa-arrow">→</div>
+        <div class="pa-node active"><strong>Schema Map</strong>→ Meridian Price</div>
+        <div class="pa-arrow">→</div>
+        <div class="pa-node active"><strong>Pocket Price Waterfall</strong>analysis node</div>
+        <div class="pa-arrow">→</div>
+        <div class="pa-node"><strong>PDF Export</strong>board_update_pricing.pdf</div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-top:4px">This workflow, once built, becomes a saved pipeline named "Monthly Pricing Review". The CFO's chief of staff loads next month's CSV into the CSV Source node and hits Run. Every step downstream replays automatically.</p>
+</section>
+
+<!-- ══════════ 08 PIPELINES ══════════ -->
+<section id="pipelines">
+  <div class="section-label">08 — Reusable Pipelines</div>
+  <h2>Build once. Run every month.</h2>
+  <p>A pipeline is a named, saved workflow — the full graph of nodes, edges, and configurations, without the data. Loading a pipeline on a new dataset replays the entire workflow: the same transformations, the same schema mapping, the same analytical frames, the same export format. The only variable is the data.</p>
+  <div class="feature-row">
+    <div class="feat feat-accent">
+      <h4>localStorage (default)</h4>
+      <p>Pipelines save automatically to the browser's localStorage under the <code>meridian_pipelines</code> key. They persist across sessions on the same machine. The pipeline library shows all saved pipelines with name, last-run date, and module target.</p>
+    </div>
+    <div class="feat feat-accent">
+      <h4>JSON export (portable backup)</h4>
+      <p>Any pipeline can be exported as a <code>.meridian</code> JSON file. This file can be shared with a colleague, stored in a client folder, or version-controlled in a repo. Re-imported via the pipeline library in one click.</p>
+    </div>
+  </div>
+  <h3>Pipeline data model</h3>
+<pre><code><span class="c">// A saved pipeline — what gets written to localStorage / JSON</span>
+{
+  <span class="k">id</span>:          <span class="s">"pipe_monthly_pricing_rev"</span>,
+  <span class="k">name</span>:        <span class="s">"Monthly Pricing Review — Renova"</span>,
+  <span class="k">module</span>:      <span class="s">"price"</span>,
+  <span class="k">createdAt</span>:   <span class="s">"2025-10-01T09:00:00Z"</span>,
+  <span class="k">lastRunAt</span>:   <span class="s">"2025-11-01T08:45:00Z"</span>,
+  <span class="k">nodes</span>: [
+    { <span class="k">id</span>: <span class="s">"n1"</span>, <span class="k">type</span>: <span class="s">"source"</span>, <span class="k">config</span>: { <span class="k">mode</span>: <span class="s">"upload"</span> } },
+    { <span class="k">id</span>: <span class="s">"n2"</span>, <span class="k">type</span>: <span class="s">"filter"</span>, <span class="k">config</span>: { <span class="k">expr</span>: <span class="s">"[year] == 2024 AND [return_flag] == 0"</span> } },
+    { <span class="k">id</span>: <span class="s">"n3"</span>, <span class="k">type</span>: <span class="s">"calculate"</span>, <span class="k">config</span>: { <span class="k">col</span>: <span class="s">"pocket_price"</span>, <span class="k">expr</span>: <span class="s">"[list_price] - [disc_amt]"</span> } },
+    { <span class="k">id</span>: <span class="s">"n4"</span>, <span class="k">type</span>: <span class="s">"schemaMap"</span>, <span class="k">config</span>: { <span class="k">module</span>: <span class="s">"price"</span>, <span class="k">map</span>: { <span class="k">listPrice</span>: <span class="s">"list_price"</span>, <span class="k">pocketPrice</span>: <span class="s">"pocket_price"</span> } } },
+    { <span class="k">id</span>: <span class="s">"n5"</span>, <span class="k">type</span>: <span class="s">"analysis"</span>, <span class="k">config</span>: { <span class="k">analysis</span>: <span class="s">"pocket_price_waterfall"</span> } },
+    { <span class="k">id</span>: <span class="s">"n6"</span>, <span class="k">type</span>: <span class="s">"export"</span>, <span class="k">config</span>: { <span class="k">format</span>: <span class="s">"pdf"</span>, <span class="k">filename</span>: <span class="s">"pricing_review_{date}"</span> } }
+  ],
+  <span class="k">edges</span>: [
+    { <span class="k">from</span>: <span class="s">"n1"</span>, <span class="k">to</span>: <span class="s">"n2"</span> }, { <span class="k">from</span>: <span class="s">"n2"</span>, <span class="k">to</span>: <span class="s">"n3"</span> },
+    { <span class="k">from</span>: <span class="s">"n3"</span>, <span class="k">to</span>: <span class="s">"n4"</span> }, { <span class="k">from</span>: <span class="s">"n4"</span>, <span class="k">to</span>: <span class="s">"n5"</span> },
+    { <span class="k">from</span>: <span class="s">"n5"</span>, <span class="k">to</span>: <span class="s">"n6"</span> }
+  ]
+  <span class="c">// No data — only the configuration. Data loads fresh each run.</span>
+}
+</code></pre>
+  <div class="callout">
+    <p><strong>What makes a pipeline portable:</strong> Because a pipeline stores node configurations and schema maps — never data — a <code>.meridian</code> file can be shared freely. A consulting manager can share their "Monthly Board Update" pipeline with a client's chief of staff. The client loads their own data. The analysis runs identically. This is consulting IP as a reusable workflow.</p>
+  </div>
+</section>
+
+<!-- ══════════ 09 HANDOFF ══════════ -->
+<section id="handoff">
+  <div class="section-label">09 — AppHandoff Protocol</div>
+  <h2>The interface contract between core and modules</h2>
+  <p>Defined once, consumed by all. Any module that implements the receiver gets a fully prepared, quality-scored, schema-mapped dataset — without knowing what upstream operations produced it.</p>
+<pre><code><span class="c">// AppHandoff — written to sessionStorage by Meridian Bridge</span>
+<span class="c">// key: 'meridian_handoff'</span>
+{
+  <span class="k">source</span>:       <span class="s">"Meridian Bridge"</span>,
+  <span class="k">targetModule</span>: <span class="s">"pulse"</span>,          <span class="c">// price | pulse | ledger | org | field | flow</span>
+  <span class="k">pipelineId</span>:   <span class="s">"pipe_monthly_..."</span>, <span class="c">// null if ad-hoc</span>
+  <span class="k">sentAt</span>:       <span class="s">"2025-11-01T08:45:00Z"</span>,
+  <span class="k">rowCount</span>:     <span class="num">45231</span>,
+  <span class="k">columns</span>:      [<span class="s">"customer_id"</span>, <span class="s">"revenue_ltm"</span>, <span class="s">"last_purchase_date"</span>, ...],
+  <span class="k">columnTypes</span>:  { <span class="s">"customer_id"</span>: <span class="s">"id"</span>, <span class="s">"revenue_ltm"</span>: <span class="s">"number"</span>, ... },
+  <span class="k">schema</span>:       { <span class="s">"customerId"</span>: <span class="s">"customer_id"</span>, <span class="s">"revenue"</span>: <span class="s">"revenue_ltm"</span>, ... },
+  <span class="k">qualityScore</span>: <span class="num">0.94</span>,
+  <span class="k">rows</span>:         [{ ... }, { ... }]
+}
+</code></pre>
+  <p>Every module implements the four-method receiver interface: <code>receiveHandoff(payload)</code> → <code>validateSchema(schema, required)</code> → <code>initModule(rows, schema)</code> → <code>renderOutputs()</code>. Modules requiring Pyodide add a fifth: <code>initPyodide()</code> called asynchronously before <code>initModule</code>.</p>
+</section>
+
+<!-- ══════════ 10 COMPUTE ══════════ -->
+<section id="compute">
+  <div class="section-label">10 — Compute Model</div>
+  <h2>Three tiers. Zero server. Full Python.</h2>
+  <div class="card">
+    <div class="compute-row">
+      <div class="cr-label">Vanilla JS</div>
+      <div class="cr-desc">Aggregations, ratios, waterfall construction, sorting, filtering, basic statistics. Under 10K rows. Synchronous, instant. All modules, always.</div>
+      <div class="cr-when">All modules</div>
+    </div>
+    <div class="compute-row">
+      <div class="cr-label">Web Workers</div>
+      <div class="cr-desc">Heavy tabular operations on datasets over 10K rows. Off main thread, non-blocking UI. Canvas pipeline execution also runs in a Worker.</div>
+      <div class="cr-when">&gt;10K rows</div>
+    </div>
+    <div class="compute-row">
+      <div class="cr-label">Pyodide</div>
+      <div class="cr-desc">Full Python runtime via WebAssembly. NumPy, pandas, scikit-learn, scipy, lifetimes. CLTV (BG/NBD), churn (logistic regression), propensity (gradient boosting), k-means clustering, ARIMA demand forecasting, survival analysis. Loads once, stays warm per session.</div>
+      <div class="cr-when">Pulse, Ledger, Org, Field, Flow · ML analyses</div>
+    </div>
+  </div>
+  <div class="callout purple">
+    <p><strong>Scale ceiling:</strong> 50K rows is the comfortable zone for all analysis types including ML inference. The architecture scales to 500K rows for ETL/aggregations and 200K rows for churn/propensity inference without any architectural change — only a chunked file parser (already supported by PapaParse streaming mode) and mini-batch model variants. No server required at any scale within the defined operating range.</p>
+  </div>
+</section>
+
+<!-- ══════════ 11 MODULE REGISTRY ══════════ -->
+<section id="modules">
+  <div class="section-label">11 — Module Registry</div>
+  <h2>Seven modules. One platform.</h2>
+  <div class="module-grid">
+    <div class="mc mc-teal" id="bridge">
+      <div class="mc-head"><div class="mc-icon">⊞</div><span class="mc-badge">core</span></div>
+      <h3>Meridian Bridge</h3>
+      <p>Data ingestion, ETL, quality scoring, schema mapping, module routing. The platform hub.</p>
+      <div class="mc-tags"><span class="mc-tag">JS only</span><span class="mc-tag">Live v1</span><span class="mc-tag">Phase 0 ext.</span></div>
+    </div>
+    <div class="mc mc-teal" id="price">
+      <div class="mc-head"><div class="mc-icon">◈</div><span class="mc-badge">Phase 1</span></div>
+      <h3>Meridian Price</h3>
+      <p>Pocket price waterfall, margin bridge, elasticity, scenario modeller, deal scoring, behavioural lab.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Workers</span><span class="mc-tag">In build</span></div>
+    </div>
+    <div class="mc mc-purple" id="pulse">
+      <div class="mc-head"><div class="mc-icon">⬟</div><span class="mc-badge">Phase 2</span></div>
+      <h3>Meridian Pulse</h3>
+      <p>CLTV (BG/NBD), churn prediction, propensity scoring, RFM segmentation, cohort retention.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Pyodide</span><span class="mc-tag">First ML module</span></div>
+    </div>
+    <div class="mc mc-amber" id="ledger">
+      <div class="mc-head"><div class="mc-icon">▦</div><span class="mc-badge">Phase 3</span></div>
+      <h3>Meridian Ledger</h3>
+      <p>Revenue bridge, P&amp;L decomposition, cost structure, working capital, cash flow waterfall, forecasting.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (forecast)</span></div>
+    </div>
+    <div class="mc mc-coral" id="org">
+      <div class="mc-head"><div class="mc-icon">⊹</div><span class="mc-badge">Phase 3</span></div>
+      <h3>Meridian Org</h3>
+      <p>Span of control, layer benchmarking, attrition prediction, capability investment mapping.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (survival)</span></div>
+    </div>
+    <div class="mc mc-blue" id="field">
+      <div class="mc-head"><div class="mc-icon">◎</div><span class="mc-badge">Phase 4</span></div>
+      <h3>Meridian Field</h3>
+      <p>TAM/SAM/SOM sizing, market share waterfall, competitive benchmarking, BCG matrix, customer archetype clustering.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (k-means)</span></div>
+    </div>
+    <div class="mc mc-green" id="flow">
+      <div class="mc-head"><div class="mc-icon">⬡</div><span class="mc-badge">Phase 4</span></div>
+      <h3>Meridian Flow</h3>
+      <p>Inventory health (ABC/XYZ), demand forecasting, lead time analysis, EOQ optimisation, stockout risk scoring.</p>
+      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (ARIMA)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 12 RENOVA ══════════ -->
+<section id="renova">
+  <div class="section-label">12 — Demo Universe</div>
+  <h2>Renova Home — one organisation, six datasets</h2>
+  <p>A single fictive organisation whose data runs through every module consistently. Users who demo Meridian Price and then Meridian Pulse are looking at the same company, same customers, same FY — cross-module insights cross-reference naturally.</p>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="margin-top:0">Company profile</h3>
+    <p><strong>Renova Home</strong> — a mid-market home improvement and décor retail chain. 180 stores across Tier 1 and Tier 2 cities in India. Growing e-commerce channel (~22% of revenue). Own-brand product lines alongside third-party brands (Asian Paints, Havells, Bosch). A dealer/franchise network in Tier 2. A B2B segment serving contractors and interior designers (~15% of revenue). FY2024 revenue: ₹2,400 Cr. 2.1M loyalty programme customers.</p>
+    <p>The company has realistic business problems baked into every dataset: pocket price leakage in the contractor segment, churn signal in the loyalty base among occasional buyers, a cost structure that shifted unfavourably when the e-commerce channel scaled, HR attrition in store management roles, an underperforming Tier 2 expansion, and supply chain lead time variance from import-dependent SKUs post-pandemic.</p>
+  </div>
+
+  <table class="renova-table">
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>Dataset file</th>
+        <th>Rows / scope</th>
+        <th>Key columns</th>
+        <th>Signals baked in</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--teal)">Bridge</span></td>
+        <td><code>renova_transactions_raw.csv</code></td>
+        <td>50,000 transaction rows, intentionally messy — mixed date formats, nulls in discount columns, duplicate order IDs</td>
+        <td>order_id, customer_id, sku_id, channel, list_price, discount_pct, discount_amt, quantity, store_id, date</td>
+        <td><span class="signal sig-a">ETL challenge</span> — tests all Bridge operations before handoff</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--teal)">Meridian Price</span></td>
+        <td><code>renova_pricing.csv</code></td>
+        <td>45,000 clean transaction rows, FY2024</td>
+        <td>sku_id, category, channel, list_price, invoice_price, pocket_price, unit_cost, discount_pct, sales_rep, customer_segment</td>
+        <td><span class="signal sig-a">Leakage</span> in contractor segment — pocket price 18% below invoice in B2B. Own-brand margin spread 2× third-party.</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--purple)">Meridian Pulse</span></td>
+        <td><code>renova_customers.csv</code></td>
+        <td>2.1M loyalty customers, 3-year transaction history</td>
+        <td>customer_id, acquisition_channel, first_purchase_date, last_purchase_date, frequency, monetary_avg, category_affinity, churn_flag_actual</td>
+        <td><span class="signal sig-p">Churn signal</span> in occasional buyers (1–2 purchases/yr). <span class="signal sig-g">High CLTV</span> cluster in contractor B2B + urban e-comm.</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--amber)">Meridian Ledger</span></td>
+        <td><code>renova_financials.csv</code></td>
+        <td>Monthly P&amp;L by channel, 36 months (FY2022–FY2024)</td>
+        <td>month, channel, revenue, cogs, gross_margin, opex_fixed, opex_variable, ebitda, working_capital_days</td>
+        <td><span class="signal sig-a">Margin compression</span> as e-commerce scaled — fulfilment cost absorbed margin gains. Revenue bridge shows volume up, mix down.</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--coral)">Meridian Org</span></td>
+        <td><code>renova_headcount.csv</code></td>
+        <td>3,200 employees, current snapshot + 24-month attrition history</td>
+        <td>emp_id, function, level, location_tier, tenure_months, salary_band, manager_id, attrition_flag, exit_reason</td>
+        <td><span class="signal sig-a">High attrition</span> in store manager level (L3), Tier 2 locations. Span of control at HO 2× industry benchmark.</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--blue)">Meridian Field</span></td>
+        <td><code>renova_market.csv</code></td>
+        <td>District-level market data, 200 districts across India</td>
+        <td>district, state, tier, population, household_income_median, organised_retail_penetration, renova_stores, competitor_stores, renova_revenue_est, market_size_est</td>
+        <td><span class="signal sig-g">Whitespace</span> in Tier 2 districts with high household income and low organised retail penetration. Tier 3 over-indexed.</td>
+      </tr>
+      <tr>
+        <td><span class="rt-mod" style="color:var(--green)">Meridian Flow</span></td>
+        <td><code>renova_inventory.csv</code></td>
+        <td>8,500 SKUs, 12-month inventory + demand history</td>
+        <td>sku_id, category, supplier_origin, lead_time_days, lead_time_variance, avg_weekly_demand, current_stock, reorder_point, stockout_days_ytd, cogs_per_unit</td>
+        <td><span class="signal sig-a">Lead time variance</span> on import SKUs (2–3× domestic). <span class="signal sig-a">Stockout risk</span> concentrated in bathroom fittings (import-dependent).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <p><strong>Cross-module narrative:</strong> The customers showing churn signal in Meridian Pulse are the same occasional buyers receiving the deepest discounts in Meridian Price. The margin compression in Meridian Ledger is partly explained by the fulfilment cost structure in Meridian Flow. The Tier 2 attrition in Meridian Org correlates with the whitespace opportunity in Meridian Field. The datasets are designed to reward users who run multiple modules — the insights compound.</p>
+  </div>
+</section>
+
+<!-- ══════════ 13 PRINCIPLES ══════════ -->
+<section id="principles">
+  <div class="section-label">13 — Design Principles</div>
+  <h2>Eight principles — updated for canvas and pipelines</h2>
+  <div class="principle-list">
+    <div class="principle-item"><span class="p-num">P1</span><div class="p-body"><h4>The framework is the UI</h4><p>Each module's interface is shaped by the analytical framework it embodies. The output is recognisable before the user reads a label.</p></div></div>
+    <div class="principle-item"><span class="p-num">P2</span><div class="p-body"><h4>Canvas and panel are the same workflow</h4><p>Switching views mid-workflow does not reset progress. The canvas renders the panel's state as nodes; the panel renders the canvas's state as steps. They are two representations of one data model.</p></div></div>
+    <div class="principle-item"><span class="p-num">P3</span><div class="p-body"><h4>Schema mapping before analysis, always</h4><p>No module runs analysis on unmapped data. The schema wizard is not skippable. This enforces methodological consistency — the output is always a real pocket price waterfall, not a chart on user data that someone labelled one.</p></div></div>
+    <div class="principle-item"><span class="p-num">P4</span><div class="p-body"><h4>Outputs are deliverable-ready, not exploration-ready</h4><p>The export target is a board deck or client presentation. Charts use consulting-grade colour and labelling. Tables include the metadata a reviewer needs. PDF export is a first-class feature.</p></div></div>
+    <div class="principle-item"><span class="p-num">P5</span><div class="p-body"><h4>Complexity is hidden, not removed</h4><p>BG/NBD and ARIMA run under the hood. The user sees the business output. Power users can inspect model parameters; everyone else gets the answer.</p></div></div>
+    <div class="principle-item"><span class="p-num">P6</span><div class="p-body"><h4>Data never leaves the machine</h4><p>Stated in every module's header as a factual architectural statement. This is also what makes the platform viable for consulting use — client data can be analysed locally without data governance implications.</p></div></div>
+    <div class="principle-item"><span class="p-num">P7</span><div class="p-body"><h4>Each module is independently launchable</h4><p>A module can receive a Bridge handoff or accept a direct upload. A user can bookmark Meridian Pulse, go directly to it, upload a CSV, and run a CLTV analysis — without opening Bridge at all.</p></div></div>
+    <div class="principle-item"><span class="p-num">P8</span><div class="p-body"><h4>Pipelines are first-class IP</h4><p>A saved pipeline is a consulting deliverable. It encodes the analytical methodology — the transformations, the schema map, the analytical frame — in a portable, reusable format. Sharing a <code>.meridian</code> file is sharing a workflow, not just data.</p></div></div>
+  </div>
+</section>
+
+<!-- ══════════ 14 ROADMAP ══════════ -->
+<section id="roadmap">
+  <div class="section-label">14 — Build Roadmap</div>
+  <h2>Five phases. Sequenced by complexity.</h2>
+  <table class="phase-table">
+    <thead>
+      <tr><th>Phase</th><th>Scope</th><th>New capabilities</th><th>Deliverable</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="ph-num">Phase 0</td>
+        <td><span class="ph-del">Meridian Platform Core</span>Module router, AppHandoff v2 (with pipelineId), canvas engine foundation, pipeline save/load (localStorage + JSON), CLAUDE.md, repo scaffold</td>
+        <td>Canvas node system, edge drawing, pipeline data model, module router UI</td>
+        <td><code>meridian-platform</code> repo live. Bridge extended. Canvas works for ETL operations. Pipelines save/load. Platform home routes to all modules.</td>
+      </tr>
+      <tr>
+        <td class="ph-num">Phase 1</td>
+        <td><span class="ph-del">Meridian Price — complete</span>Finish all 8 sub-modules in Meridian Price. Add Price-specific canvas nodes (Pocket Price Waterfall node, Scenario Modeller node). Renova pricing demo dataset. First reusable pipeline demo: "Monthly Pricing Review".</td>
+        <td>First full canvas workflow. First reusable pipeline.</td>
+        <td><code>price/index.html</code> live. Renova pricing demo. "Monthly Pricing Review" pipeline ships as a bundled demo pipeline.</td>
+      </tr>
+      <tr>
+        <td class="ph-num">Phase 2</td>
+        <td><span class="ph-del">Meridian Pulse — Consumer Analytics</span>RFM + cohort retention in JS first. CLTV, churn, propensity via Pyodide. Pyodide initialiser proven. Renova customers demo dataset.</td>
+        <td>First Pyodide module. Pyodide warm/cold load UX resolved.</td>
+        <td><code>pulse/index.html</code> live. Code sessions begin (CLAUDE.md active).</td>
+      </tr>
+      <tr>
+        <td class="ph-num">Phase 3</td>
+        <td><span class="ph-del">Meridian Ledger + Meridian Org</span>Revenue bridge, P&amp;L, forecasting (Ledger). Span analysis, attrition modelling (Org). Both in parallel — no inter-dependency.</td>
+        <td>Two modules simultaneously. Platform reaches 4 live modules.</td>
+        <td><code>ledger/index.html</code> + <code>org/index.html</code> live. Renova financials + headcount demos.</td>
+      </tr>
+      <tr>
+        <td class="ph-num">Phase 4</td>
+        <td><span class="ph-del">Meridian Field + Meridian Flow · Platform v1.0</span>Market sizing, BCG matrix, clustering (Field). Inventory health, demand forecasting, EOQ (Flow). All 6 Renova demo datasets live. Full cross-module demo narrative documented.</td>
+        <td>Platform complete. All canvas node types live. Full demo universe.</td>
+        <td>All 6 modules live. Renova Home full demo suite. Platform v1.0 shipped.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════ 15 CLAUDE.MD ══════════ -->
+<section id="claudemd">
+  <div class="section-label">15 — CLAUDE.md Template</div>
+  <h2>The Code session brain</h2>
+  <p>This file lives at the repo root. Every Claude Code session reads it on start. It encodes everything a Code agent needs to make correct implementation decisions without re-briefing. It is the handoff from Chat to Code.</p>
+  <div class="claude-md">
+<span class="cm-h"># CLAUDE.md — Meridian Platform</span>
+
+<span class="cm-c">## What this is</span>
+Meridian is a browser-native strategy analytics platform. No server.
+No licence. No data leaves the user's machine. All computation runs
+in-browser: vanilla JS, Web Workers, Pyodide (WASM Python).
+
+<span class="cm-c">## Repo structure</span>
+<span class="cm-val">bridge/ price/ pulse/ ledger/ org/ field/ flow/</span>  — one module per folder
+<span class="cm-val">shared/handoff.js</span>    — AppHandoff protocol (DO NOT modify schema)
+<span class="cm-val">shared/canvas.js</span>     — Canvas engine, node registry
+<span class="cm-val">shared/pipelines.js</span>  — Pipeline save/load/replay
+<span class="cm-val">demos/renova/</span>        — Demo datasets (Renova Home, 6 CSVs)
+
+<span class="cm-c">## AppHandoff schema — immutable</span>
+source | targetModule | pipelineId | sentAt | rowCount |
+columns | columnTypes | schema | qualityScore | rows
+
+<span class="cm-c">## Four-method module interface (every module implements this)</span>
+receiveHandoff(payload)
+validateSchema(schema, required[])
+initModule(rows, schema)
+renderOutputs()
+<span class="cm-c">// + initPyodide() for ML modules (pulse, ledger, org, field, flow)</span>
+
+<span class="cm-c">## Canvas node types</span>
+source | transform | schemaMap | analysis | visualise | export
+<span class="cm-c">// All nodes registered in shared/canvas.js NodeRegistry</span>
+
+<span class="cm-c">## Pipeline data model</span>
+{ id, name, module, createdAt, lastRunAt, nodes[], edges[] }
+<span class="cm-c">// localStorage key: 'meridian_pipelines' (array)</span>
+<span class="cm-c">// Export format: .meridian (JSON)</span>
+
+<span class="cm-c">## CDN stack (these exact versions, no others)</span>
+PapaParse 5.4 | SheetJS 0.20 | Chart.js 4.4 | D3 7.9 |
+math.js 13 | jsPDF 2.5 | html2canvas 1.4 | Pyodide 0.25+
+
+<span class="cm-c">## Hard constraints</span>
+- Single HTML file per module (no bundler, no build step)
+- CDN-only dependencies
+- No server calls of any kind
+- AppHandoff schema is immutable — adding fields is OK, removing is not
+- Canvas and panel UI share the same configuration component code
+- Data never stored in pipelines — config only
+
+<span class="cm-c">## Demo org: Renova Home</span>
+Mid-market home improvement retail, India. 180 stores, 2.1M customers.
+FY2024 revenue ₹2,400 Cr. See demos/renova/ for all dataset files.
+Known signals: pricing leakage in B2B segment, churn in occasional
+buyers, e-comm margin compression, Tier 2 attrition, import supply
+chain variance.
+
+<span class="cm-c">## Current build status</span>
+Phase 0: [ ] repo scaffold  [ ] canvas engine  [ ] pipeline engine
+Phase 1: [ ] Meridian Price complete
+Phase 2: [ ] Meridian Pulse (first Pyodide module)
+<span class="cm-c">## Update this section after each phase completes.</span>
+  </div>
+</section>
+
+<!-- ══════════ 16 CONSTRAINTS ══════════ -->
+<section id="constraints">
+  <div class="section-label">16 — Constraints &amp; Scope Boundary</div>
+  <h2>What Meridian is not</h2>
+  <div class="callout amber">
+    <p><strong>Immutable constraints:</strong> Zero server. Zero licence. Zero data leaves the user's machine. Single HTML file per module. CDN-only dependencies. These are architectural commitments. Any feature that violates them is out of scope by definition, regardless of how it is requested.</p>
+  </div>
+  <div class="card">
+    <h3>Explicit out-of-scope for v1.0</h3>
+    <p><strong>User accounts and cloud sync</strong> — no backend means no account system. Pipelines persist in localStorage and export as JSON. That is the persistence model.</p>
+    <p><strong>Real-time data connections</strong> — no API integrations, no live database connections. Input is always a file upload or sessionStorage handoff.</p>
+    <p><strong>Collaborative editing</strong> — one user, one browser session. Pipeline sharing is via <code>.meridian</code> file export, not a shared workspace.</p>
+    <p><strong>Custom model training</strong> — Pyodide runs inference on pre-defined model architectures. Users cannot upload custom weights or modify model architectures. The ML layer is intentionally black-boxed.</p>
+    <p><strong>Mobile-first design</strong> — desktop and laptop primary. Analytical tools at this complexity require screen real estate. Responsive layouts implemented, mobile not the primary experience.</p>
+  </div>
+  <div class="callout purple">
+    <p><strong>The capstone outcome:</strong> When all six modules are live, Meridian will be the most comprehensive open-source browser-native analytical workbench for strategy and commercial consulting practitioners in existence. Alteryx-style canvas workflows. Reusable pipelines as shareable consulting IP. Full ML inference in-browser. Every module grounded in real engagement experience. <strong>Zero infrastructure. Permanent open access.</strong></p>
+  </div>
+</section>
+
+</div>
+</main>
+</div>
+
+<script>
+const links=document.querySelectorAll('.nav-link');
+const sections=document.querySelectorAll('section[id]');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      const a=document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if(a)a.classList.add('active');
+    }
+  });
+},{threshold:0.25,rootMargin:'-8% 0px -60% 0px'});
+sections.forEach(s=>obs.observe(s));
+</script>
+
+
+</body></html>

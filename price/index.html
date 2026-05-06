@@ -176,6 +176,50 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 .analysis-pending .ap-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:6px}
 .analysis-pending .ap-sub{font-size:12px;line-height:1.6;max-width:360px}
 
+
+/* ── Guided onboarding ── */
+.step-indicator{
+  display:flex;align-items:center;gap:0;padding:0 20px 0 0;flex-shrink:0;
+}
+.step{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;
+  font-size:11px;color:var(--dim);position:relative;
+}
+.step-num{
+  width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:10px;
+  font-family:var(--mono);font-weight:600;flex-shrink:0;background:var(--surface3);
+}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#0d1117}
+.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#0d1117}
+.step.done{color:var(--success)}
+.step.active{color:var(--accent)}
+.step-arrow{color:var(--border2);font-size:10px;margin:0 -4px}
+/* Guidance callout */
+.guidance{
+  background:rgba(34,211,184,0.06);border:1px solid var(--teal-bd, rgba(34,211,184,0.2));
+  border-radius:8px;padding:12px 16px;margin:0 0 16px;
+  display:flex;align-items:flex-start;gap:10px;font-size:12px;
+}
+.guidance-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.guidance-body strong{color:var(--accent);display:block;margin-bottom:2px;font-size:12px}
+.guidance-body p{color:var(--muted);margin:0;line-height:1.55}
+.guidance-body .guidance-action{
+  margin-top:8px;display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;
+  text-decoration-color:rgba(34,211,184,0.4);
+}
+/* Scenario canvas */
+#scenario-canvas-wrap{
+  background:var(--bg);border:1px solid var(--border2);border-radius:12px;
+  overflow:hidden;margin:16px 0;position:relative;
+  background-image:radial-gradient(circle,var(--border2) 1px,transparent 1px);
+  background-size:20px 20px;
+}
+#scenario-canvas-inner{
+  position:relative;overflow:hidden;min-height:280px;
+}
+
 /* ── Waterfall ── */
 .waterfall-container{overflow-x:auto;padding-bottom:8px}
 .waterfall-svg{display:block}
@@ -285,11 +329,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div class="topbar-right">
-    <div class="mode-switch">
-    <button class="mode-btn active" id="mode-panel-btn" onclick="setModePrice('panel')">▦ Panel</button>
-    <button class="mode-btn" id="mode-canvas-btn" onclick="setModePrice('canvas')">◇ Canvas</button>
-  </div>
-  <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
     <button class="btn btn-sm" id="upload-btn" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
     <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
     <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
@@ -306,6 +346,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   <span class="ctx-item">Source: <strong id="ctx-source">—</strong></span>
   <span class="ctx-item">Quality: <strong id="ctx-quality">—</strong></span>
   <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions mapped</strong></span>
+  <div class="step-indicator" id="step-indicator">
+    <div class="step active" id="step-1"><span class="step-num">1</span>Load data</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-2"><span class="step-num">2</span>Map schema</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-3"><span class="step-num">3</span>Analyse</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-4"><span class="step-num">4</span>Export</div>
+  </div>
   <span style="margin-left:auto">
     <button class="btn btn-sm" onclick="loadDemoData()" id="demo-btn">Load Renova demo</button>
   </span>
@@ -313,8 +362,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 
 <!-- App body -->
 <div class="app-body">
-<!-- Canvas container (shown in canvas mode) -->
-<div id="price-canvas-container" style="position:absolute;inset:0;display:none;z-index:5;left:200px"></div>
 
 <!-- Sidebar -->
 <nav class="sidebar">
@@ -377,10 +424,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   </div>
   <div id="waterfall-content" style="display:none">
     <div id="waterfall-run-zone">
+      <div class="guidance" id="waterfall-guidance">
+        <div class="guidance-icon">◈</div>
+        <div class="guidance-body">
+          <strong>Before you run: check your schema mapping</strong>
+          <p>The waterfall needs <em>List price</em>, <em>Pocket price</em>, <em>Unit cost</em>, and <em>Discount amount</em> to be mapped. The more dimensions you map, the richer the output.</p>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.7">
+            <strong style="color:var(--text2)">How the waterfall steps are constructed:</strong>
+            If your data has a single discount column, the model estimates the split across discount types using a
+            <span style="font-family:var(--mono);color:var(--accent)">60/25/10/5</span> heuristic
+            (invoice discount · volume discount · cash discount · other allowances) — consistent with the McKinsey pocket price methodology.
+            If you have separate discount columns mapped, each maps to its own waterfall step exactly.
+          </div>
+          <span class="guidance-action" onclick="openSchemaWizard()">◈ Open schema mapper →</span>
+        </div>
+      </div>
       <div class="analysis-pending" id="waterfall-pending">
         <div class="ap-icon">⬇</div>
         <div class="ap-title">Ready to build the pocket price waterfall</div>
-        <div class="ap-sub">Maps your transaction data to the waterfall model — list price through every discount element to pocket price and gross profit.</div>
+        <div class="ap-sub">Maps your transaction data to the waterfall model — isolating each source of leakage between list price and the price you actually receive.</div>
         <button class="run-analysis-btn" onclick="runWaterfall()" id="run-waterfall-btn">▶ Run waterfall analysis</button>
       </div>
     </div>
@@ -480,6 +542,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   </div>
   <div id="elasticity-content" style="display:none">
     <div id="elasticity-run-zone">
+      <div class="guidance">
+        <div class="guidance-icon">↗</div>
+        <div class="guidance-body">
+          <strong>What the elasticity coefficient means</strong>
+          <p>The coefficient is estimated via Pearson correlation between discount % and units per transaction, scaled by the ratio of their standard deviations.
+          <strong style="color:var(--text2)">Reading the number:</strong>
+          <span style="font-family:var(--mono);color:var(--accent)">–1.5</span> means a 1% increase in discount is associated with a 1.5% increase in units sold (elastic — discounting moves volume).
+          <span style="font-family:var(--mono);color:var(--accent)">–0.4</span> means a 1% discount increases volume by only 0.4% (inelastic — customers buy regardless of discount).
+          Positive coefficients (rare) suggest discounts are associated with smaller orders — a signal of customer mix effects.</p>
+          <p style="margin-top:6px"><strong style="color:var(--text2)">Use the category filter above</strong> to isolate elasticity for a specific product line. Different categories in the same business can have very different elasticity profiles.</p>
+        </div>
+      </div>
       <div class="analysis-pending" id="elasticity-pending">
         <div class="ap-icon">↗</div>
         <div class="ap-title">Ready to estimate price elasticity</div>
@@ -522,6 +596,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="module-eyebrow">M4 — Segment Pricing Diagnostics</div>
     <div class="module-title">Who's getting what price?</div>
     <div class="module-desc">Compares pricing outcomes across customer tiers, regions, sales reps, and product categories. Identifies where pocket prices vary beyond legitimate discount policy — the core leakage diagnostic of every pricing engagement.</div>
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+    padding:10px 16px;margin-top:0;font-size:11px;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--text2)">How to read the segment chart:</strong>
+    The dashed line is the company-wide average. Bars above the line represent segments receiving deeper discounts than average.
+    The <strong style="color:var(--text2)">Spread</strong> metric in the stats row shows max–min across segments —
+    a spread &gt;10 percentage points signals non-uniform pricing that likely exceeds legitimate policy variation.
+    Use <em>Price band scatter</em> below to see individual transaction outliers within each segment.
+  </div>
   </div>
   <div id="segments-empty" class="empty-state">
     <div class="empty-icon">⬟</div>
@@ -574,7 +656,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   <div class="module-header">
     <div class="module-eyebrow">M5 — Competitor Benchmarking</div>
     <div class="module-title">How do we compare on price?</div>
-    <div class="module-desc">Compares your pocket prices against floor prices, target prices, and any competitor reference data you provide. Identifies products priced below cost floor and above competitive ceiling.</div>
+    <div class="module-desc">Compares your pocket prices against floor prices and target prices — derived from your mapped cost and list price data.</div>
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+    padding:10px 16px;margin-top:0;font-size:11px;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--text2)">How floor and target prices are calculated:</strong>
+    <strong style="color:var(--danger)">Floor price</strong> = unit cost × 1.10 (cost plus 10% minimum margin — below this, the deal is structurally unprofitable).
+    <strong style="color:var(--success)">Target price</strong> = list price × 0.90 (the price at maximum policy discount — pocket prices below this indicate policy breach).
+    Both are computed per-product from your mapped data. If unit cost is not mapped, floor price cannot be computed.
+  </div>
   </div>
   <div id="benchmark-empty" class="empty-state">
     <div class="empty-icon">◎</div>
@@ -604,7 +693,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   <div class="module-header">
     <div class="module-eyebrow">M6 — Scenario Modeller</div>
     <div class="module-title">What happens if we change the price?</div>
-    <div class="module-desc">Models the revenue and margin impact of pricing policy changes — discount ceiling reductions, list price increases, floor price enforcement. Compares up to three scenarios simultaneously.</div>
+    <div class="module-desc">Models the revenue and margin impact of pricing policy changes — discount ceiling reductions, list price increases, floor price enforcement. Each scenario is a transformation pipeline on your actual data. Configure the nodes below, then run all scenarios to compare results.</div>
   </div>
   <div id="scenario-empty" class="empty-state">
     <div class="empty-icon">⟳</div>
@@ -612,6 +701,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Scenarios model the impact of pricing policy changes on revenue and margin, based on your actual transaction data.</div>
   </div>
   <div id="scenario-content" style="display:none">
+    <div class="guidance">
+      <div class="guidance-icon">⟳</div>
+      <div class="guidance-body">
+        <strong>How the scenario pipeline works</strong>
+        <p>The canvas below shows three parallel scenario branches — each applies a different pricing policy transformation to your base dataset. Adjust the sliders in each scenario card, then the comparison chart updates automatically. The pipeline canvas above the cards shows the data flow.</p>
+      </div>
+    </div>
+    <div id="scenario-canvas-wrap">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:0.06em;text-transform:uppercase">Scenario pipeline</span>
+        <span style="font-size:10px;color:var(--dim);margin-left:auto">Drag to reposition · click a node to configure</span>
+      </div>
+      <div id="scenario-canvas-inner" style="height:260px"></div>
+    </div>
     <div class="section-divider">Scenario parameters</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px" id="scenario-cards"></div>
     <div class="stat-grid" id="scenario-stats"></div>
@@ -642,6 +745,39 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   </div>
   <div id="deals-content" style="display:none">
     <div id="deals-run-zone">
+      <div class="guidance">
+        <div class="guidance-icon">◇</div>
+        <div class="guidance-body">
+          <strong>Deal scoring — 5 criteria, exact thresholds</strong>
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11px;line-height:1.8">
+            <div>
+              <strong style="color:var(--text2)">1. Margin health (–30/–15 pts)</strong><br>
+              <span style="color:var(--muted)">Margin &lt;20%: –30 pts · Margin 20–35%: –15 pts · Above 35%: no penalty</span>
+            </div>
+            <div>
+              <strong style="color:var(--text2)">2. Discount level (–25/–12 pts)</strong><br>
+              <span style="color:var(--muted)">Discount &gt;25%: –25 pts · Discount 15–25%: –12 pts · Below 15%: no penalty</span>
+            </div>
+            <div>
+              <strong style="color:var(--text2)">3. Floor price compliance (–25 pts)</strong><br>
+              <span style="color:var(--muted)">Pocket price &lt; unit cost × 1.05: –25 pts (negative-margin deal)</span>
+            </div>
+            <div>
+              <strong style="color:var(--text2)">4. Tier alignment (–10 pts)</strong><br>
+              <span style="color:var(--muted)">B2B or SMB customer with discount &gt;20%: –10 pts (below-policy for tier)</span>
+            </div>
+            <div style="grid-column:1/-1">
+              <strong style="color:var(--text2)">5. Extreme outlier (–15 pts)</strong><br>
+              <span style="color:var(--muted)">Discount &gt;30%: additional –15 pts regardless of other criteria</span>
+            </div>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+            All deals start at 100. Penalties are additive — a deal with 28% discount, 18% margin, and B2B tier
+            loses <span style="font-family:var(--mono);color:var(--danger)">25+15+10 = –50 pts → score 50 (Review)</span>.
+            <strong style="color:var(--text2)">Bands: 70–100 = Sound · 40–70 = Review · &lt;40 = Flag</strong>
+          </div>
+        </div>
+      </div>
       <div class="analysis-pending" id="deals-pending">
         <div class="ap-icon">◇</div>
         <div class="ap-title">Ready to score your deal portfolio</div>
@@ -1054,6 +1190,11 @@ function initData(rows, source) {
   updateContextBar();
   showEmptyStates(false);
   renderModule(AppState.activeModule);
+  // Reset dropdowns so they repopulate with new data's values
+  ['elast-segment','margin-group','margin-p1','margin-p2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">—</option>';
+  });
   showToast(rows.length.toLocaleString() + ' rows loaded · ' + Object.keys(autoSchema).length + ' dimensions auto-mapped', 'success');
 }
 
@@ -1358,10 +1499,10 @@ function renderMarginBridge() {
     ? [...new Set(rows.map(r => r[col('date')]||'').filter(Boolean))].sort()
     : [];
 
-  // Populate period selectors
+  // Populate period selectors only on first load
   const p1El = document.getElementById('margin-p1');
   const p2El = document.getElementById('margin-p2');
-  if (p1El && periods.length) {
+  if (p1El && periods.length && p1El.options.length === 0) {
     const opts = periods.map(p => `<option value="${p}">${p}</option>`).join('');
     p1El.innerHTML = opts;
     p2El.innerHTML = opts;
@@ -1370,9 +1511,9 @@ function renderMarginBridge() {
 
   const groupDim = col('category') || col('product') || col('region');
   const groupEl  = document.getElementById('margin-group');
-  if (groupEl && groupDim) {
+  if (groupEl && groupDim && groupEl.options.length <= 1) {
     const groups = [...new Set(rows.map(r => r[groupDim]||'').filter(Boolean))].sort();
-    groupEl.innerHTML = `<option value="">All</option>` + groups.map(g => `<option>${g}</option>`).join('');
+    groupEl.innerHTML = `<option value="">All</option>` + groups.map(g => `<option value="${g}">${g}</option>`).join('');
   }
 
   // Compute aggregate stats
@@ -1468,14 +1609,15 @@ function renderElasticity() {
   const rows = AppState.rows;
 
   const catDim = col('category') || col('product');
-  if (catDim) {
+  // Populate dropdown only when empty — preserves user's selection on re-render
+  const elastSel = document.getElementById('elast-segment');
+  if (catDim && elastSel && elastSel.options.length <= 1) {
     const cats = [...new Set(rows.map(r => r[catDim]||'').filter(Boolean))].sort();
-    const el = document.getElementById('elast-segment');
-    el.innerHTML = `<option value="all">All transactions</option>` + cats.map(c=>`<option>${c}</option>`).join('');
+    elastSel.innerHTML = `<option value="all">All transactions</option>` + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
   }
 
-  const selectedCat = document.getElementById('elast-segment')?.value || 'all';
-  const filtered = selectedCat === 'all' ? rows : rows.filter(r => r[catDim] === selectedCat);
+  const selectedCat = elastSel?.value || 'all';
+  const filtered = selectedCat === 'all' ? rows : rows.filter(r => String(r[catDim]||'') === selectedCat);
 
   // Compute correlation between discount % and quantity
   const pairs = filtered.map(r => ({
@@ -1490,15 +1632,22 @@ function renderElasticity() {
   const r_val = den ? num/den : 0;
   const elasticity = r_val * (stddev(pairs.map(p=>p.qty)) / (stddev(pairs.map(p=>p.disc))||1));
 
+  const elastInterpret = Math.abs(elasticity) > 1.5 ? 'Strongly elastic — heavy discounting drives significant volume uplift'
+    : Math.abs(elasticity) > 1 ? 'Elastic — discounting moves volume meaningfully'
+    : Math.abs(elasticity) > 0.5 ? 'Moderately inelastic — limited volume response to discounts'
+    : 'Highly inelastic — customers buy regardless of discount level';
   document.getElementById('elasticity-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Correlation (r)</div><div class="stat-value">${r_val.toFixed(2)}</div><div class="stat-sub">discount vs units</div></div>
+    <div class="stat-card"><div class="stat-label">Correlation (r)</div><div class="stat-value">${r_val.toFixed(2)}</div><div class="stat-sub">Pearson: discount % vs units</div></div>
     <div class="stat-card ${Math.abs(elasticity)>1?'warn':'good'}">
       <div class="stat-label">Elasticity coeff.</div>
       <div class="stat-value">${elasticity.toFixed(2)}</div>
       <div class="stat-sub">${Math.abs(elasticity)>1?'Elastic — discount-driven':'Inelastic — quality-driven'}</div>
     </div>
-    <div class="stat-card"><div class="stat-label">Avg discount</div><div class="stat-value">${fmtPct(avgD)}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg units/txn</div><div class="stat-value">${avgQ.toFixed(1)}</div></div>`;
+    <div class="stat-card">
+      <div class="stat-label">Interpretation</div>
+      <div class="stat-value" style="font-size:11px;line-height:1.3;color:var(--text2)">${elastInterpret}</div>
+    </div>
+    <div class="stat-card"><div class="stat-label">Avg discount</div><div class="stat-value">${fmtPct(avgD)}</div></div>`;
 
   // Scatter chart
   destroyChart('elasticity-chart');
@@ -1585,12 +1734,26 @@ function renderSegments() {
   const rows = AppState.rows;
   const dimKey = document.getElementById('seg-dim')?.value || 'customerTier';
   const metric = document.getElementById('seg-metric')?.value || 'avgDiscount';
-  const dimCol = col(dimKey) || dimKey;
+  // Resolve actual column name from schema — fall back to scanning data columns
+  // that match the semantic meaning if schema not mapped
+  const FALLBACK_COLS = {
+    customerTier: /tier|segment|class|grade|loyalty/i,
+    region:       /region|territory|area|zone|city/i,
+    salesRep:     /rep|sales.*rep|owner|seller|staff/i,
+    product:      /product|sku|item|category|type/i,
+  };
+  let dimCol = col(dimKey);
+  if (!dimCol) {
+    const pattern = FALLBACK_COLS[dimKey];
+    const dataCols = Object.keys(rows[0]||{});
+    dimCol = pattern ? (dataCols.find(c => pattern.test(c)) || null) : null;
+  }
+  if (!dimCol) { showToast('Map the "' + dimKey + '" dimension in Schema Map to use this filter', 'warn'); return; }
 
-  const segments = [...new Set(rows.map(r=>r[dimCol]||'').filter(Boolean))].sort();
+  const segments = [...new Set(rows.map(r=>String(r[dimCol]||'').trim()).filter(Boolean))].sort();
 
   const segData = segments.map(seg => {
-    const sRows = rows.filter(r => String(r[dimCol]||'') === seg);
+    const sRows = rows.filter(r => String(r[dimCol]||'').trim() === seg);
     const discs = sRows.map(r=>getVal(r,'discountPct')||0);
     const lists = sRows.map(r=>getVal(r,'listPrice')||0).filter(v=>v>0);
     const pockets = sRows.map(r=>getVal(r,'pocketPrice')||0).filter(v=>v>0);
@@ -1999,7 +2162,7 @@ function renderDealsTable() {
     <div class="chart-card" style="padding:0;overflow:hidden">
       <table class="analysis-table">
         <thead><tr>
-          <th>Deal</th><th>Score</th><th>Disc %</th><th>Pocket price</th><th>Margin %</th><th>Tier</th><th>Status</th>
+          <th>Deal</th><th>Score <span style="font-size:8px;font-weight:400;color:var(--dim)">(0=worst, 100=best)</span></th><th>Disc %</th><th>Pocket price</th><th>Margin %</th><th>Tier</th><th>Status</th>
         </tr></thead>
         <tbody>
           ${filtered.slice(0,50).map(r=>`<tr>
@@ -2209,76 +2372,9 @@ function exportDealsXLSX() {
   showToast('Deal scores exported', 'success');
 }
 
+
 // ════════════════════════════════════════════════════════════════
-// MERIDIAN PRICE — Canvas mode + Run Analysis wrappers
-// ════════════════════════════════════════════════════════════════
 
-let _priceCanvas = null;
-
-function initPriceCanvas() {
-  if (!window.ModuleCanvas) return;
-  _priceCanvas = new ModuleCanvas({
-    containerId:  'price-canvas-container',
-    panelId:      'price-panel-wrap',
-    toggleBtnId:  'mode-canvas-btn',
-    nodes: [
-      { id:'source',    label:'Data source',      sub:'CSV / XLSX / Bridge handoff', icon:'⊞', color:'#22d3b8', type:'source' },
-      { id:'schema',    label:'Schema map',        sub:'Map pricing dimensions',      icon:'◈', color:'#22d3b8', type:'process' },
-      { id:'waterfall', label:'Price waterfall',   sub:'Pocket price leakage',        icon:'⬇', color:'#22d3b8', type:'model', runnable:true },
-      { id:'margin',    label:'Margin bridge',     sub:'Volume · price · mix',        icon:'▦', color:'#22d3b8', type:'model', runnable:true },
-      { id:'elasticity',label:'Elasticity',        sub:'Price-volume relationship',   icon:'↗', color:'#22d3b8', type:'model', runnable:true },
-      { id:'segments',  label:'Segment diag.',     sub:'Pricing by tier/region/rep',  icon:'⬟', color:'#22d3b8', type:'model', runnable:true },
-      { id:'scenario',  label:'Scenario modeller', sub:'What-if pricing impact',      icon:'⟳', color:'#22d3b8', type:'model', runnable:true },
-      { id:'deals',     label:'Deal scoring',      sub:'5-criterion deal score',      icon:'◇', color:'#22d3b8', type:'model', runnable:true },
-      { id:'export',    label:'Export',            sub:'PDF · XLSX · PNG',            icon:'↗', color:'#4ade80', type:'export' },
-    ],
-    onNodeRun: (defId, done) => {
-      // Map canvas node to panel action
-      const MAP = {
-        waterfall:  runWaterfall,
-        margin:     () => { showModule('margin'); renderMarginBridge(); },
-        elasticity: runElasticityAnalysis,
-        segments:   () => { showModule('segments'); renderSegments(); },
-        scenario:   () => { showModule('scenario'); renderScenario(); },
-        deals:      runDealScoring,
-      };
-      if (MAP[defId]) {
-        setTimeout(() => { try { MAP[defId](); done(true); } catch(e){ done(false); } }, 400);
-      } else { done(true); }
-    },
-    onNodeSelect: (defId) => {
-      // Switch to the relevant panel in panel view context
-      const moduleMap = { waterfall:'waterfall', margin:'margin', elasticity:'elasticity',
-        segments:'segments', benchmark:'benchmark', scenario:'scenario', deals:'deals' };
-      if (moduleMap[defId]) {
-        setModePrice('panel');
-        showModule(moduleMap[defId]);
-      }
-    }
-  });
-  _priceCanvas.mount();
-}
-
-function setModePrice(mode) {
-  const canvasEl = document.getElementById('price-canvas-container');
-  const panelEl  = document.getElementById('price-panel-wrap');
-  const panelBtn = document.getElementById('mode-panel-btn');
-  const canvasBtn= document.getElementById('mode-canvas-btn');
-
-  if (mode === 'canvas') {
-    if (!_priceCanvas) initPriceCanvas();
-    if (canvasEl) canvasEl.style.display = 'block';
-    if (panelEl)  panelEl.style.display  = 'none';
-    panelBtn?.classList.remove('active');
-    canvasBtn?.classList.add('active');
-    setTimeout(() => _priceCanvas?.zoomFit(), 100);
-  } else {
-    if (canvasEl) canvasEl.style.display = 'none';
-    if (panelEl)  panelEl.style.display  = 'flex';
-    panelBtn?.classList.add('active');
-    canvasBtn?.classList.remove('active');
-  }
-}
 
 // ── Run Analysis wrapper functions ───────────────────────────────
 function runWaterfall() {
@@ -2383,6 +2479,154 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 });
+
+
+// ── Onboarding step progress ──────────────────────────────────
+function updateStepIndicator() {
+  const hasData   = AppState.rows.length > 0;
+  const hasSchema = Object.keys(AppState.schema).length >= 3;
+  const hasResults= document.getElementById('waterfall-results')?.style.display !== 'none'
+                 || document.getElementById('deals-results')?.style.display !== 'none';
+
+  const steps = [
+    { id:'step-1', done: hasData,    active: !hasData },
+    { id:'step-2', done: hasSchema,  active: hasData && !hasSchema },
+    { id:'step-3', done: hasResults, active: hasData && hasSchema && !hasResults },
+    { id:'step-4', done: false,      active: hasResults },
+  ];
+
+  steps.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (!el) return;
+    el.className = 'step' + (s.done?' done':s.active?' active':'');
+  });
+
+  // Hide waterfall guidance once schema is mapped
+  const wfGuidance = document.getElementById('waterfall-guidance');
+  if (wfGuidance) wfGuidance.style.display = hasSchema ? 'none' : '';
+}
+
+// ── Scenario canvas — genuine pipeline canvas ──────────────────
+// The scenario modeller is the one place in Price where a canvas
+// makes real sense: each scenario IS a data transformation pipeline.
+
+let _scenCanvas = null;
+
+function initScenarioCanvas(containerId) {
+  if (!window.ModuleCanvas || _scenCanvas) return;
+  _scenCanvas = new ModuleCanvas({
+    containerId: containerId,
+    panelId: null,
+    toggleBtnId: null,
+    nodes: [
+      { id:'source',   label:'Transaction data', sub:'Your loaded dataset',        icon:'⊞', color:'#22d3b8', type:'source' },
+      { id:'filter',   label:'Filter',           sub:'e.g. FY2024, won deals',     icon:'⊻', color:'#9ba6ba', type:'process' },
+      { id:'scen_a',   label:'Scenario A',       sub:'Cap max discount',           icon:'A', color:'#22d3b8', type:'model', runnable:true },
+      { id:'scen_b',   label:'Scenario B',       sub:'List price increase',        icon:'B', color:'#a78bfa', type:'model', runnable:true },
+      { id:'scen_c',   label:'Scenario C',       sub:'Floor price enforcement',    icon:'C', color:'#f5a524', type:'model', runnable:true },
+      { id:'compare',  label:'Compare results',  sub:'Revenue · margin · price',   icon:'≡', color:'#60a5fa', type:'process' },
+      { id:'export',   label:'Export',           sub:'PDF · XLSX',                 icon:'↗', color:'#4ade80', type:'export' },
+    ],
+    onNodeRun: (defId, done) => {
+      if (defId === 'scen_a' || defId === 'scen_b' || defId === 'scen_c' || defId === 'compare') {
+        updateScenario();
+        setTimeout(() => done(true), 200);
+      } else { done(true); }
+    },
+    onNodeSelect: (defId) => {
+      // Scroll to the relevant scenario card
+      const map = { scen_a: 'scen-A', scen_b: 'scen-B', scen_c: 'scen-C' };
+      if (map[defId]) {
+        document.getElementById(map[defId])?.closest('.chart-card')?.scrollIntoView({behavior:'smooth'});
+      }
+    }
+  });
+
+  // Custom layout for scenario (branching from source)
+  _scenCanvas.nodes[0].x = 40;  _scenCanvas.nodes[0].y = 100; // source
+  _scenCanvas.nodes[1].x = 260; _scenCanvas.nodes[1].y = 100; // filter
+  _scenCanvas.nodes[2].x = 480; _scenCanvas.nodes[2].y = 20;  // A
+  _scenCanvas.nodes[3].x = 480; _scenCanvas.nodes[3].y = 110; // B
+  _scenCanvas.nodes[4].x = 480; _scenCanvas.nodes[4].y = 200; // C
+  _scenCanvas.nodes[5].x = 700; _scenCanvas.nodes[5].y = 100; // compare
+  _scenCanvas.nodes[6].x = 920; _scenCanvas.nodes[6].y = 100; // export
+
+  // Custom edges — fan-out from filter to all scenarios, converge at compare
+  _scenCanvas.edges = [
+    { from: 'mc_source',  to: 'mc_filter'  },
+    { from: 'mc_filter',  to: 'mc_scen_a'  },
+    { from: 'mc_filter',  to: 'mc_scen_b'  },
+    { from: 'mc_filter',  to: 'mc_scen_c'  },
+    { from: 'mc_scen_a',  to: 'mc_compare' },
+    { from: 'mc_scen_b',  to: 'mc_compare' },
+    { from: 'mc_scen_c',  to: 'mc_compare' },
+    { from: 'mc_compare', to: 'mc_export'  },
+  ];
+
+  _scenCanvas.mount();
+  _scenCanvas.zoomFit();
+
+  // Mark source as done if data is loaded
+  if (AppState.rows.length) {
+    _scenCanvas.setStatus('source','done');
+    _scenCanvas.setStatus('filter','done');
+  }
+}
+
+// Patch renderScenario to update canvas node statuses
+const _origRenderScenario = window.renderScenario;
+if (_origRenderScenario) {
+  window.renderScenario = function() {
+    _origRenderScenario();
+    // Init canvas after content renders (DOM is ready)
+    setTimeout(() => {
+      initScenarioCanvas('scenario-canvas-inner');
+      if (_scenCanvas) {
+        if (AppState.rows.length) {
+          _scenCanvas.setStatus('source','done');
+          _scenCanvas.setStatus('filter','done');
+        }
+      }
+    }, 50);
+  };
+}
+
+// Patch updateScenario to mark nodes done after run
+const _origUpdateScenario = window.updateScenario;
+if (_origUpdateScenario) {
+  window.updateScenario = function() {
+    _origUpdateScenario();
+    if (_scenCanvas) {
+      ['scen_a','scen_b','scen_c','compare'].forEach(id => _scenCanvas.setStatus(id,'done'));
+    }
+    updateStepIndicator();
+  };
+}
+
+// Hook into initData to update steps and canvas
+const _origInitDataPrice = window.initData;
+if (typeof _origInitDataPrice === 'function') {
+  window.initData = function(rows, source) {
+    _origInitDataPrice(rows, source);
+    updateStepIndicator();
+    if (_scenCanvas) {
+      _scenCanvas.nodes.forEach(n => {
+        if (n.defId === 'source' || n.defId === 'filter') n.status = 'done';
+        else if (n.defId !== 'export') n.status = 'idle';
+      });
+      _scenCanvas._render();
+    }
+  };
+}
+
+// Hook into applySchema to update steps
+const _origApplySchemaPrice = window.applySchema;
+if (typeof _origApplySchemaPrice === 'function') {
+  window.applySchema = function() {
+    _origApplySchemaPrice();
+    updateStepIndicator();
+  };
+}
 
 </script>
 </body>

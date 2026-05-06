@@ -213,30 +213,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 .migration-matrix .row-label{text-align:left;font-family:var(--sans);color:var(--text2);font-size:11px;white-space:nowrap}
 
 
-/* ── Canvas + Run Analysis ── */
-.mode-switch{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden;background:var(--surface2)}
-.mode-btn{padding:4px 11px;font-size:11px;font-family:var(--sans);font-weight:500;cursor:pointer;
-  background:transparent;border:none;color:var(--muted);transition:all 0.12s}
-.mode-btn.active{background:var(--accent);color:#0d1117}
-.run-analysis-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:10px 20px;background:var(--accent);color:#0d1117;
-  border:none;border-radius:8px;font-family:var(--sans);
-  font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.1s;
-  margin:16px 0;
-}
-.run-analysis-btn:hover{opacity:0.9}
-.run-analysis-btn:disabled{opacity:0.4;cursor:not-allowed}
-.run-analysis-btn .spin{animation:spin 0.8s linear infinite;display:inline-block}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.analysis-pending{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:48px 24px;text-align:center;color:var(--muted);
-  border:1.5px dashed var(--border2);border-radius:12px;margin:20px 0;
-}
-.analysis-pending .ap-icon{font-size:32px;margin-bottom:12px;opacity:0.5}
-.analysis-pending .ap-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.analysis-pending .ap-sub{font-size:12px;line-height:1.6;max-width:380px}
+
+
+
+/* ── Guided onboarding ── */
+.step-indicator{display:flex;align-items:center;gap:0;padding:0 20px 0 0;flex-shrink:0}
+.step{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:11px;color:var(--dim)}
+.step-num{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:10px;
+  font-family:var(--mono);font-weight:600;flex-shrink:0;background:var(--surface3)}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#0d1117}
+.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#0d1117}
+.step.done{color:var(--success)}.step.active{color:var(--accent)}
+.step-arrow{color:var(--border2);font-size:10px;margin:0 -4px}
+.guidance{background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);
+  border-radius:8px;padding:12px 16px;margin:0 0 16px;
+  display:flex;align-items:flex-start;gap:10px;font-size:12px}
+.guidance-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.guidance-body strong{color:var(--accent);display:block;margin-bottom:2px;font-size:12px}
+.guidance-body p{color:var(--muted);margin:0;line-height:1.55}
+.guidance-action{margin-top:8px;display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;
+  text-decoration-color:rgba(167,139,250,0.4)}
 .data-mode-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;
   font-family:var(--mono);padding:3px 8px;border-radius:4px;margin-bottom:12px}
 .data-mode-badge.computed{background:var(--success-bg);color:var(--success)}
@@ -258,11 +256,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div class="topbar-right">
-    <div class="mode-switch">
-    <button class="mode-btn active" id="mode-panel-btn" onclick="setModePulse('panel')">▦ Panel</button>
-    <button class="mode-btn" id="mode-canvas-btn" onclick="setModePulse('canvas')">◇ Canvas</button>
-  </div>
-  <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
     <button class="btn btn-sm" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
     <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
     <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
@@ -277,13 +271,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
   <span class="ctx-item">Customers: <strong id="ctx-customers">—</strong></span>
   <span class="ctx-item">Period: <strong id="ctx-period">—</strong></span>
   <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions</strong></span>
+  <div class="step-indicator" id="step-indicator">
+    <div class="step active" id="step-1"><span class="step-num">1</span>Load data</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-2"><span class="step-num">2</span>Map schema</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-3"><span class="step-num">3</span>Segment (RFM)</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-4"><span class="step-num">4</span>Run models</div>
+    <span class="step-arrow">›</span>
+    <div class="step" id="step-5"><span class="step-num">5</span>Export</div>
+  </div>
   <span style="margin-left:auto">
     <button class="btn btn-sm" onclick="loadDemoData()">Load Renova demo</button>
   </span>
 </div>
 
 <div class="app-body">
-<div id="pulse-canvas-container" style="position:absolute;inset:0;display:none;z-index:5;left:200px"></div>
 
 <nav class="sidebar">
   <div class="sb-section">Segmentation</div>
@@ -335,7 +339,40 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
   </div>
   <div id="rfm-content" style="display:none">
+    <div class="guidance" id="rfm-guidance" style="display:none">
+      <div class="guidance-icon">⬟</div>
+      <div class="guidance-body">
+        <strong>RFM segments computed automatically</strong>
+        <p>Every customer has been scored on Recency (days since last purchase), Frequency (number of purchases), and Monetary value (total spend) — each on a 1–5 percentile scale. Segments are derived from those three scores. No model training required.</p>
+        <span class="guidance-action" onclick="document.getElementById('rfm-guidance').style.display='none'">Got it ✕</span>
+      </div>
+    </div>
     <div class="stat-grid" id="rfm-stats"></div>
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+      padding:12px 16px;margin:0 0 16px;display:flex;gap:24px;flex-wrap:wrap;font-size:11px">
+      <div>
+        <div style="font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;
+          text-transform:uppercase;margin-bottom:5px">How R/F/M scores work</div>
+        <div style="color:var(--text2);line-height:1.7">
+          Each customer is scored <span style="font-family:var(--mono);color:var(--accent)">1–5</span> on three dimensions using <strong>percentile rank</strong> across your customer base — not fixed thresholds.
+          <strong>R score:</strong> 5 = bought most recently · 1 = longest since last purchase.
+          <strong>F score:</strong> 5 = most frequent buyer · 1 = fewest transactions.
+          <strong>M score:</strong> 5 = highest total spend · 1 = lowest.
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;
+          text-transform:uppercase;margin-bottom:5px">Segment classification rules</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;line-height:1.6;color:var(--text2)">
+          <span><span style="color:#a78bfa;font-weight:500">Champions</span> — R≥4, F≥4, M≥4</span>
+          <span><span style="color:#22d3b8;font-weight:500">Loyal</span> — R≥3, F≥3, M≥4</span>
+          <span><span style="color:#fb7185;font-weight:500">At Risk</span> — R≤2, F≥4, M≥4</span>
+          <span><span style="color:#ef4444;font-weight:500">Cannot Lose</span> — R≤2, F≥3, M≥3</span>
+          <span><span style="color:#f5a524;font-weight:500">Needs Attention</span> — avg score ≥3, R declining</span>
+          <span><span style="color:#9ba6ba;font-weight:500">Hibernating</span> — R≤2, low frequency</span>
+        </div>
+      </div>
+    </div>
     <div class="rfm-grid" id="rfm-segment-grid"></div>
     <div class="chart-card">
       <div class="chart-title">RFM segment distribution</div>
@@ -377,6 +414,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       </div>
     </div>
     <div id="cltv-results" style="display:none">
+    <div class="guidance">
+      <div class="guidance-icon">◎</div>
+      <div class="guidance-body">
+        <strong>How the CLTV model works — step by step</strong>
+        <p><strong style="color:var(--text)">Step 1 — Purchase rate:</strong> For each customer, we calculate purchases per month = total transactions ÷ active months (tenure ÷ 30).</p>
+        <p style="margin-top:6px"><strong style="color:var(--text)">Step 2 — DCF projection:</strong> We project that rate forward for each month in the horizon, discounting each future period by the monthly equivalent of your annual discount rate. Formula: <span style="font-family:var(--mono);font-size:10px;color:var(--accent)">Σ (rate × AOV) / (1+r)^t</span> for t = 1 to horizon.</p>
+        <p style="margin-top:6px"><strong style="color:var(--text)">Step 3 — Churn adjustment:</strong> Customers inactive for 90–180 days get a 0.75× multiplier. Over 180 days inactive: 0.50×. Active customers: 1.0×. This is a heuristic — not a fitted model.</p>
+        <p style="margin-top:6px"><strong style="color:var(--text)">Step 4 — Tier assignment:</strong> Tiers are set at the P25, P50, and P75 quartiles of your actual CLTV distribution — so Tier 1 is always the top 25% of <em>your</em> customers, not a fixed rupee threshold.</p>
+      </div>
+    </div>
     <div class="controls-row">
       <span class="ctrl-label">Forecast horizon:</span>
       <select id="cltv-horizon" onchange="renderCLTV()">
@@ -479,7 +526,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div id="churn-results" style="display:none">
     <div class="stat-grid" id="churn-stats"></div>
     <div class="callout warn">
-      <strong>Model approach:</strong> Logistic regression on RFM signals — recency percentile, frequency percentile, monetary percentile, and recency trend (improving or declining). Trained on the loaded dataset using gradient descent. No server, no external model — your data, your browser.
+      <strong>How the churn model was trained on your data:</strong>
+      Logistic regression — 4 input features, 100 gradient descent iterations, trained entirely in your browser on the loaded dataset.
+      <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px;line-height:1.8">
+        <span><strong style="color:var(--text)">Feature 1 — Recency (days since last purchase):</strong> normalised 0→1. High recency = high churn signal.</span>
+        <span><strong style="color:var(--text)">Feature 2 — Inverse frequency:</strong> 1 − (purchases ÷ max purchases). Low frequency = high churn signal.</span>
+        <span><strong style="color:var(--text)">Feature 3 — Inverse monetary:</strong> 1 − (spend ÷ max spend). Low value = higher churn probability.</span>
+        <span><strong style="color:var(--text)">Feature 4 — Inactivity flag:</strong> Binary — 1 if R score ≤ 2 (bottom 40% recency). Strong predictor.</span>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+        <strong>Label definition:</strong> A customer is labelled "churned" for training if recency &gt; 90 days AND R score ≤ 2. The model learns to generalise this signal across all four features.
+        Fitted weights are shown in the feature importance chart.
+        <strong>Score interpretation:</strong> 0–40% = Low risk · 40–70% = Medium risk · 70–100% = High risk.
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+      padding:10px 14px;margin:0 0 16px;font-size:11px;color:var(--muted)">
+      <span id="churn-weights-display">Model weights will appear here after training.</span>
     </div>
     <div class="chart-card">
       <div class="chart-title">Churn risk distribution</div>
@@ -1187,14 +1250,47 @@ function renderCLTV() {
       <div class="stat-sub">${tiers['Tier 1 — Elite']?.count||0} customers</div></div>
     <div class="stat-card"><div class="stat-label">Horizon</div><div class="stat-value">${horizon}m</div><div class="stat-sub">discount rate: ${(discount*100).toFixed(0)}%</div></div>`;
 
+  // Compute data-driven tier thresholds using quartiles of actual CLTV distribution
+  const cltvVals = data.map(c=>c.cltv).filter(v=>v>0).sort((a,b)=>a-b);
+  const q75 = cltvVals[Math.floor(cltvVals.length*0.75)] || 80000;
+  const q50 = cltvVals[Math.floor(cltvVals.length*0.50)] || 40000;
+  const q25 = cltvVals[Math.floor(cltvVals.length*0.25)] || 15000;
+
+  // Store thresholds for tier card display
+  const tierThresholds = {
+    'Tier 1 — Elite':  { min: q75,  label: `>${fmtK(q75)} CLTV` },
+    'Tier 2 — High':   { min: q50,  label: `${fmtK(q50)}–${fmtK(q75)}` },
+    'Tier 3 — Medium': { min: q25,  label: `${fmtK(q25)}–${fmtK(q50)}` },
+    'Tier 4 — Base':   { min: 0,    label: `<${fmtK(q25)} CLTV` },
+  };
+
+  // Reclassify using quartile thresholds (more meaningful than fixed absolutes)
+  data.forEach(c => {
+    c.tier = c.cltv >= q75 ? 'Tier 1 — Elite'
+           : c.cltv >= q50 ? 'Tier 2 — High'
+           : c.cltv >= q25 ? 'Tier 3 — Medium'
+           : 'Tier 4 — Base';
+  });
+  // Recount
+  Object.keys(tiers).forEach(k=>{ tiers[k]={count:0,cltv:0}; });
+  data.forEach(c => {
+    tiers[c.tier].count++;
+    tiers[c.tier].cltv += c.cltv;
+  });
+
   const tierOrder = ['Tier 1 — Elite','Tier 2 — High','Tier 3 — Medium','Tier 4 — Base'];
   document.getElementById('cltv-tiers').innerHTML = tierOrder.map(t => {
     const d = tiers[t]||{count:0,cltv:0};
+    const th = tierThresholds[t];
     return `<div class="cltv-tier" style="border-color:${tierColors[t]||'var(--border2)'}44">
       <div class="tier-name" style="color:${tierColors[t]||'var(--text)'}">${t}</div>
       <div class="tier-count" style="color:${tierColors[t]||'var(--text)'}">${d.count}</div>
-      <div class="tier-value">CLTV: ${fmtK(d.cltv)}</div>
-      <div class="tier-value" style="color:var(--dim);font-size:10px">${fmtPct(d.cltv/totalCLTV*100)} of total</div>
+      <div class="tier-value">Total CLTV: ${fmtK(d.cltv)}</div>
+      <div class="tier-value" style="color:var(--dim);font-size:10px">${fmtPct(d.cltv/totalCLTV*100)} of total LTV base</div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:9px;color:var(--dim);line-height:1.5">
+        <span style="font-family:var(--mono);color:${tierColors[t]}">${th.label}</span><br>
+        Threshold: ${t==='Tier 1 — Elite'?'top quartile (P75)':t==='Tier 2 — High'?'P50–P75':t==='Tier 3 — Medium'?'P25–P50':'bottom quartile (P25)'} of this dataset
+      </div>
     </div>`;
   }).join('');
 
@@ -1578,13 +1674,19 @@ function renderPropensity() {
   // Drivers
   document.getElementById('propensity-drivers').innerHTML = `
     <div class="chart-card">
-      <div class="chart-title" style="margin-bottom:12px">Top propensity drivers</div>
+      <div class="chart-title" style="margin-bottom:4px">Propensity score formula</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Score = <span style="font-family:var(--mono);color:var(--accent)">0.35×recency + 0.30×frequency + 0.20×monetary + 0.10×tenure + segment_bonus</span><br>
+        All inputs are normalised 0→1 against your dataset. Recency is inverted (lower days = higher score).
+        Segment bonus: Champions +0.25 · Loyal +0.20 · Potential Loyalists +0.15 · Promising +0.10.
+        <strong>Score interpretation:</strong> D10 (top decile) = highest priority outreach. D1 = lowest likelihood. Scores are deterministic — same data always produces same scores.
+      </div>
       ${[
-        {label:'Recency — days since last purchase',val:35,color:'#a78bfa'},
-        {label:'Purchase frequency',val:30,color:'#22d3b8'},
-        {label:'Average order value',val:20,color:'#60a5fa'},
-        {label:'Customer tenure',val:10,color:'#f5a524'},
-        {label:'RFM segment bonus',val:5,color:'#4ade80'},
+        {label:'Recency — days since last purchase (inverted)',val:35,color:'#a78bfa'},
+        {label:'Purchase frequency (normalised)',val:30,color:'#22d3b8'},
+        {label:'Average order value (normalised)',val:20,color:'#60a5fa'},
+        {label:'Customer tenure (normalised)',val:10,color:'#f5a524'},
+        {label:'RFM segment bonus (fixed by segment)',val:5,color:'#4ade80'},
       ].map(d=>`
         <div class="gauge-row">
           <div class="gauge-label">${d.label}</div>
@@ -1878,258 +1980,133 @@ async function exportReport() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// MERIDIAN PULSE — Canvas mode + Run Analysis wrappers
+// RUN ANALYSIS WRAPPER FUNCTIONS
 // ════════════════════════════════════════════════════════════════
-
-let _pulseCanvas = null;
-
-function initPulseCanvas() {
-  if (!window.ModuleCanvas) return;
-  _pulseCanvas = new ModuleCanvas({
-    containerId:  'pulse-canvas-container',
-    panelId:      'pulse-panel-wrap',
-    toggleBtnId:  'mode-canvas-btn',
-    nodes: [
-      { id:'source',      label:'Customer data',     sub:'CSV / XLSX / Bridge handoff',  icon:'⊞', color:'#a78bfa', type:'source' },
-      { id:'schema',      label:'Schema map',         sub:'Map customer dimensions',       icon:'◈', color:'#a78bfa', type:'process' },
-      { id:'rfm',         label:'RFM segmentation',  sub:'Recency · Frequency · Monetary',icon:'⬟', color:'#a78bfa', type:'model', runnable:false },
-      { id:'cltv',        label:'CLTV model',         sub:'Discounted lifetime value',     icon:'◎', color:'#a78bfa', type:'model', runnable:true },
-      { id:'churn',       label:'Churn prediction',  sub:'Logistic regression model',     icon:'⚠', color:'#fb7185', type:'model', runnable:true },
-      { id:'propensity',  label:'Propensity scoring', sub:'Purchase likelihood score',     icon:'↗', color:'#22d3b8', type:'model', runnable:true },
-      { id:'export',      label:'Export',             sub:'PDF · XLSX',                   icon:'↗', color:'#4ade80', type:'export' },
-    ],
-    onNodeRun: (defId, done) => {
-      const MAP = {
-        cltv:       runCLTVModel,
-        churn:      runChurnModel,
-        propensity: runPropensityModel,
-      };
-      if (MAP[defId]) {
-        setTimeout(() => { try { MAP[defId](); done(true); } catch(e){ done(false); }}, 400);
-      } else { done(true); }
-    },
-    onNodeSelect: (defId) => {
-      const moduleMap = { rfm:'rfm', cltv:'cltv', churn:'churn', propensity:'propensity',
-        migration:'migration', acquisition:'acquisition' };
-      if (moduleMap[defId]) {
-        setModePulse('panel');
-        showModule(moduleMap[defId]);
-      }
-    }
-  });
-  _pulseCanvas.mount();
-}
-
-function setModePulse(mode) {
-  const canvasEl  = document.getElementById('pulse-canvas-container');
-  const panelEl   = document.getElementById('pulse-panel-wrap');
-  const panelBtn  = document.getElementById('mode-panel-btn');
-  const canvasBtn = document.getElementById('mode-canvas-btn');
-
-  if (mode === 'canvas') {
-    if (!_pulseCanvas) initPulseCanvas();
-    if (canvasEl) canvasEl.style.display = 'block';
-    if (panelEl)  panelEl.style.display  = 'none';
-    panelBtn?.classList.remove('active');
-    canvasBtn?.classList.add('active');
-    setTimeout(() => _pulseCanvas?.zoomFit(), 100);
-  } else {
-    if (canvasEl) canvasEl.style.display = 'none';
-    if (panelEl)  panelEl.style.display  = 'flex';
-    panelBtn?.classList.add('active');
-    canvasBtn?.classList.remove('active');
-  }
-}
-
-// ── Detect data mode ─────────────────────────────────────────────
-// Returns 'transaction' if data looks like event-level transactions,
-// 'summary' if it looks like a customer summary file.
-function detectDataMode(rows) {
-  if (!rows.length) return 'summary';
-  const cols = Object.keys(rows[0]);
-  const hasTransactionDate = cols.some(c => /date|time|period|timestamp/i.test(c));
-  const hasAmount          = cols.some(c => /amount|value|revenue|spend|price/i.test(c));
-  const hasCustomerId      = cols.some(c => /customer.*id|cust.*id|user.*id/i.test(c));
-  // Transaction data: same customer ID appears multiple times
-  const custIds = rows.map(r => {
-    const c = cols.find(x => /customer.*id|cust.*id|user.*id/i.test(x));
-    return c ? r[c] : null;
-  }).filter(Boolean);
-  const uniqueRatio = new Set(custIds).size / custIds.length;
-  const isTransactional = hasTransactionDate && hasAmount && hasCustomerId && uniqueRatio < 0.8;
-  return isTransactional ? 'transaction' : 'summary';
-}
-
-// ── Run Analysis wrappers with model progress feedback ────────────
 
 function runCLTVModel() {
   if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
-  const btn     = document.getElementById('run-cltv-btn');
-  const pending = document.getElementById('cltv-pending');
-  const results = document.getElementById('cltv-results');
-
-  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Computing CLTV…'; }
-
-  // Async to allow UI to update
-  setTimeout(() => {
+  const btn=document.getElementById('run-cltv-btn'),
+        pending=document.getElementById('cltv-pending'),
+        results=document.getElementById('cltv-results');
+  if (btn){btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Computing CLTV…';}
+  setTimeout(()=>{
     try {
-      const horizon  = parseInt(document.getElementById('cltv-horizon')?.value||24);
-      const discount = parseFloat(document.getElementById('cltv-discount')?.value||0.12);
-
-      // Force recompute
+      const horizon=parseInt(document.getElementById('cltv-horizon')?.value||24);
+      const discount=parseFloat(document.getElementById('cltv-discount')?.value||0.12);
       delete AppState.computed[`cltv_${horizon}_${discount}`];
-
       renderCLTV();
-      if (pending) pending.style.display = 'none';
-      if (results) results.style.display = '';
-      if (_pulseCanvas) _pulseCanvas.setStatus('cltv','done');
+      if(pending)pending.style.display='none';if(results)results.style.display='';
       showToast('CLTV model complete — '+AppState.customers.length.toLocaleString()+' customers scored','success');
-    } catch(e) {
-      showToast('CLTV error: '+e.message,'error');
-      if (_pulseCanvas) _pulseCanvas.setStatus('cltv','error');
-    }
-    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-run model'; }
-  }, 150);
+      updateStepIndicator();
+    } catch(e){showToast('CLTV error: '+e.message,'error');}
+    if(btn){btn.disabled=false;btn.innerHTML='▶ Re-run model';}
+  },150);
 }
 
 function runChurnModel() {
   if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
-  const btn     = document.getElementById('run-churn-btn');
-  const pending = document.getElementById('churn-pending');
-  const results = document.getElementById('churn-results');
-
-  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Training model (100 iterations)…'; }
-
-  setTimeout(() => {
+  const btn=document.getElementById('run-churn-btn'),
+        pending=document.getElementById('churn-pending'),
+        results=document.getElementById('churn-results');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Training model (100 iterations)…';}
+  setTimeout(()=>{
     try {
-      // Force recompute — clear cached result
-      delete AppState.computed.churn;
-      delete AppState.computed.churnWeights;
-
+      delete AppState.computed.churn; delete AppState.computed.churnWeights;
       renderChurn();
-      if (pending) pending.style.display = 'none';
-      if (results) results.style.display = '';
-      if (_pulseCanvas) _pulseCanvas.setStatus('churn','done');
-
-      const highRisk = AppState.computed.churnScored?.filter(c=>c.churnRisk==='High').length||0;
+      if(pending)pending.style.display='none';if(results)results.style.display='';
+      const highRisk=AppState.computed.churnScored?.filter(c=>c.churnRisk==='High').length||0;
       showToast('Churn model trained — '+highRisk+' high-risk customers identified','success');
-    } catch(e) {
-      showToast('Model error: '+e.message,'error');
-      if (_pulseCanvas) _pulseCanvas.setStatus('churn','error');
-    }
-    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-train model'; }
-  }, 100);
+      const w=AppState.computed.churnWeights||[];
+      const featNames=['Recency','Low frequency','Low monetary','Inactivity flag'];
+      const wDisp=document.getElementById('churn-weights-display');
+      if(wDisp&&w.length){
+        const total=w.reduce((s,v)=>s+Math.abs(v),0)||1;
+        wDisp.innerHTML='<strong style="color:var(--text)">Fitted weights on your data:</strong>'
+          +featNames.map((n,i)=>`<span style="margin-left:10px;color:var(--accent);font-family:var(--mono)">${n}: ${(Math.abs(w[i])/total*100).toFixed(0)}%</span>`).join('');
+      }
+      updateStepIndicator();
+    } catch(e){showToast('Model error: '+e.message,'error');}
+    if(btn){btn.disabled=false;btn.innerHTML='▶ Re-train model';}
+  },100);
 }
 
 function runPropensityModel() {
   if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
-  const btn     = document.getElementById('run-propensity-btn');
-  const pending = document.getElementById('propensity-pending');
-  const results = document.getElementById('propensity-results');
-
-  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Scoring customers…'; }
-
-  setTimeout(() => {
+  const btn=document.getElementById('run-propensity-btn'),
+        pending=document.getElementById('propensity-pending'),
+        results=document.getElementById('propensity-results');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Scoring customers…';}
+  setTimeout(()=>{
     try {
-      // Force recompute — remove noise term, use deterministic scoring
       delete AppState.computed.propensity;
-
-      // Override computePropensity to remove noise
-      const rfm = computeRFM();
-      const maxTenure = Math.max(...rfm.map(c=>c.tenure));
-      const maxAOV    = Math.max(...rfm.map(c=>c.aov));
-
-      const scored = rfm.map(c => {
-        const recencyScore  = Math.max(0, 1 - c.recency / 200);
-        const freqScore     = Math.min(1, c.freq / 20);
-        const monetaryScore = c.aov / (maxAOV || 1);
-        const tenureScore   = Math.min(1, c.tenure / maxTenure);
-        const segBonus = {'Champions':0.25,'Loyal Customers':0.20,'Potential Loyalists':0.15,
-          'Promising':0.10,'Recent Customers':0.08}[c.segment] || 0;
-
-        // Deterministic — no noise
-        const raw = 0.35*recencyScore + 0.30*freqScore + 0.20*monetaryScore + 0.10*tenureScore + segBonus;
-        const propensity = Math.min(0.97, Math.max(0.03, raw));
-        const decile = Math.min(10, Math.ceil(propensity * 10));
-        return { ...c, propensity, decile };
+      const rfm=computeRFM();
+      const maxTenure=Math.max(...rfm.map(c=>c.tenure));
+      const maxAOV=Math.max(...rfm.map(c=>c.aov));
+      const scored=rfm.map(c=>{
+        const rS=Math.max(0,1-c.recency/200), fS=Math.min(1,c.freq/20),
+              mS=c.aov/(maxAOV||1), tS=Math.min(1,c.tenure/(maxTenure||1));
+        const segBonus={'Champions':0.25,'Loyal Customers':0.20,'Potential Loyalists':0.15,'Promising':0.10,'Recent Customers':0.08}[c.segment]||0;
+        const propensity=Math.min(0.97,Math.max(0.03,0.35*rS+0.30*fS+0.20*mS+0.10*tS+segBonus));
+        return {...c,propensity,decile:Math.min(10,Math.ceil(propensity*10))};
       });
-
-      AppState.computed.propensity = scored;
+      AppState.computed.propensity=scored;
       renderPropensity();
-      if (pending) pending.style.display = 'none';
-      if (results) results.style.display = '';
-      if (_pulseCanvas) _pulseCanvas.setStatus('propensity','done');
+      if(pending)pending.style.display='none';if(results)results.style.display='';
       showToast('Propensity scoring complete','success');
-    } catch(e) {
-      showToast('Scoring error: '+e.message,'error');
-    }
-    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-score'; }
-  }, 100);
+      updateStepIndicator();
+    } catch(e){showToast('Scoring error: '+e.message,'error');}
+    if(btn){btn.disabled=false;btn.innerHTML='▶ Re-score';}
+  },100);
 }
 
-// ── Data mode detection on load ───────────────────────────────────
-// Extends initData to detect transaction vs summary format
-// and show appropriate mode badges on cohort/migration/acq panels
-const _origInitDataPulse = window.initData;
-window.initData = function(rows, source) {
-  const mode = detectDataMode(rows);
-  AppState.dataMode = mode;
-
-  _origInitDataPulse(rows, source);
-
-  // Reset all run zones
-  ['cltv','churn','propensity'].forEach(id => {
-    const pending = document.getElementById(id+'-pending');
-    const results = document.getElementById(id+'-results');
-    if (pending) pending.style.display = '';
-    if (results) results.style.display = 'none';
-    const btn = document.getElementById('run-'+id+'-btn');
-    if (btn) { btn.disabled=false; }
+// ── STEP INDICATOR ────────────────────────────────────────────
+function updateStepIndicator() {
+  const hasData=AppState.customers.length>0, hasSchema=Object.keys(AppState.schema).length>=2,
+        hasRFM=!!AppState.computed.rfm, hasModels=!!AppState.computed.churn||!!AppState.computed.cltvData;
+  [{id:'step-1',done:hasData,active:!hasData},{id:'step-2',done:hasSchema,active:hasData&&!hasSchema},
+   {id:'step-3',done:hasRFM,active:hasData&&hasSchema&&!hasRFM},{id:'step-4',done:hasModels,active:hasRFM&&!hasModels},
+   {id:'step-5',done:false,active:hasModels}].forEach(s=>{
+    const el=document.getElementById(s.id);if(el)el.className='step'+(s.done?' done':s.active?' active':'');
   });
+}
 
-  // Invalidate computed cache
-  AppState.computed = {};
-  if (_pulseCanvas) {
-    _pulseCanvas.nodes.forEach(n => {
-      if (n.defId !== 'source' && n.defId !== 'schema') n.status = 'idle';
-      else n.status = 'done';
-    });
-    _pulseCanvas._render();
-  }
+// ── DATA MODE DETECTION ───────────────────────────────────────
+function detectDataMode(rows) {
+  if(!rows.length) return 'summary';
+  const cols=Object.keys(rows[0]);
+  const hasDate=cols.some(c=>/date|time|period/i.test(c)),
+        hasAmt=cols.some(c=>/amount|value|revenue|spend|price/i.test(c)),
+        hasId=cols.some(c=>/customer.*id|cust.*id|user.*id/i.test(c));
+  if(!hasDate||!hasAmt||!hasId) return 'summary';
+  const ids=rows.map(r=>{const c=cols.find(x=>/customer.*id|cust.*id|user.*id/i.test(x));return c?r[c]:null;}).filter(Boolean);
+  return new Set(ids).size/ids.length<0.8?'transaction':'summary';
+}
 
-  // Show data mode badge on time-series panels
-  const badge = mode === 'transaction'
-    ? '<span class="data-mode-badge computed">✓ Transaction-level data — true cohort computation</span>'
-    : '<span class="data-mode-badge proxy">⚠ Customer summary data — cohort analysis uses recency/tenure proxy. Load transaction-level data for exact cohort curves.</span>';
-
-  ['cohort','migration','acquisition'].forEach(id => {
-    const statsEl = document.getElementById(id+'-stats');
-    if (statsEl) {
-      const existing = statsEl.previousElementSibling;
-      if (existing?.classList.contains('data-mode-badge')) existing.remove();
-      statsEl.insertAdjacentHTML('beforebegin', badge);
-    }
+// ── EXTEND initData ───────────────────────────────────────────
+const _origInitDataPulse=window.initData;
+window.initData=function(rows,source){
+  _origInitDataPulse(rows,source);
+  AppState.dataMode=detectDataMode(rows);
+  ['cltv','churn','propensity'].forEach(id=>{
+    const p=document.getElementById(id+'-pending'),r=document.getElementById(id+'-results'),b=document.getElementById('run-'+id+'-btn');
+    if(p)p.style.display='';if(r)r.style.display='none';if(b){b.disabled=false;}
   });
-
-  // RFM runs automatically (fast, no training step)
-  if (AppState.activeModule === 'rfm') renderRFM();
+  AppState.computed={};
+  const badge=AppState.dataMode==='transaction'
+    ?'<span class="data-mode-badge computed">✓ Transaction-level data — true cohort computation</span>'
+    :'<span class="data-mode-badge proxy">⚠ Customer summary data — cohort curves use recency/tenure proxy. Load one row per transaction for exact cohorts.</span>';
+  ['cohort-stats','migration-stats','acq-stats'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const prev=el.previousElementSibling;if(prev?.classList.contains('data-mode-badge'))prev.remove();
+    el.insertAdjacentHTML('beforebegin',badge);
+  });
+  updateStepIndicator();
+  const g=document.getElementById('rfm-guidance');if(g)g.style.display='';
+  if(AppState.activeModule==='rfm'){renderRFM();updateStepIndicator();}
 };
 
-// ── Panel wrap initialisation ────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const sidebar    = document.querySelector('.sidebar');
-  const mainPanel  = document.querySelector('.main-panel');
-  const appBody    = document.querySelector('.app-body');
-  if (sidebar && mainPanel && appBody && !document.getElementById('pulse-panel-wrap')) {
-    const wrap = document.createElement('div');
-    wrap.id = 'pulse-panel-wrap';
-    wrap.style.cssText = 'display:flex;flex:1;overflow:hidden';
-    appBody.appendChild(wrap);
-    wrap.appendChild(sidebar);
-    wrap.appendChild(mainPanel);
-  }
-});
-
+const _origApplySchemaPulse=window.applySchema;
+window.applySchema=function(){_origApplySchemaPulse();updateStepIndicator();};
 </script>
 </body>
 </html>

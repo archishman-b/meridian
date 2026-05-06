@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="../shared/canvas-module.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -145,6 +146,36 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 .chart-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
 .chart-wrap{position:relative}
 
+
+/* ── Canvas mode ── */
+.mode-switch{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden;background:var(--surface2)}
+.mode-btn{padding:4px 11px;font-size:11px;font-family:var(--sans);font-weight:500;cursor:pointer;
+  background:transparent;border:none;color:var(--muted);transition:all 0.12s}
+.mode-btn.active{background:var(--accent);color:#0d1117}
+#canvas-container{position:absolute;inset:0;display:none}
+.app-body{position:relative}
+.main-panel-wrap{display:flex;flex:1;overflow:hidden;position:relative}
+/* Run analysis button */
+.run-analysis-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;background:var(--accent);color:#0d1117;
+  border:none;border-radius:8px;font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.1s;
+  margin:16px 0;
+}
+.run-analysis-btn:hover{opacity:0.9}
+.run-analysis-btn:disabled{opacity:0.4;cursor:not-allowed}
+.run-analysis-btn .spin{animation:spin 0.8s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.analysis-pending{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;text-align:center;color:var(--muted);
+  border:1.5px dashed var(--border2);border-radius:12px;margin:20px 0;
+}
+.analysis-pending .ap-icon{font-size:32px;margin-bottom:12px;opacity:0.5}
+.analysis-pending .ap-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.analysis-pending .ap-sub{font-size:12px;line-height:1.6;max-width:360px}
+
 /* ── Waterfall ── */
 .waterfall-container{overflow-x:auto;padding-bottom:8px}
 .waterfall-svg{display:block}
@@ -254,7 +285,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div class="topbar-right">
-    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <div class="mode-switch">
+    <button class="mode-btn active" id="mode-panel-btn" onclick="setModePrice('panel')">▦ Panel</button>
+    <button class="mode-btn" id="mode-canvas-btn" onclick="setModePrice('canvas')">◇ Canvas</button>
+  </div>
+  <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
     <button class="btn btn-sm" id="upload-btn" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
     <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
     <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
@@ -278,6 +313,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 
 <!-- App body -->
 <div class="app-body">
+<!-- Canvas container (shown in canvas mode) -->
+<div id="price-canvas-container" style="position:absolute;inset:0;display:none;z-index:5;left:200px"></div>
 
 <!-- Sidebar -->
 <nav class="sidebar">
@@ -339,6 +376,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div id="waterfall-content" style="display:none">
+    <div id="waterfall-run-zone">
+      <div class="analysis-pending" id="waterfall-pending">
+        <div class="ap-icon">⬇</div>
+        <div class="ap-title">Ready to build the pocket price waterfall</div>
+        <div class="ap-sub">Maps your transaction data to the waterfall model — list price through every discount element to pocket price and gross profit.</div>
+        <button class="run-analysis-btn" onclick="runWaterfall()" id="run-waterfall-btn">▶ Run waterfall analysis</button>
+      </div>
+    </div>
+    <div id="waterfall-results" style="display:none">
     <div class="stat-grid" id="waterfall-stats"></div>
     <div class="chart-card">
       <div class="chart-title">Pocket price waterfall</div>
@@ -377,6 +423,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       <button class="btn btn-sm" onclick="exportWaterfallXLSX()">↓ XLSX</button>
       <button class="btn btn-sm" onclick="exportReport()">↗ PDF report</button>
     </div>
+    </div><!-- end waterfall-results -->
   </div>
 </div>
 
@@ -432,6 +479,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Requires transaction data with discount %, quantity/units, and a product or category dimension.</div>
   </div>
   <div id="elasticity-content" style="display:none">
+    <div id="elasticity-run-zone">
+      <div class="analysis-pending" id="elasticity-pending">
+        <div class="ap-icon">↗</div>
+        <div class="ap-title">Ready to estimate price elasticity</div>
+        <div class="ap-sub">Computes the price-volume relationship from your transaction data. Identifies elastic vs inelastic categories.</div>
+        <button class="run-analysis-btn" onclick="runElasticityAnalysis()" id="run-elasticity-btn">▶ Run elasticity analysis</button>
+      </div>
+    </div>
+    <div id="elasticity-results" style="display:none">
     <div class="controls-row">
       <span class="ctrl-label">Segment by:</span>
       <select id="elast-segment" onchange="renderElasticity()">
@@ -454,6 +510,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       </div>
     </div>
     <div id="elasticity-table"></div>
+    </div><!-- end elasticity-results -->
   </div>
 </div>
 
@@ -584,6 +641,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Deal scoring requires price, cost, discount, and ideally customer tier dimensions to be mapped.</div>
   </div>
   <div id="deals-content" style="display:none">
+    <div id="deals-run-zone">
+      <div class="analysis-pending" id="deals-pending">
+        <div class="ap-icon">◇</div>
+        <div class="ap-title">Ready to score your deal portfolio</div>
+        <div class="ap-sub">Runs 5-criterion scoring on every transaction: margin health, discount level, floor price, tier alignment, and volume justification.</div>
+        <button class="run-analysis-btn" onclick="runDealScoring()" id="run-deals-btn">▶ Run deal scoring</button>
+      </div>
+    </div>
+    <div id="deals-results" style="display:none">
     <div class="stat-grid" id="deals-stats"></div>
     <div class="chart-card">
       <div class="chart-title">Deal score distribution</div>
@@ -612,6 +678,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       <span class="export-label">Export:</span>
       <button class="btn btn-sm" onclick="exportDealsXLSX()">↓ Flagged deals XLSX</button>
     </div>
+    </div><!-- end deals-results -->
   </div>
 </div>
 
@@ -2141,6 +2208,182 @@ function exportDealsXLSX() {
   XLSX.writeFile(wb, 'meridian_deal_scores.xlsx');
   showToast('Deal scores exported', 'success');
 }
+
+// ════════════════════════════════════════════════════════════════
+// MERIDIAN PRICE — Canvas mode + Run Analysis wrappers
+// ════════════════════════════════════════════════════════════════
+
+let _priceCanvas = null;
+
+function initPriceCanvas() {
+  if (!window.ModuleCanvas) return;
+  _priceCanvas = new ModuleCanvas({
+    containerId:  'price-canvas-container',
+    panelId:      'price-panel-wrap',
+    toggleBtnId:  'mode-canvas-btn',
+    nodes: [
+      { id:'source',    label:'Data source',      sub:'CSV / XLSX / Bridge handoff', icon:'⊞', color:'#22d3b8', type:'source' },
+      { id:'schema',    label:'Schema map',        sub:'Map pricing dimensions',      icon:'◈', color:'#22d3b8', type:'process' },
+      { id:'waterfall', label:'Price waterfall',   sub:'Pocket price leakage',        icon:'⬇', color:'#22d3b8', type:'model', runnable:true },
+      { id:'margin',    label:'Margin bridge',     sub:'Volume · price · mix',        icon:'▦', color:'#22d3b8', type:'model', runnable:true },
+      { id:'elasticity',label:'Elasticity',        sub:'Price-volume relationship',   icon:'↗', color:'#22d3b8', type:'model', runnable:true },
+      { id:'segments',  label:'Segment diag.',     sub:'Pricing by tier/region/rep',  icon:'⬟', color:'#22d3b8', type:'model', runnable:true },
+      { id:'scenario',  label:'Scenario modeller', sub:'What-if pricing impact',      icon:'⟳', color:'#22d3b8', type:'model', runnable:true },
+      { id:'deals',     label:'Deal scoring',      sub:'5-criterion deal score',      icon:'◇', color:'#22d3b8', type:'model', runnable:true },
+      { id:'export',    label:'Export',            sub:'PDF · XLSX · PNG',            icon:'↗', color:'#4ade80', type:'export' },
+    ],
+    onNodeRun: (defId, done) => {
+      // Map canvas node to panel action
+      const MAP = {
+        waterfall:  runWaterfall,
+        margin:     () => { showModule('margin'); renderMarginBridge(); },
+        elasticity: runElasticityAnalysis,
+        segments:   () => { showModule('segments'); renderSegments(); },
+        scenario:   () => { showModule('scenario'); renderScenario(); },
+        deals:      runDealScoring,
+      };
+      if (MAP[defId]) {
+        setTimeout(() => { try { MAP[defId](); done(true); } catch(e){ done(false); } }, 400);
+      } else { done(true); }
+    },
+    onNodeSelect: (defId) => {
+      // Switch to the relevant panel in panel view context
+      const moduleMap = { waterfall:'waterfall', margin:'margin', elasticity:'elasticity',
+        segments:'segments', benchmark:'benchmark', scenario:'scenario', deals:'deals' };
+      if (moduleMap[defId]) {
+        setModePrice('panel');
+        showModule(moduleMap[defId]);
+      }
+    }
+  });
+  _priceCanvas.mount();
+}
+
+function setModePrice(mode) {
+  const canvasEl = document.getElementById('price-canvas-container');
+  const panelEl  = document.getElementById('price-panel-wrap');
+  const panelBtn = document.getElementById('mode-panel-btn');
+  const canvasBtn= document.getElementById('mode-canvas-btn');
+
+  if (mode === 'canvas') {
+    if (!_priceCanvas) initPriceCanvas();
+    if (canvasEl) canvasEl.style.display = 'block';
+    if (panelEl)  panelEl.style.display  = 'none';
+    panelBtn?.classList.remove('active');
+    canvasBtn?.classList.add('active');
+    setTimeout(() => _priceCanvas?.zoomFit(), 100);
+  } else {
+    if (canvasEl) canvasEl.style.display = 'none';
+    if (panelEl)  panelEl.style.display  = 'flex';
+    panelBtn?.classList.add('active');
+    canvasBtn?.classList.remove('active');
+  }
+}
+
+// ── Run Analysis wrapper functions ───────────────────────────────
+function runWaterfall() {
+  if (!AppState.rows.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-waterfall-btn');
+  const pending = document.getElementById('waterfall-pending');
+  const results = document.getElementById('waterfall-results');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Analysing…'; }
+  setTimeout(() => {
+    try {
+      renderWaterfall();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_priceCanvas) _priceCanvas.setStatus('waterfall','done');
+      showToast('Waterfall analysis complete','success');
+    } catch(e) {
+      showToast('Analysis error: '+e.message,'error');
+      if (_priceCanvas) _priceCanvas.setStatus('waterfall','error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-run analysis'; }
+  }, 200);
+}
+
+function runElasticityAnalysis() {
+  if (!AppState.rows.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-elasticity-btn');
+  const pending = document.getElementById('elasticity-pending');
+  const results = document.getElementById('elasticity-results');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Computing elasticity…'; }
+  setTimeout(() => {
+    try {
+      renderElasticity();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_priceCanvas) _priceCanvas.setStatus('elasticity','done');
+      showToast('Elasticity analysis complete','success');
+    } catch(e) {
+      showToast('Analysis error: '+e.message,'error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-run analysis'; }
+  }, 300);
+}
+
+function runDealScoring() {
+  if (!AppState.rows.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-deals-btn');
+  const pending = document.getElementById('deals-pending');
+  const results = document.getElementById('deals-results');
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Scoring deals…'; }
+  setTimeout(() => {
+    try {
+      renderDeals();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_priceCanvas) _priceCanvas.setStatus('deals','done');
+      showToast('Deal scoring complete — '+AppState.rows.length.toLocaleString()+' deals scored','success');
+    } catch(e) {
+      showToast('Scoring error: '+e.message,'error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-run scoring'; }
+  }, 200);
+}
+
+// Wrap the panel content in a named div for canvas mode to show/hide
+document.addEventListener('DOMContentLoaded', () => {
+  // Wrap .app-body > .main-panel in a div with id price-panel-wrap
+  const mainPanel = document.querySelector('.main-panel');
+  if (mainPanel && !document.getElementById('price-panel-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.id = 'price-panel-wrap';
+    wrap.style.cssText = 'display:flex;flex:1;overflow:hidden';
+    mainPanel.parentNode.insertBefore(wrap, mainPanel);
+    wrap.appendChild(document.querySelector('.sidebar'));
+    wrap.appendChild(mainPanel);
+  }
+
+  // Auto-run waterfall and deal scoring when data is first loaded
+  // (trigger pending state reset)
+  const origInitData = window.initData;
+  if (origInitData) {
+    window.initData = function(rows, source) {
+      origInitData(rows, source);
+      // Reset all run zones to pending
+      ['waterfall','elasticity','deals'].forEach(id => {
+        const pending = document.getElementById(id+'-pending');
+        const results = document.getElementById(id+'-results');
+        if (pending) pending.style.display = '';
+        if (results) results.style.display = 'none';
+        const btn = document.getElementById('run-'+id+'-btn');
+        if (btn) { btn.disabled=false; btn.innerHTML = btn.innerHTML.replace('Re-run','▶ Run'); }
+      });
+      if (_priceCanvas) {
+        _priceCanvas.nodes.forEach(n => { if (n.type!=='source') n.status='idle'; });
+        _priceCanvas.nodes.find(n=>n.defId==='source') && (_priceCanvas.nodes.find(n=>n.defId==='source').status='done');
+        _priceCanvas.nodes.find(n=>n.defId==='schema') && (_priceCanvas.nodes.find(n=>n.defId==='schema').status='done');
+        _priceCanvas._render();
+      }
+      // Auto-run the visible module if it's not a run-required one
+      if (!['waterfall','elasticity','deals'].includes(AppState.activeModule)) {
+        renderModule(AppState.activeModule);
+      }
+    };
+  }
+});
+
 </script>
 </body>
 </html>

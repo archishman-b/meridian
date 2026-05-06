@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Pulse — Consumer Analytics</title>
+<script src="../shared/canvas-module.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -211,6 +212,36 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 .migration-matrix .high-exit{background:rgba(239,68,68,0.15);color:var(--danger)}
 .migration-matrix .row-label{text-align:left;font-family:var(--sans);color:var(--text2);font-size:11px;white-space:nowrap}
 
+
+/* ── Canvas + Run Analysis ── */
+.mode-switch{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden;background:var(--surface2)}
+.mode-btn{padding:4px 11px;font-size:11px;font-family:var(--sans);font-weight:500;cursor:pointer;
+  background:transparent;border:none;color:var(--muted);transition:all 0.12s}
+.mode-btn.active{background:var(--accent);color:#0d1117}
+.run-analysis-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;background:var(--accent);color:#0d1117;
+  border:none;border-radius:8px;font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.1s;
+  margin:16px 0;
+}
+.run-analysis-btn:hover{opacity:0.9}
+.run-analysis-btn:disabled{opacity:0.4;cursor:not-allowed}
+.run-analysis-btn .spin{animation:spin 0.8s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.analysis-pending{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;text-align:center;color:var(--muted);
+  border:1.5px dashed var(--border2);border-radius:12px;margin:20px 0;
+}
+.analysis-pending .ap-icon{font-size:32px;margin-bottom:12px;opacity:0.5}
+.analysis-pending .ap-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.analysis-pending .ap-sub{font-size:12px;line-height:1.6;max-width:380px}
+.data-mode-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;
+  font-family:var(--mono);padding:3px 8px;border-radius:4px;margin-bottom:12px}
+.data-mode-badge.computed{background:var(--success-bg);color:var(--success)}
+.data-mode-badge.proxy{background:var(--warn-bg);color:var(--warn)}
+
 @media(max-width:800px){.sidebar{display:none}.schema-grid{grid-template-columns:1fr}.rfm-grid{grid-template-columns:1fr 1fr}.cltv-tiers{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -227,7 +258,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div class="topbar-right">
-    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <div class="mode-switch">
+    <button class="mode-btn active" id="mode-panel-btn" onclick="setModePulse('panel')">▦ Panel</button>
+    <button class="mode-btn" id="mode-canvas-btn" onclick="setModePulse('canvas')">◇ Canvas</button>
+  </div>
+  <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
     <button class="btn btn-sm" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
     <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
     <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
@@ -248,6 +283,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 </div>
 
 <div class="app-body">
+<div id="pulse-canvas-container" style="position:absolute;inset:0;display:none;z-index:5;left:200px"></div>
 
 <nav class="sidebar">
   <div class="sb-section">Segmentation</div>
@@ -332,6 +368,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Requires customer ID, transaction date, and transaction value dimensions.</div>
   </div>
   <div id="cltv-content" style="display:none">
+    <div id="cltv-run-zone">
+      <div class="analysis-pending" id="cltv-pending">
+        <div class="ap-icon">◎</div>
+        <div class="ap-title">Ready to compute Customer Lifetime Value</div>
+        <div class="ap-sub">Runs a discounted cash flow CLTV model on every customer — purchase rate from actual frequency/tenure, adjusted for churn risk via recency signal.</div>
+        <button class="run-analysis-btn" onclick="runCLTVModel()" id="run-cltv-btn">▶ Run CLTV model</button>
+      </div>
+    </div>
+    <div id="cltv-results" style="display:none">
     <div class="controls-row">
       <span class="ctrl-label">Forecast horizon:</span>
       <select id="cltv-horizon" onchange="renderCLTV()">
@@ -365,6 +410,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       <span class="export-label">Export:</span>
       <button class="btn btn-sm" onclick="exportCLTVXLSX()">↓ CLTV scores XLSX</button>
     </div>
+    </div><!-- end cltv-results -->
   </div>
 </div>
 
@@ -422,6 +468,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Churn model requires customer ID, transaction date, and transaction value. The model trains and scores entirely in your browser.</div>
   </div>
   <div id="churn-content" style="display:none">
+    <div id="churn-run-zone">
+      <div class="analysis-pending" id="churn-pending">
+        <div class="ap-icon">⚠</div>
+        <div class="ap-title">Ready to train churn prediction model</div>
+        <div class="ap-sub">Trains a logistic regression model on your customer data using gradient descent — 100 iterations, fitting weights to recency, frequency, monetary, and activity signals.</div>
+        <button class="run-analysis-btn" onclick="runChurnModel()" id="run-churn-btn">▶ Train &amp; score churn model</button>
+      </div>
+    </div>
+    <div id="churn-results" style="display:none">
     <div class="stat-grid" id="churn-stats"></div>
     <div class="callout warn">
       <strong>Model approach:</strong> Logistic regression on RFM signals — recency percentile, frequency percentile, monetary percentile, and recency trend (improving or declining). Trained on the loaded dataset using gradient descent. No server, no external model — your data, your browser.
@@ -452,6 +507,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       <span class="export-label">Export:</span>
       <button class="btn btn-sm" onclick="exportChurnXLSX()">↓ High-risk list XLSX</button>
     </div>
+    </div><!-- end churn-results -->
   </div>
 </div>
 
@@ -468,6 +524,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
     <div class="empty-sub">Works on the same transaction data as RFM. The more purchase history, the more precise the propensity signal.</div>
   </div>
   <div id="propensity-content" style="display:none">
+    <div id="propensity-run-zone">
+      <div class="analysis-pending" id="propensity-pending">
+        <div class="ap-icon">↗</div>
+        <div class="ap-title">Ready to score purchase propensity</div>
+        <div class="ap-sub">Scores every customer on their likelihood to purchase in the next period — combining recency trajectory, frequency momentum, monetary value, tenure, and RFM segment signals.</div>
+        <button class="run-analysis-btn" onclick="runPropensityModel()" id="run-propensity-btn">▶ Score propensity</button>
+      </div>
+    </div>
+    <div id="propensity-results" style="display:none">
     <div class="stat-grid" id="propensity-stats"></div>
     <div class="chart-card">
       <div class="chart-title">Propensity score distribution</div>
@@ -489,6 +554,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
       <span class="export-label">Export:</span>
       <button class="btn btn-sm" onclick="exportPropensityXLSX()">↓ Propensity list XLSX</button>
     </div>
+    </div><!-- end propensity-results -->
   </div>
 </div>
 
@@ -1465,11 +1531,11 @@ function computePropensity() {
     const recencyScore  = Math.max(0, 1 - c.recency / 200);
     const freqScore     = Math.min(1, c.freq / 20);
     const monetaryScore = c.aov / maxAOV;
-    const tenureBonus   = Math.min(0.2, c.tenure / maxTenure * 0.2);
+    const tenureScore   = Math.min(1, c.tenure / (maxTenure||1));
     const segBonus = {'Champions':0.25,'Loyal Customers':0.2,'Potential Loyalists':0.15,'Promising':0.1}[c.segment]||0;
 
-    const raw = 0.35*recencyScore + 0.3*freqScore + 0.2*monetaryScore + 0.1*tenureBonus*5 + segBonus;
-    const propensity = Math.min(0.98, Math.max(0.02, raw + (Math.random()-0.5)*0.05));
+    const raw = 0.35*recencyScore + 0.30*freqScore + 0.20*monetaryScore + 0.10*tenureScore + segBonus;
+    const propensity = Math.min(0.97, Math.max(0.03, raw)); // deterministic — no noise
     const decile = Math.min(10, Math.ceil(propensity*10));
     return { ...c, propensity, decile };
   });
@@ -1810,6 +1876,260 @@ async function exportReport() {
     showToast('PDF exported','success');
   } catch(e){showToast('Export error: '+e.message,'error');}
 }
+
+// ════════════════════════════════════════════════════════════════
+// MERIDIAN PULSE — Canvas mode + Run Analysis wrappers
+// ════════════════════════════════════════════════════════════════
+
+let _pulseCanvas = null;
+
+function initPulseCanvas() {
+  if (!window.ModuleCanvas) return;
+  _pulseCanvas = new ModuleCanvas({
+    containerId:  'pulse-canvas-container',
+    panelId:      'pulse-panel-wrap',
+    toggleBtnId:  'mode-canvas-btn',
+    nodes: [
+      { id:'source',      label:'Customer data',     sub:'CSV / XLSX / Bridge handoff',  icon:'⊞', color:'#a78bfa', type:'source' },
+      { id:'schema',      label:'Schema map',         sub:'Map customer dimensions',       icon:'◈', color:'#a78bfa', type:'process' },
+      { id:'rfm',         label:'RFM segmentation',  sub:'Recency · Frequency · Monetary',icon:'⬟', color:'#a78bfa', type:'model', runnable:false },
+      { id:'cltv',        label:'CLTV model',         sub:'Discounted lifetime value',     icon:'◎', color:'#a78bfa', type:'model', runnable:true },
+      { id:'churn',       label:'Churn prediction',  sub:'Logistic regression model',     icon:'⚠', color:'#fb7185', type:'model', runnable:true },
+      { id:'propensity',  label:'Propensity scoring', sub:'Purchase likelihood score',     icon:'↗', color:'#22d3b8', type:'model', runnable:true },
+      { id:'export',      label:'Export',             sub:'PDF · XLSX',                   icon:'↗', color:'#4ade80', type:'export' },
+    ],
+    onNodeRun: (defId, done) => {
+      const MAP = {
+        cltv:       runCLTVModel,
+        churn:      runChurnModel,
+        propensity: runPropensityModel,
+      };
+      if (MAP[defId]) {
+        setTimeout(() => { try { MAP[defId](); done(true); } catch(e){ done(false); }}, 400);
+      } else { done(true); }
+    },
+    onNodeSelect: (defId) => {
+      const moduleMap = { rfm:'rfm', cltv:'cltv', churn:'churn', propensity:'propensity',
+        migration:'migration', acquisition:'acquisition' };
+      if (moduleMap[defId]) {
+        setModePulse('panel');
+        showModule(moduleMap[defId]);
+      }
+    }
+  });
+  _pulseCanvas.mount();
+}
+
+function setModePulse(mode) {
+  const canvasEl  = document.getElementById('pulse-canvas-container');
+  const panelEl   = document.getElementById('pulse-panel-wrap');
+  const panelBtn  = document.getElementById('mode-panel-btn');
+  const canvasBtn = document.getElementById('mode-canvas-btn');
+
+  if (mode === 'canvas') {
+    if (!_pulseCanvas) initPulseCanvas();
+    if (canvasEl) canvasEl.style.display = 'block';
+    if (panelEl)  panelEl.style.display  = 'none';
+    panelBtn?.classList.remove('active');
+    canvasBtn?.classList.add('active');
+    setTimeout(() => _pulseCanvas?.zoomFit(), 100);
+  } else {
+    if (canvasEl) canvasEl.style.display = 'none';
+    if (panelEl)  panelEl.style.display  = 'flex';
+    panelBtn?.classList.add('active');
+    canvasBtn?.classList.remove('active');
+  }
+}
+
+// ── Detect data mode ─────────────────────────────────────────────
+// Returns 'transaction' if data looks like event-level transactions,
+// 'summary' if it looks like a customer summary file.
+function detectDataMode(rows) {
+  if (!rows.length) return 'summary';
+  const cols = Object.keys(rows[0]);
+  const hasTransactionDate = cols.some(c => /date|time|period|timestamp/i.test(c));
+  const hasAmount          = cols.some(c => /amount|value|revenue|spend|price/i.test(c));
+  const hasCustomerId      = cols.some(c => /customer.*id|cust.*id|user.*id/i.test(c));
+  // Transaction data: same customer ID appears multiple times
+  const custIds = rows.map(r => {
+    const c = cols.find(x => /customer.*id|cust.*id|user.*id/i.test(x));
+    return c ? r[c] : null;
+  }).filter(Boolean);
+  const uniqueRatio = new Set(custIds).size / custIds.length;
+  const isTransactional = hasTransactionDate && hasAmount && hasCustomerId && uniqueRatio < 0.8;
+  return isTransactional ? 'transaction' : 'summary';
+}
+
+// ── Run Analysis wrappers with model progress feedback ────────────
+
+function runCLTVModel() {
+  if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-cltv-btn');
+  const pending = document.getElementById('cltv-pending');
+  const results = document.getElementById('cltv-results');
+
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Computing CLTV…'; }
+
+  // Async to allow UI to update
+  setTimeout(() => {
+    try {
+      const horizon  = parseInt(document.getElementById('cltv-horizon')?.value||24);
+      const discount = parseFloat(document.getElementById('cltv-discount')?.value||0.12);
+
+      // Force recompute
+      delete AppState.computed[`cltv_${horizon}_${discount}`];
+
+      renderCLTV();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_pulseCanvas) _pulseCanvas.setStatus('cltv','done');
+      showToast('CLTV model complete — '+AppState.customers.length.toLocaleString()+' customers scored','success');
+    } catch(e) {
+      showToast('CLTV error: '+e.message,'error');
+      if (_pulseCanvas) _pulseCanvas.setStatus('cltv','error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-run model'; }
+  }, 150);
+}
+
+function runChurnModel() {
+  if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-churn-btn');
+  const pending = document.getElementById('churn-pending');
+  const results = document.getElementById('churn-results');
+
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Training model (100 iterations)…'; }
+
+  setTimeout(() => {
+    try {
+      // Force recompute — clear cached result
+      delete AppState.computed.churn;
+      delete AppState.computed.churnWeights;
+
+      renderChurn();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_pulseCanvas) _pulseCanvas.setStatus('churn','done');
+
+      const highRisk = AppState.computed.churnScored?.filter(c=>c.churnRisk==='High').length||0;
+      showToast('Churn model trained — '+highRisk+' high-risk customers identified','success');
+    } catch(e) {
+      showToast('Model error: '+e.message,'error');
+      if (_pulseCanvas) _pulseCanvas.setStatus('churn','error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-train model'; }
+  }, 100);
+}
+
+function runPropensityModel() {
+  if (!AppState.customers.length) { showToast('Load data first','warn'); return; }
+  const btn     = document.getElementById('run-propensity-btn');
+  const pending = document.getElementById('propensity-pending');
+  const results = document.getElementById('propensity-results');
+
+  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">⟳</span> Scoring customers…'; }
+
+  setTimeout(() => {
+    try {
+      // Force recompute — remove noise term, use deterministic scoring
+      delete AppState.computed.propensity;
+
+      // Override computePropensity to remove noise
+      const rfm = computeRFM();
+      const maxTenure = Math.max(...rfm.map(c=>c.tenure));
+      const maxAOV    = Math.max(...rfm.map(c=>c.aov));
+
+      const scored = rfm.map(c => {
+        const recencyScore  = Math.max(0, 1 - c.recency / 200);
+        const freqScore     = Math.min(1, c.freq / 20);
+        const monetaryScore = c.aov / (maxAOV || 1);
+        const tenureScore   = Math.min(1, c.tenure / maxTenure);
+        const segBonus = {'Champions':0.25,'Loyal Customers':0.20,'Potential Loyalists':0.15,
+          'Promising':0.10,'Recent Customers':0.08}[c.segment] || 0;
+
+        // Deterministic — no noise
+        const raw = 0.35*recencyScore + 0.30*freqScore + 0.20*monetaryScore + 0.10*tenureScore + segBonus;
+        const propensity = Math.min(0.97, Math.max(0.03, raw));
+        const decile = Math.min(10, Math.ceil(propensity * 10));
+        return { ...c, propensity, decile };
+      });
+
+      AppState.computed.propensity = scored;
+      renderPropensity();
+      if (pending) pending.style.display = 'none';
+      if (results) results.style.display = '';
+      if (_pulseCanvas) _pulseCanvas.setStatus('propensity','done');
+      showToast('Propensity scoring complete','success');
+    } catch(e) {
+      showToast('Scoring error: '+e.message,'error');
+    }
+    if (btn) { btn.disabled=false; btn.innerHTML='▶ Re-score'; }
+  }, 100);
+}
+
+// ── Data mode detection on load ───────────────────────────────────
+// Extends initData to detect transaction vs summary format
+// and show appropriate mode badges on cohort/migration/acq panels
+const _origInitDataPulse = window.initData;
+window.initData = function(rows, source) {
+  const mode = detectDataMode(rows);
+  AppState.dataMode = mode;
+
+  _origInitDataPulse(rows, source);
+
+  // Reset all run zones
+  ['cltv','churn','propensity'].forEach(id => {
+    const pending = document.getElementById(id+'-pending');
+    const results = document.getElementById(id+'-results');
+    if (pending) pending.style.display = '';
+    if (results) results.style.display = 'none';
+    const btn = document.getElementById('run-'+id+'-btn');
+    if (btn) { btn.disabled=false; }
+  });
+
+  // Invalidate computed cache
+  AppState.computed = {};
+  if (_pulseCanvas) {
+    _pulseCanvas.nodes.forEach(n => {
+      if (n.defId !== 'source' && n.defId !== 'schema') n.status = 'idle';
+      else n.status = 'done';
+    });
+    _pulseCanvas._render();
+  }
+
+  // Show data mode badge on time-series panels
+  const badge = mode === 'transaction'
+    ? '<span class="data-mode-badge computed">✓ Transaction-level data — true cohort computation</span>'
+    : '<span class="data-mode-badge proxy">⚠ Customer summary data — cohort analysis uses recency/tenure proxy. Load transaction-level data for exact cohort curves.</span>';
+
+  ['cohort','migration','acquisition'].forEach(id => {
+    const statsEl = document.getElementById(id+'-stats');
+    if (statsEl) {
+      const existing = statsEl.previousElementSibling;
+      if (existing?.classList.contains('data-mode-badge')) existing.remove();
+      statsEl.insertAdjacentHTML('beforebegin', badge);
+    }
+  });
+
+  // RFM runs automatically (fast, no training step)
+  if (AppState.activeModule === 'rfm') renderRFM();
+};
+
+// ── Panel wrap initialisation ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar    = document.querySelector('.sidebar');
+  const mainPanel  = document.querySelector('.main-panel');
+  const appBody    = document.querySelector('.app-body');
+  if (sidebar && mainPanel && appBody && !document.getElementById('pulse-panel-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.id = 'pulse-panel-wrap';
+    wrap.style.cssText = 'display:flex;flex:1;overflow:hidden';
+    appBody.appendChild(wrap);
+    wrap.appendChild(sidebar);
+    wrap.appendChild(mainPanel);
+  }
+});
+
 </script>
 </body>
 </html>

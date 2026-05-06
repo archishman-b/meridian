@@ -241,7 +241,7 @@ pre code{color:var(--text2)}
 .adr{
   background:var(--surface2);border:1px solid var(--border2);
   border-left:3px solid var(--teal);border-radius:0 8px 8px 0;
-  padding:18px 22px;margin:22px 0;
+  padding:18px 22px;margin:22px 0;max-width:640px;
 }
 .adr-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .adr-id{
@@ -259,7 +259,7 @@ pre code{color:var(--text2)}
 .backlog-item{
   background:var(--surface2);border:1px solid var(--border2);
   border-left:3px solid var(--amber);border-radius:0 8px 8px 0;
-  padding:14px 18px;margin:10px 0;
+  padding:14px 18px;margin:10px 0;max-width:640px;
 }
 .bl-header{display:flex;align-items:center;gap:8px;margin-bottom:5px}
 .bl-id{
@@ -272,12 +272,12 @@ pre code{color:var(--text2)}
 .bug-rec{
   background:var(--surface2);border:1px solid rgba(251,113,133,0.25);
   border-left:3px solid var(--coral);border-radius:0 8px 8px 0;
-  padding:12px 18px;margin:10px 0;
+  padding:12px 18px;margin:10px 0;max-width:640px;
 }
 .bug-rec h4{font-size:11px;font-weight:600;color:var(--coral);margin:0 0 4px;font-family:var(--mono)}
 .bug-rec p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
 .bug-rec code{font-family:var(--mono);font-size:10px;color:var(--coral)}
-.iter-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.iter-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);max-width:640px}
 .iter-row:last-child{border-bottom:none}
 .iter-label{
   font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;
@@ -289,7 +289,7 @@ pre code{color:var(--text2)}
 .iter-row p:last-child{margin:0}
 .method-note{
   background:var(--surface2);border:1px solid var(--border2);
-  border-radius:8px;padding:13px 18px;margin:10px 0;
+  border-radius:8px;padding:13px 18px;margin:10px 0;max-width:640px;
 }
 .method-note h4{font-size:12px;font-weight:600;color:var(--text);margin:0 0 4px}
 .method-note p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
@@ -342,7 +342,6 @@ pre code{color:var(--text2)}
   <a href="#constraints" class="nav-link"><span class="nav-dot"></span>Constraints</a>
 
   <span class="nav-section">Build journal</span>
-  <a href="#j-origin" class="nav-link"><span class="nav-dot"></span>Origin &amp; problem</a>
   <a href="#j-arch" class="nav-link"><span class="nav-dot"></span>Architecture ADRs</a>
   <a href="#j-p0" class="nav-link"><span class="nav-dot"></span>Phase 0 — Core</a>
   <a href="#j-p1" class="nav-link"><span class="nav-dot"></span>Phase 1 — Price</a>
@@ -367,7 +366,7 @@ pre code{color:var(--text2)}
     <div class="hm-item"><span class="hm-label">Interaction</span><span class="hm-value">Canvas (Alteryx-style) + Panel UI, both</span></div>
     <div class="hm-item"><span class="hm-label">Pipelines</span><span class="hm-value">localStorage + JSON export</span></div>
     <div class="hm-item"><span class="hm-label">Demo org</span><span class="hm-value">Renova Home</span></div>
-    <div class="hm-item"><span class="hm-label">Status</span><span class="hm-value">Pre-build — stage gate before Phase 0</span></div>
+    <div class="hm-item"><span class="hm-label">Status</span><span class="hm-value">Phases 0–2 complete · Phase 3 in build</span></div>
   </div>
 </div>
 
@@ -701,48 +700,205 @@ pre code{color:var(--text2)}
 <section id="modules">
   <div class="section-label">11 — Module Registry</div>
   <h2>Seven modules. One platform.</h2>
-  <div class="module-grid">
-    <div class="mc mc-teal" id="bridge">
-      <div class="mc-head"><div class="mc-icon">⊞</div><span class="mc-badge">core</span></div>
-      <h3>Meridian Bridge</h3>
-      <p>Data ingestion, ETL, quality scoring, schema mapping, module routing. The platform hub.</p>
-      <div class="mc-tags"><span class="mc-tag">JS only</span><span class="mc-tag">Live v1</span><span class="mc-tag">Phase 0 ext.</span></div>
+  <p>Each module is a self-contained HTML file — independently deployable, independently usable, and connected to Bridge via the AppHandoff protocol. Full sub-module detail, schema requirements, output formats, and compute layer for each module below.</p>
+
+  <!-- ── Bridge ── -->
+  <div class="card" id="bridge" style="margin:28px 0 0;border-top:3px solid var(--teal)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:var(--teal-dim);border:1px solid var(--teal-bd);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">⊞</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--teal)">Meridian Bridge</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">core · live v1 · bridge/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS only · Live</span>
     </div>
-    <div class="mc mc-teal" id="price">
-      <div class="mc-head"><div class="mc-icon">◈</div><span class="mc-badge">Phase 1</span></div>
-      <h3>Meridian Price</h3>
-      <p>Pocket price waterfall, margin bridge, elasticity, scenario modeller, deal scoring, behavioural lab.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Workers</span><span class="mc-tag">In build</span></div>
+    <p>The platform hub and ETL core. Every analysis in every module starts here — data ingestion, quality validation, schema mapping, and handoff to the target module. Alteryx-style drag-drop canvas with node-based pipeline builder. Build a pipeline once, run it every reporting cycle.</p>
+    <h4>Sub-modules / capabilities</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:12px;color:var(--text2);margin-bottom:12px">
+      <span>⊞ CSV / XLSX data ingestion (drag-drop, clipboard)</span>
+      <span>◈ Universal schema wizard — 6 module dimension sets</span>
+      <span>✦ Data quality scoring (null rate, type consistency, duplicates)</span>
+      <span>⬡ Module router — validate schema, dispatch to module</span>
+      <span>⟳ ETL operations: filter, aggregate, calculate, segment, bin, rank</span>
+      <span>◧ Time-series operations: lag, lead, rolling window, period compare</span>
+      <span>⬡ Canvas — drag-drop node pipeline builder</span>
+      <span>↗ Pipeline save / load / export (.meridian JSON)</span>
+      <span>⟦⟧ AppHandoff v2 — sessionStorage payload dispatch</span>
+      <span>↓ Export: CSV, XLSX, clipboard</span>
     </div>
-    <div class="mc mc-purple" id="pulse">
-      <div class="mc-head"><div class="mc-icon">⬟</div><span class="mc-badge">Phase 2</span></div>
-      <h3>Meridian Pulse</h3>
-      <p>CLTV (BG/NBD), churn prediction, propensity scoring, RFM segmentation, cohort retention.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Pyodide</span><span class="mc-tag">First ML module</span></div>
+    <h4>Required schema dimensions</h4>
+    <p style="font-size:12px;color:var(--muted)">Module-agnostic — Bridge maps to whichever schema the target module requires. Universal wizard covers: pricing dimensions (list price, pocket price, unit cost, discount %, discount amount, quantity, sales rep, customer tier, region, product/SKU, date), customer dimensions (customer ID, recency, frequency, monetary, tenure, segment, acquisition channel, region), financial dimensions (revenue, COGS, gross profit, EBIT, date, department, product line), and HR dimensions (employee ID, role, level, tenure, status, department, manager).</p>
+    <h4>Output</h4>
+    <p style="font-size:12px;color:var(--muted)">sessionStorage AppHandoff payload → consumed by target module. Pipeline JSON for localStorage persistence and file export.</p>
+    <h4>Demo dataset</h4>
+    <p style="font-size:12px;color:var(--muted)">Renova Home FY2024 transactions — 50,000 rows, 12 columns, pre-mapped to pricing schema. Also ships Renova customer summary (2,100 rows) and Renova headcount extract (800 employees) for schema-mapping demos.</p>
+  </div>
+
+  <!-- ── Price ── -->
+  <div class="card" id="price" style="margin:20px 0 0;border-top:3px solid var(--teal)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:var(--teal-dim);border:1px solid var(--teal-bd);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">◈</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--teal)">Meridian Price</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 1 · live v1 · price/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS + Web Workers · Live</span>
     </div>
-    <div class="mc mc-amber" id="ledger">
-      <div class="mc-head"><div class="mc-icon">▦</div><span class="mc-badge">Phase 3</span></div>
-      <h3>Meridian Ledger</h3>
-      <p>Revenue bridge, P&amp;L decomposition, cost structure, working capital, cash flow waterfall, forecasting.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (forecast)</span></div>
+    <p>Commercial pricing intelligence workbench. Eight sub-modules covering the full pricing diagnostic sequence — from leakage identification through scenario modelling to deal-level scoring. Grounded in the Monitor Deloitte NAPA pricing transformation engagement.</p>
+    <h4>Sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M1</span><span><strong>Pocket price waterfall</strong> — List price → invoice discounts → volume discounts → cash discounts → other allowances → pocket price → unit cost → gross profit. Heuristic 60/25/10/5 split when single discount column; exact mapping when separate columns are available. Leakage per element surfaced.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M2</span><span><strong>Margin bridge</strong> — Period-on-period decomposition of gross margin change into volume effect, price effect, and mix effect. Configurable comparison periods and grouping dimension.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M3</span><span><strong>Price-volume elasticity</strong> — Pearson correlation between discount % and units per transaction, scaled by SD ratio. Per-category and aggregate. Four interpretation bands. Framed as approximation — requires controlled price variation for true elasticity.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M4</span><span><strong>Segment diagnostics</strong> — Average pocket price and discount % by customer tier, region, sales rep, or product category. Price band scatter overlay. Identifies non-uniform pricing beyond policy tolerance. Spread metric (max−min across segments) surfaced.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M5</span><span><strong>Competitor benchmarking</strong> — Floor price (cost×1.10) and target price (list×0.90) computed from mapped data. Identifies products priced below floor (negative-margin) and below target (policy breach).</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M6</span><span><strong>Scenario modeller</strong> — Three parallel scenario branches on shared base data: (A) discount ceiling cap, (B) list price increase %, (C) floor price enforcement. Node-canvas shows the parallel pipeline structure. Revenue, profit, and margin delta per scenario.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M7</span><span><strong>Deal scoring</strong> — Five-criterion scoring (0–100) per transaction: margin health (–30/–15), discount level (–25/–12), floor price compliance (–25), tier alignment (–10), extreme outlier flag (–15 additional). Score bands: &lt;40 Flag · 40–70 Review · &gt;70 Sound.</span>
+        <span style="font-family:var(--mono);color:var(--teal);font-weight:600">M8</span><span><strong>Behavioural pricing lab</strong> — Always-on, data-free entry point. Interactive simulators: anchoring effect, decoy pricing, charm pricing, Good-Better-Best tier construction. No data upload required.</span>
+      </div>
     </div>
-    <div class="mc mc-coral" id="org">
-      <div class="mc-head"><div class="mc-icon">⊹</div><span class="mc-badge">Phase 3</span></div>
-      <h3>Meridian Org</h3>
-      <p>Span of control, layer benchmarking, attrition prediction, capability investment mapping.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (survival)</span></div>
+    <h4>Required schema dimensions</h4>
+    <p style="font-size:12px;color:var(--muted)">Core (required): <code>listPrice</code>, <code>pocketPrice</code>, <code>unitCost</code>, <code>discountPct</code> or <code>discountAmt</code>, <code>quantity</code>. Enriching (optional): <code>salesRep</code>, <code>customerTier</code>, <code>region</code>, <code>product</code>, <code>date</code>. More dimensions mapped = richer segment diagnostics and margin bridge. Schema wizard auto-suggests from column name patterns.</p>
+    <h4>Outputs</h4>
+    <p style="font-size:12px;color:var(--muted)">PDF report (all active analyses), XLSX per analysis (waterfall table, flagged deals list, elasticity by category), PNG chart exports. Scenario modeller: side-by-side scenario comparison table exportable as XLSX.</p>
+    <h4>Compute</h4>
+    <p style="font-size:12px;color:var(--muted)">Vanilla JS for all analyses. Web Workers for datasets &gt;10K rows (waterfall aggregation, deal scoring on large transaction sets). No model training required — all analyses are deterministic computations.</p>
+    <h4>Demo dataset</h4>
+    <p style="font-size:12px;color:var(--muted)">Renova Home — 50 transactions, synthetic, with known signals: B2B contractor pocket prices ~18% below invoice, two sales reps with above-policy average discounts, category-level margin spread between own-brand and third-party SKUs.</p>
+  </div>
+
+  <!-- ── Pulse ── -->
+  <div class="card" id="pulse" style="margin:20px 0 0;border-top:3px solid var(--purple)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:var(--purple-dim,rgba(109,40,217,0.1));border:1px solid rgba(109,40,217,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">⬟</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--purple)">Meridian Pulse</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 2 · live v1 · pulse/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS ML + Pyodide (Phase 2.1) · Live</span>
     </div>
-    <div class="mc mc-blue" id="field">
-      <div class="mc-head"><div class="mc-icon">◎</div><span class="mc-badge">Phase 4</span></div>
-      <h3>Meridian Field</h3>
-      <p>TAM/SAM/SOM sizing, market share waterfall, competitive benchmarking, BCG matrix, customer archetype clustering.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (k-means)</span></div>
+    <p>Consumer analytics workbench. Seven sub-modules covering the full customer intelligence diagnostic — from RFM segmentation through CLTV projection, churn prediction, and propensity scoring. Grounded in the Mahindra AFS consumer analytics CoE engagement (~2M customer dataset, SQL Server).</p>
+    <h4>Sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P1</span><span><strong>RFM segmentation</strong> — Percentile-ranked R/F/M scores (1–5) per customer across recency, frequency, monetary dimensions. Ten segment labels with explicit classification rules (Champions, Loyal, At Risk, Cannot Lose, Needs Attention, Hibernating, etc.). Runs automatically on data load — deterministic, no model training.</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P2</span><span><strong>CLTV model</strong> — DCF-based lifetime value projection. Purchase rate from actual frequency/tenure. User-configurable horizon (12/24/36 months) and discount rate (10–18%). Churn adjustment: 0.75× for recency 90–180 days, 0.50× for &gt;180 days. Tier assignment at P25/P50/P75 quartiles of actual CLTV distribution — data-driven, not fixed thresholds. BG/NBD upgrade planned for Phase 2.1 (Pyodide).</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P3</span><span><strong>Cohort retention</strong> — Month-on-month retention curves by acquisition cohort. Requires transaction-level data for true computation; falls back to recency/tenure proxy with amber disclosure badge when summary data is loaded.</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P4</span><span><strong>Churn prediction</strong> — Logistic regression model trained in-browser via gradient descent (100 iterations, LR=0.1). Four features: normalised recency, inverse frequency, inverse monetary, binary inactivity flag (R≤2). Label: churned = recency &gt;90 days AND R≤2. Fitted weights displayed dynamically post-training. Score bands: 0–40% Low · 40–70% Medium · 70–100% High.</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P5</span><span><strong>Propensity scoring</strong> — Deterministic weighted formula: 0.35×recency + 0.30×frequency + 0.20×monetary + 0.10×tenure + segment_bonus. Weights currently heuristic (PULSE-B01 — statistically derived weights planned for Phase 2.1). Decile assignment D1–D10. Output: ranked customer list with score and decile.</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P6</span><span><strong>Segment migration</strong> — Period-on-period RFM segment movement matrix. Shows how many customers moved from each segment to each other (e.g. Champions → Loyal, At Risk → Churned). Requires transaction-level data for true period-level computation.</span>
+        <span style="font-family:var(--mono);color:var(--purple);font-weight:600">P7</span><span><strong>Acquisition vs retention mix</strong> — Revenue and customer count split between new (first purchase in period) and retained customers. Trend over time. CAC/LTV ratio surface. Proxy mode available when transaction data is not loaded.</span>
+      </div>
     </div>
-    <div class="mc mc-green" id="flow">
-      <div class="mc-head"><div class="mc-icon">⬡</div><span class="mc-badge">Phase 4</span></div>
-      <h3>Meridian Flow</h3>
-      <p>Inventory health (ABC/XYZ), demand forecasting, lead time analysis, EOQ optimisation, stockout risk scoring.</p>
-      <div class="mc-tags"><span class="mc-tag">JS + Pyodide (ARIMA)</span></div>
+    <h4>Required schema dimensions</h4>
+    <p style="font-size:12px;color:var(--muted)">Summary mode: <code>customerId</code>, <code>recency</code>, <code>frequency</code>, <code>monetary</code>. Enriching: <code>tenure</code>, <code>segment</code>, <code>acquisitionChannel</code>, <code>region</code>. Transaction mode (required for P3/P6/P7): <code>customerId</code>, <code>transactionDate</code>, <code>transactionAmount</code>. Pulse auto-detects data mode on load.</p>
+    <h4>Outputs</h4>
+    <p style="font-size:12px;color:var(--muted)">XLSX exports per analysis (RFM scores, CLTV scores, high-risk churn list, propensity ranked list). PDF report covering active analyses. Charts: RFM heatmap, CLTV distribution, churn risk histogram, propensity decile bar, cohort retention curves, migration matrix heatmap.</p>
+    <h4>Compute</h4>
+    <p style="font-size:12px;color:var(--muted)">Vanilla JS for all Phase 2.0 ML (logistic regression gradient descent, DCF CLTV). Pyodide integration planned for Phase 2.1 (BG/NBD, statistically fitted propensity weights). All model training runs in-browser — no server, no upload, no API call.</p>
+    <h4>Demo dataset</h4>
+    <p style="font-size:12px;color:var(--muted)">Renova Home — 100-customer summary file. Known signals: high-recency churn cluster among occasional purchasers, Champions concentrated in Tier 1 city stores, propensity D10 dominated by own-brand repeat buyers. Transaction-level dataset (~2,000 rows) pending (PLATFORM-B01).</p>
+  </div>
+
+  <!-- ── Ledger ── -->
+  <div class="card" id="ledger" style="margin:20px 0 0;border-top:3px solid var(--amber)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:var(--amber-dim,rgba(180,83,9,0.1));border:1px solid rgba(180,83,9,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">▦</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--amber)">Meridian Ledger</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 3 · planned · ledger/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS + Pyodide (forecasting) · Phase 3</span>
+    </div>
+    <p>Financial analytics workbench. Converts a P&amp;L extract or management accounts CSV into a board-ready financial diagnostic — revenue decomposition, cost structure analysis, working capital health, and forward projections. Designed for the engagement manager who needs to understand a client's financial position without access to the finance team's modelling environment.</p>
+    <h4>Planned sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L1</span><span><strong>Revenue bridge</strong> — Period-on-period revenue decomposition: volume effect, price/rate effect, mix effect, new business, churn. Waterfall chart with drill-down by product line or geography.</span>
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L2</span><span><strong>P&amp;L decomposition</strong> — Gross margin, EBITDA, EBIT, and net margin trends. Contribution margin by product line. Fixed vs variable cost split. Year-on-year bridge at each profit line.</span>
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L3</span><span><strong>Cost structure analysis</strong> — Cost as % of revenue by category (COGS, S&amp;M, R&amp;D, G&amp;A). Benchmark against industry reference ranges. Identifies categories where cost ratio has expanded relative to revenue growth.</span>
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L4</span><span><strong>Working capital health</strong> — DSO, DPO, DIO computation. Cash conversion cycle. Working capital as % of revenue. Period trend and benchmark comparison.</span>
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L5</span><span><strong>Cash flow waterfall</strong> — Operating cash flow bridge from EBITDA: working capital movement, capex, tax, interest. Free cash flow computation. Period comparison.</span>
+        <span style="font-family:var(--mono);color:var(--amber);font-weight:600">L6</span><span><strong>Revenue forecasting</strong> — Time-series decomposition (trend + seasonality) via Pyodide. Configurable horizon. Confidence interval output. ARIMA or exponential smoothing depending on data volume.</span>
+      </div>
+    </div>
+    <h4>Required schema dimensions</h4>
+    <p style="font-size:12px;color:var(--muted)">Core: <code>date</code> (monthly period), <code>revenue</code>, <code>cogs</code>, <code>grossProfit</code>. Enriching: <code>ebitda</code>, <code>ebit</code>, <code>opex</code> (by category), <code>receivables</code>, <code>payables</code>, <code>inventory</code>, <code>capex</code>, <code>productLine</code>, <code>geography</code>.</p>
+    <h4>Demo dataset</h4>
+    <p style="font-size:12px;color:var(--muted)">Renova Home monthly P&amp;L — 24 months, FY2023–FY2024. Known signals: EBITDA margin compression in e-commerce channel, working capital deterioration from Tier 2 inventory build, S&amp;M cost ratio expansion above revenue growth.</p>
+  </div>
+
+  <!-- ── Org ── -->
+  <div class="card" id="org" style="margin:20px 0 0;border-top:3px solid var(--coral)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">⊹</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--coral)">Meridian Org</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 3 · planned · org/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS + Pyodide (survival) · Phase 3</span>
+    </div>
+    <p>HR and organisational design analytics workbench. Converts a headcount extract into an org health diagnostic — span of control, layer efficiency, attrition prediction, and capability investment prioritisation. For the engagement manager who needs to identify structural org inefficiency without access to HRIS systems.</p>
+    <h4>Planned sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:var(--coral);font-weight:600">O1</span><span><strong>Span of control analysis</strong> — Direct reports per manager by level and department. Benchmark against target spans (IC: 6–8, manager: 4–6, director: 3–5). Identifies under-spanned layers (management overhead) and over-spanned roles (control risk).</span>
+        <span style="font-family:var(--mono);color:var(--coral);font-weight:600">O2</span><span><strong>Layer benchmarking</strong> — Number of layers between CEO and IC by function. Layer cost as % of total payroll. Comparison against industry benchmarks and historical trend.</span>
+        <span style="font-family:var(--mono);color:var(--coral);font-weight:600">O3</span><span><strong>Attrition analysis</strong> — Voluntary attrition rate by department, level, tenure band, and manager. Regrettable vs non-regrettable classification where performance data is available. Cohort-level attrition curves.</span>
+        <span style="font-family:var(--mono);color:var(--coral);font-weight:600">O4</span><span><strong>Attrition prediction</strong> — Survival analysis (Kaplan-Meier) via Pyodide. Estimates probability of attrition by tenure for each role/department combination. Flight risk scoring per employee.</span>
+        <span style="font-family:var(--mono);color:var(--coral);font-weight:600">O5</span><span><strong>Capability investment mapping</strong> — Headcount distribution across capability categories (revenue-generating, support, overhead). Cost per capability category. Investment vs benchmark. Identifies where headcount growth has outpaced revenue contribution.</span>
+      </div>
+    </div>
+    <h4>Required schema dimensions</h4>
+    <p style="font-size:12px;color:var(--muted)">Core: <code>employeeId</code>, <code>level</code>, <code>department</code>, <code>managerId</code>, <code>tenure</code>, <code>status</code> (active/left). Enriching: <code>role</code>, <code>location</code>, <code>salary</code>, <code>hireDate</code>, <code>exitDate</code>, <code>exitReason</code>, <code>performanceRating</code>.</p>
+    <h4>Demo dataset</h4>
+    <p style="font-size:12px;color:var(--muted)">Renova Home headcount — 800 employees, 5 layers, 12 departments. Known signals: above-benchmark attrition in store management (Level 3), under-spanned regional director layer, capability investment skewed toward overhead vs revenue-generating functions.</p>
+  </div>
+
+  <!-- ── Field ── -->
+  <div class="card" id="field" style="margin:20px 0 0;border-top:3px solid #3b82f6">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">◎</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#3b82f6">Meridian Field</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 4 · planned · field/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS + Pyodide (k-means) · Phase 4</span>
+    </div>
+    <p>Market intelligence workbench. TAM/SAM/SOM sizing, competitive position analysis, BCG matrix, and customer archetype clustering. For strategy engagements where the analytical question is market-level rather than operations-level.</p>
+    <h4>Planned sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:#3b82f6;font-weight:600">F1</span><span><strong>TAM/SAM/SOM sizing</strong> — Top-down and bottom-up market sizing. Adjustable assumptions with sensitivity output. Revenue potential per segment.</span>
+        <span style="font-family:var(--mono);color:#3b82f6;font-weight:600">F2</span><span><strong>Market share waterfall</strong> — Share shift decomposition between periods. Gain/loss attribution by competitor, geography, and product category.</span>
+        <span style="font-family:var(--mono);color:#3b82f6;font-weight:600">F3</span><span><strong>Competitive benchmarking</strong> — Relative position on price, quality, and NPS proxies. Spider chart output. Gap analysis versus leading competitor.</span>
+        <span style="font-family:var(--mono);color:#3b82f6;font-weight:600">F4</span><span><strong>BCG matrix</strong> — Product portfolio positioning: market growth rate vs relative market share. Quadrant classification (Star/Cash Cow/Question Mark/Dog). Investment implication overlay.</span>
+        <span style="font-family:var(--mono);color:#3b82f6;font-weight:600">F5</span><span><strong>Customer archetype clustering</strong> — k-means clustering (Pyodide) on behavioural and demographic dimensions. Cluster profile cards with defining characteristics and addressable size.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Flow ── -->
+  <div class="card" id="flow" style="margin:20px 0 0;border-top:3px solid #22c55e">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:28px;height:28px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">⬡</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#22c55e">Meridian Flow</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim)">Phase 4 · planned · flow/index.html</div>
+      </div>
+      <span class="mc-tag" style="margin-left:auto">JS + Pyodide (ARIMA) · Phase 4</span>
+    </div>
+    <p>Supply chain analytics workbench. Inventory health, demand forecasting, lead time analysis, and stockout risk scoring. For operations and supply chain strategy engagements where inventory and replenishment decisions are under analytical scrutiny.</p>
+    <h4>Planned sub-modules</h4>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:start">
+        <span style="font-family:var(--mono);color:#22c55e;font-weight:600">S1</span><span><strong>ABC/XYZ inventory classification</strong> — ABC by revenue contribution, XYZ by demand variability. Combined ABCXYZ matrix. Policy recommendations per category (safety stock, review frequency, supplier consolidation).</span>
+        <span style="font-family:var(--mono);color:#22c55e;font-weight:600">S2</span><span><strong>Demand forecasting</strong> — ARIMA and exponential smoothing via Pyodide. Configurable horizon. Forecast accuracy metrics (MAPE, RMSE). Seasonal decomposition.</span>
+        <span style="font-family:var(--mono);color:#22c55e;font-weight:600">S3</span><span><strong>Lead time analysis</strong> — Lead time distribution by supplier, product category, and geography. Variability scoring. P90 lead time for safety stock calculation.</span>
+        <span style="font-family:var(--mono);color:#22c55e;font-weight:600">S4</span><span><strong>EOQ optimisation</strong> — Economic order quantity per SKU. Carrying cost vs ordering cost trade-off. Reorder point and safety stock recommendation.</span>
+        <span style="font-family:var(--mono);color:#22c55e;font-weight:600">S5</span><span><strong>Stockout risk scoring</strong> — Risk score per SKU combining demand variability, lead time variance, current stock level, and forecast demand. Priority intervention list.</span>
+      </div>
     </div>
   </div>
 </section>
@@ -853,32 +1009,32 @@ pre code{color:var(--text2)}
     </thead>
     <tbody>
       <tr>
-        <td class="ph-num">Phase 0</td>
-        <td><span class="ph-del">Meridian Platform Core</span>Module router, AppHandoff v2 (with pipelineId), canvas engine foundation, pipeline save/load (localStorage + JSON), CLAUDE.md, repo scaffold</td>
+        <td class="ph-num">Phase 0 ✓</td>
+        <td><span class="ph-del">Meridian Platform Core</span>Module router, AppHandoff v2, canvas engine, pipeline save/load, CLAUDE.md, repo scaffold</td>
         <td>Canvas node system, edge drawing, pipeline data model, module router UI</td>
-        <td><code>meridian-platform</code> repo live. Bridge extended. Canvas works for ETL operations. Pipelines save/load. Platform home routes to all modules.</td>
+        <td><code>meridian</code> repo live. Bridge extended. Canvas works. Pipelines save/load. Platform home routes to all modules.</td>
       </tr>
       <tr>
-        <td class="ph-num">Phase 1</td>
-        <td><span class="ph-del">Meridian Price — complete</span>Finish all 8 sub-modules in Meridian Price. Add Price-specific canvas nodes (Pocket Price Waterfall node, Scenario Modeller node). Renova pricing demo dataset. First reusable pipeline demo: "Monthly Pricing Review".</td>
-        <td>First full canvas workflow. First reusable pipeline.</td>
-        <td><code>price/index.html</code> live. Renova pricing demo. "Monthly Pricing Review" pipeline ships as a bundled demo pipeline.</td>
+        <td class="ph-num">Phase 1 ✓</td>
+        <td><span class="ph-del">Meridian Price — complete</span>All 8 sub-modules live. Scenario Modeller canvas. Renova pricing demo. Run Analysis button pattern.</td>
+        <td>First full canvas workflow (Scenario Modeller). Run Analysis pattern established.</td>
+        <td><code>price/index.html</code> live at archishman.com/meridian/price</td>
       </tr>
       <tr>
-        <td class="ph-num">Phase 2</td>
-        <td><span class="ph-del">Meridian Pulse — Consumer Analytics</span>RFM + cohort retention in JS first. CLTV, churn, propensity via Pyodide. Pyodide initialiser proven. Renova customers demo dataset.</td>
-        <td>First Pyodide module. Pyodide warm/cold load UX resolved.</td>
-        <td><code>pulse/index.html</code> live. Code sessions begin (CLAUDE.md active).</td>
+        <td class="ph-num">Phase 2 ✓</td>
+        <td><span class="ph-del">Meridian Pulse — Consumer Analytics</span>7 sub-modules. RFM, CLTV (DCF), Churn (logistic regression), Propensity scoring, Cohort, Migration, Acq/Retention. JS ML — Pyodide deferred to Phase 2.1.</td>
+        <td>First ML module. Gradient descent in-browser. Data mode detection. Methodology transparency layer.</td>
+        <td><code>pulse/index.html</code> live at archishman.com/meridian/pulse</td>
       </tr>
       <tr>
-        <td class="ph-num">Phase 3</td>
-        <td><span class="ph-del">Meridian Ledger + Meridian Org</span>Revenue bridge, P&amp;L, forecasting (Ledger). Span analysis, attrition modelling (Org). Both in parallel — no inter-dependency.</td>
-        <td>Two modules simultaneously. Platform reaches 4 live modules.</td>
+        <td class="ph-num">Phase 3 ▶</td>
+        <td><span class="ph-del">Meridian Ledger + Meridian Org</span>Revenue bridge, P&amp;L, working capital, forecasting (Ledger). Span of control, layer benchmarking, attrition, capability mapping (Org). Both in parallel.</td>
+        <td>Two modules simultaneously. First financial analytics. First HR/org analytics. Platform reaches 4 live modules.</td>
         <td><code>ledger/index.html</code> + <code>org/index.html</code> live. Renova financials + headcount demos.</td>
       </tr>
       <tr>
         <td class="ph-num">Phase 4</td>
-        <td><span class="ph-del">Meridian Field + Meridian Flow · Platform v1.0</span>Market sizing, BCG matrix, clustering (Field). Inventory health, demand forecasting, EOQ (Flow). All 6 Renova demo datasets live. Full cross-module demo narrative documented.</td>
+        <td><span class="ph-del">Meridian Field + Meridian Flow · Platform v1.0</span>Market sizing, BCG, clustering (Field). Inventory, demand forecasting, EOQ (Flow). All 6 Renova demo datasets live.</td>
         <td>Platform complete. All canvas node types live. Full demo universe.</td>
         <td>All 6 modules live. Renova Home full demo suite. Platform v1.0 shipped.</td>
       </tr>
@@ -946,9 +1102,10 @@ buyers, e-comm margin compression, Tier 2 attrition, import supply
 chain variance.
 
 <span class="cm-c">## Current build status</span>
-Phase 0: [ ] repo scaffold  [ ] canvas engine  [ ] pipeline engine
-Phase 1: [ ] Meridian Price complete
-Phase 2: [ ] Meridian Pulse (first Pyodide module)
+Phase 0: [✓] repo scaffold  [✓] canvas engine  [✓] pipeline engine
+Phase 1: [✓] Meridian Price complete
+Phase 2: [✓] Meridian Pulse (JS ML — Pyodide Phase 2.1)
+Phase 3: [ ] Meridian Ledger  [ ] Meridian Org
 <span class="cm-c">## Update this section after each phase completes.</span>
   </div>
 </section>
@@ -977,32 +1134,13 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     BUILD JOURNAL — Sections 17–24
+     BUILD JOURNAL — Sections 17–23
      Decision log: granular, specific, consulting-grounded.
      PM lifecycle map to be overlaid post-build.
 ══════════════════════════════════════════════════════════════ -->
 
-<section id="j-origin">
-  <div class="section-label">17 — Build Journal · Origin</div>
-  <h2>The two engagements that made this product necessary</h2>
-
-  <p>This product was not designed to fill a market gap identified in a whitepaper. It was designed to resolve a specific professional frustration encountered twice in twelve years — in two different organisations, with two different datasets, and the same structural cause each time.</p>
-
-  <div class="callout purple">
-    <p><strong>The observation that created the product:</strong> The person who understands the business question is almost never the same person who can execute the analysis. This separation is not a skills gap. It is an infrastructure gap — and it is structural, not accidental.</p>
-  </div>
-
-  <h3>Engagement 1 — Monitor Deloitte, US auto parts retail (~$50M pricing transformation)</h3>
-  <p>A large NAPA-scale auto parts retailer. The analytical question was clear within the first week: isolate pocket price leakage across 200,000 SKUs, by category, channel, and customer tier. Every pricing manager in the room knew what the waterfall framework was. The question was not what to do. The question was how long it would take to do it.</p>
-  <p>The answer was weeks — not because the analysis was hard, but because the infrastructure required to run it (SQL Server, Alteryx pipelines, Tableau dashboards) needed setup time and dedicated analyst capacity. The analytical logic was locked in days. The clean, production-ready dataset that would let the analysis run took weeks. The bottleneck was infrastructure latency, not intellectual capacity.</p>
-
-  <h3>Engagement 2 — Mahindra AFS, consumer analytics CoE</h3>
-  <p>A multi-million customer dataset on SQL Server, with a dedicated analytics CoE running CLTV models, propensity scores, and churn signals. The outputs were decision-relevant. But every iteration — every "what if we segment by use case instead of geography?" — went back into the analyst queue. Two to three days per iteration cycle. The strategic conversation was moving faster than the analytical pipeline could follow it.</p>
-  <p>In both cases: the bottleneck was not intelligence. It was infrastructure latency. The solution is not to hire more analysts — it is to close the distance between the question and the answer. DataBridge proved the zero-server, browser-native architecture was viable at commercial data volumes. Meridian extends that architecture across the full strategy consulting engagement lifecycle.</p>
-</section>
-
 <section id="j-arch">
-  <div class="section-label">18 — Build Journal · Architecture ADRs</div>
+  <div class="section-label">17 — Build Journal · Architecture ADRs</div>
   <h2>Five architecture decisions — with the reasoning that locked them</h2>
 
   <div class="adr">
@@ -1055,7 +1193,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-p0">
-  <div class="section-label">19 — Build Journal · Phase 0</div>
+  <div class="section-label">18 — Build Journal · Phase 0</div>
   <h2>Platform core — decisions and rationale for each component</h2>
 
   <p>Phase 0 was the prerequisite gate before any module could be built correctly. The three shared utilities (handoff.js, pipelines.js, canvas.js) were built before any module took a dependency on them — ensuring the interface contracts were stable before they were consumed.</p>
@@ -1095,7 +1233,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-p1">
-  <div class="section-label">20 — Build Journal · Phase 1</div>
+  <div class="section-label">19 — Build Journal · Phase 1</div>
   <h2>Meridian Price — eight sub-modules, analytical methodology decisions</h2>
 
   <p>Meridian Price maps directly to the analytical sequence of the Monitor Deloitte pricing engagement. Every sub-module corresponds to a diagnostic that was run (or needed to be run) in the first four weeks of that project.</p>
@@ -1132,7 +1270,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-p2">
-  <div class="section-label">21 — Build Journal · Phase 2</div>
+  <div class="section-label">20 — Build Journal · Phase 2</div>
   <h2>Meridian Pulse — consumer analytics methodology decisions</h2>
 
   <p>Meridian Pulse is grounded in the Mahindra AFS analytics CoE work — specifically the CLTV model on ~2M customers, the propensity scoring system, the cohort retention analysis, and the churn prediction model that was built on SQL Server. The browser-native version replicates that analytical capability set within the zero-server constraint.</p>
@@ -1165,7 +1303,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-ux">
-  <div class="section-label">22 — Build Journal · UX Iteration Log</div>
+  <div class="section-label">21 — Build Journal · UX Iteration Log</div>
   <h2>What changed in the UX — the decisions and what drove them</h2>
 
   <div class="iter-row">
@@ -1202,7 +1340,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-bugs">
-  <div class="section-label">23 — Build Journal · Bug Log</div>
+  <div class="section-label">22 — Build Journal · Bug Log</div>
   <h2>Every bug found and fixed — root cause first</h2>
 
   <p>Six of the seven bugs below share a single structural pattern: a render function that rebuilds its own UI on every call, overwriting state set by the user before reading it back. This is a consequence of the single-function render model — when one function handles both state-building and rendering, it resets what the user has changed.</p>
@@ -1251,7 +1389,7 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 <section id="j-backlog">
-  <div class="section-label">24 — Build Journal · Backlog</div>
+  <div class="section-label">23 — Build Journal · Backlog</div>
   <h2>Known limitations and what is planned to address them</h2>
 
   <div class="backlog-item">

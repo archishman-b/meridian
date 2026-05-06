@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Flow — Supply Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjs@13.0.0/lib/browser/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2230;
+  --surface3: #21283a;
+  --border: #2a3142;
+  --border2: #323d52;
+  --text: #e8eaf0;
+  --text2: #b0bac8;
+  --muted: #6b7590;
+  --accent: #4ade80;
+  --accent-dim: rgba(74,222,128,0.10);
+  --accent-bd: rgba(74,222,128,0.28);
+  --blue: #60a5fa;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --sans: 'DM Sans', sans-serif;
+  --serif: 'DM Serif Display', serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+.shell { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; gap: 16px; }
+.content { padding: 28px; flex: 1; }
+
+.brand { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.brand-tag { font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.brand-name { font-family: var(--serif); font-size: 20px; color: var(--text); }
+.brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.nav-section { padding: 8px 20px 4px; font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); border-left-color: var(--accent); color: var(--accent); }
+.nav-item .nav-code { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: auto; }
+.nav-item.active .nav-code { color: var(--accent); }
+
+.topbar-title { font-family: var(--serif); font-size: 18px; color: var(--text); }
+.topbar-sep { color: var(--border2); }
+.topbar-module { font-size: 13px; color: var(--text2); }
+.dataset-pill { margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--text2); }
+.dataset-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.handoff-badge { font-size: 10px; font-family: var(--mono); padding: 3px 8px; border-radius: 4px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-bd); }
+
+.module-panel { display: none; }
+.module-panel.active { display: block; }
+.module-header { margin-bottom: 24px; }
+.module-title { font-family: var(--serif); font-size: 26px; color: var(--text); margin-bottom: 4px; }
+.module-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.card-title { font-size: 12px; font-family: var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title::before { content: ''; display: block; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+.kpi-tile { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 16px; }
+.kpi-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; }
+.kpi-value { font-family: var(--serif); font-size: 22px; color: var(--text); margin-bottom: 2px; }
+.kpi-sub { font-size: 11px; color: var(--muted); }
+.kpi-change.up { color: #4ade80; font-size: 11px; font-family: var(--mono); margin-top: 4px; }
+.kpi-change.down { color: #f87171; font-size: 11px; font-family: var(--mono); margin-top: 4px; }
+.kpi-change.warn { color: var(--amber); font-size: 11px; font-family: var(--mono); margin-top: 4px; }
+
+.control-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.control-group { display: flex; flex-direction: column; gap: 4px; }
+.control-label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.control-input { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 10px; outline: none; }
+.control-input:focus { border-color: var(--accent); }
+.control-select { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 10px; outline: none; cursor: pointer; }
+.btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-family: var(--sans); font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.btn-accent { background: var(--accent); color: #0d1117; }
+.btn-accent:hover { background: #86efac; }
+.btn-ghost { background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.chart-wrap { position: relative; height: 260px; }
+.chart-wrap-lg { position: relative; height: 320px; }
+.chart-wrap-sm { position: relative; height: 200px; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { background: var(--surface2); color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.data-table tr:hover td { background: var(--surface2); }
+.data-table .num { text-align: right; font-family: var(--mono); }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-family: var(--mono); }
+.badge-green { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+.badge-amber { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.25); }
+.badge-red { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+.badge-blue { background: rgba(96,165,250,0.12); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
+.badge-purple { background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.25); }
+
+/* ABC/XYZ matrix */
+.xyz-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.xyz-cell { padding: 12px; border-radius: 4px; text-align: center; }
+.xyz-cell .xyz-label { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-bottom: 4px; }
+.xyz-cell .xyz-count { font-size: 18px; font-weight: 600; font-family: var(--serif); }
+.xyz-cell .xyz-rev { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* Risk score bar */
+.risk-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.risk-label { font-size: 11px; color: var(--muted); width: 140px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.risk-bar-bg { flex: 1; background: var(--surface2); border-radius: 3px; height: 10px; }
+.risk-bar-fill { height: 100%; border-radius: 3px; }
+.risk-val { font-family: var(--mono); font-size: 11px; color: var(--text2); width: 36px; text-align: right; flex-shrink: 0; }
+
+/* Upload */
+.upload-zone { border: 2px dashed var(--border2); border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-dim); }
+.upload-icon { font-size: 32px; margin-bottom: 12px; }
+.upload-text { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+.upload-sub { font-size: 12px; color: var(--muted); }
+
+.export-bar { background: var(--surface); border-top: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; gap: 12px; }
+.export-label { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-right: 4px; }
+
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text2); animation: fadeIn 0.2s ease; max-width: 320px; }
+.toast.success { border-color: rgba(74,222,128,0.3); color: #4ade80; }
+.toast.error { border-color: rgba(248,113,113,0.3); color: var(--red); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.insight { background: var(--accent-dim); border: 1px solid var(--accent-bd); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+.insight strong { color: var(--accent); }
+.insight.warn { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.25); }
+.insight.warn strong { color: var(--amber); }
+
+.eoq-result { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 20px; margin-top: 16px; }
+.eoq-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.eoq-row:last-child { border-bottom: none; }
+.eoq-key { font-size: 13px; color: var(--text2); }
+.eoq-val { font-family: var(--mono); font-size: 14px; color: var(--accent); font-weight: 500; }
+
+.progress-ring { display: flex; align-items: center; gap: 16px; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .grid-4, .grid-5 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* Table scroll */
+.table-scroll { max-height: 380px; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="shell">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-tag">Meridian Platform</div>
+      <div class="brand-name">Flow</div>
+      <div class="brand-sub">Supply Chain</div>
+    </div>
+    <span class="nav-section">Analyses</span>
+    <div class="nav-item active" onclick="showModule('s1')">
+      <span>ABC/XYZ Classification</span><span class="nav-code">S1</span>
+    </div>
+    <div class="nav-item" onclick="showModule('s2')">
+      <span>Demand Forecasting</span><span class="nav-code">S2</span>
+    </div>
+    <div class="nav-item" onclick="showModule('s3')">
+      <span>Lead Time Analysis</span><span class="nav-code">S3</span>
+    </div>
+    <div class="nav-item" onclick="showModule('s4')">
+      <span>EOQ Optimisation</span><span class="nav-code">S4</span>
+    </div>
+    <div class="nav-item" onclick="showModule('s5')">
+      <span>Stockout Risk</span><span class="nav-code">S5</span>
+    </div>
+    <span class="nav-section">Data</span>
+    <div class="nav-item" onclick="showModule('data')">
+      <span>Load Dataset</span>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Meridian</span>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-module" id="topbarModule">Supply Chain — S1: ABC/XYZ Classification</span>
+      <div class="dataset-pill" id="datasetPill">
+        <div class="dot"></div>
+        <span id="datasetLabel">Renova Home · 8,500 SKUs</span>
+      </div>
+      <span class="handoff-badge" id="handoffBadge" style="display:none">← Handoff</span>
+    </div>
+
+    <div class="content" id="mainContent">
+
+      <!-- ══ S1: ABC/XYZ ══ -->
+      <div class="module-panel active" id="panel-s1">
+        <div class="module-header">
+          <div class="module-title">ABC/XYZ Inventory Classification</div>
+          <div class="module-desc">ABC classification by cumulative revenue contribution. XYZ by demand variability (CV). Combined matrix for inventory policy decisions.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">ABC Thresholds</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">A cutoff (% cumulative rev)</div>
+              <input class="control-input" type="number" id="s1_a_cut" value="70" min="50" max="85" style="width:100px" oninput="renderS1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">B cutoff (% cumulative rev)</div>
+              <input class="control-input" type="number" id="s1_b_cut" value="90" min="75" max="95" style="width:100px" oninput="renderS1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">X CV threshold</div>
+              <input class="control-input" type="number" id="s1_x_cv" value="0.25" step="0.05" style="width:100px" oninput="renderS1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Y CV threshold</div>
+              <input class="control-input" type="number" id="s1_y_cv" value="0.60" step="0.05" style="width:100px" oninput="renderS1()">
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">ABC Distribution</div>
+            <div class="chart-wrap-sm"><canvas id="s1_abc_chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">XYZ Demand Variability</div>
+            <div class="chart-wrap-sm"><canvas id="s1_xyz_chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">ABC/XYZ Combined Matrix — SKU Count</div>
+          <div id="s1_matrix" style="margin-bottom:16px"></div>
+          <div class="insight" id="s1_insight"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Pareto Curve — Cumulative Revenue</div>
+          <div class="chart-wrap"><canvas id="s1_pareto"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top 20 SKUs by Revenue</div>
+          <div class="table-scroll"><table class="data-table" id="s1_top_table"></table></div>
+        </div>
+      </div>
+
+      <!-- ══ S2: Demand Forecasting ══ -->
+      <div class="module-panel" id="panel-s2">
+        <div class="module-header">
+          <div class="module-title">Demand Forecasting</div>
+          <div class="module-desc">Linear trend extraction with multiplicative seasonal decomposition. Forecast horizon adjustable. MAPE displayed for model assessment.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Forecast Configuration</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Category</div>
+              <select class="control-select" id="s2_category" onchange="renderS2()">
+                <option>Bathroom Fittings</option>
+                <option>Floor Tiles</option>
+                <option>Paints & Coatings</option>
+                <option>Modular Kitchen</option>
+                <option>Plumbing Systems</option>
+                <option>Electrical Fixtures</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <div class="control-label">Forecast periods (months)</div>
+              <input class="control-input" type="number" id="s2_horizon" value="6" min="1" max="24" style="width:80px" oninput="renderS2()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Seasonal period (months)</div>
+              <input class="control-input" type="number" id="s2_seasonal" value="12" min="3" max="24" style="width:80px" oninput="renderS2()">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Demand Trend + Seasonal Decomposition + Forecast</div>
+          <div class="chart-wrap-lg"><canvas id="s2_forecast_chart"></canvas></div>
+        </div>
+        <div class="grid-3">
+          <div class="kpi-tile">
+            <div class="kpi-label">Trend direction</div>
+            <div class="kpi-value" id="s2_trend_dir">—</div>
+            <div class="kpi-sub" id="s2_trend_val">—</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">MAPE</div>
+            <div class="kpi-value" id="s2_mape">—</div>
+            <div class="kpi-sub">Forecast accuracy</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Peak forecast period</div>
+            <div class="kpi-value" id="s2_peak">—</div>
+            <div class="kpi-sub">Highest demand month</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Seasonal Decomposition</div>
+          <div class="chart-wrap-sm"><canvas id="s2_seasonal_chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ══ S3: Lead Time Analysis ══ -->
+      <div class="module-panel" id="panel-s3">
+        <div class="module-header">
+          <div class="module-title">Lead Time Analysis</div>
+          <div class="module-desc">Lead time distribution by supplier and category. P90 computation for safety stock sizing. Import vs domestic variance comparison.</div>
+        </div>
+        <div class="grid-4" id="s3_kpis"></div>
+        <div class="card">
+          <div class="card-title">Lead Time Distribution by Supplier Type</div>
+          <div class="chart-wrap-lg"><canvas id="s3_dist_chart"></canvas></div>
+        </div>
+        <div class="insight warn" id="s3_insight"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">P90 by Category (Safety Stock Basis)</div>
+            <div class="chart-wrap"><canvas id="s3_p90_chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Supplier Performance Table</div>
+            <div class="table-scroll"><table class="data-table" id="s3_table"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ S4: EOQ Optimisation ══ -->
+      <div class="module-panel" id="panel-s4">
+        <div class="module-header">
+          <div class="module-title">EOQ Optimisation</div>
+          <div class="module-desc">Economic Order Quantity, Reorder Point, and Safety Stock calculation. Single-SKU deep dive or portfolio-level optimisation sweep.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Single SKU — EOQ Calculator</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Annual demand (units)</div>
+              <input class="control-input" type="number" id="s4_demand" value="2400" style="width:110px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Unit cost (₹)</div>
+              <input class="control-input" type="number" id="s4_unit_cost" value="850" style="width:110px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Ordering cost (₹ / order)</div>
+              <input class="control-input" type="number" id="s4_order_cost" value="1200" style="width:110px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Holding cost rate (%)</div>
+              <input class="control-input" type="number" id="s4_holding_rate" value="22" style="width:100px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Lead time (days)</div>
+              <input class="control-input" type="number" id="s4_lead" value="18" style="width:90px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Demand SD (daily units)</div>
+              <input class="control-input" type="number" id="s4_sigma" value="3.2" step="0.1" style="width:100px" oninput="renderS4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Service level (z-score)</div>
+              <select class="control-select" id="s4_z" onchange="renderS4()">
+                <option value="1.28">90% (z=1.28)</option>
+                <option value="1.645" selected>95% (z=1.645)</option>
+                <option value="1.96">97.5% (z=1.96)</option>
+                <option value="2.326">99% (z=2.326)</option>
+              </select>
+            </div>
+          </div>
+          <div class="eoq-result" id="s4_result"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Cost Curve</div>
+          <div class="chart-wrap"><canvas id="s4_cost_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Portfolio EOQ Sweep — Top Categories</div>
+          <div class="chart-wrap"><canvas id="s4_portfolio_chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ══ S5: Stockout Risk ══ -->
+      <div class="module-panel" id="panel-s5">
+        <div class="module-header">
+          <div class="module-title">Stockout Risk Scoring</div>
+          <div class="module-desc">Composite risk score: demand variability (CV) + lead time variance + current stock vs 30-day forecast. Flags at-risk SKUs by category.</div>
+        </div>
+        <div class="grid-4" id="s5_kpis"></div>
+        <div class="card">
+          <div class="card-title">Risk Score Distribution</div>
+          <div class="chart-wrap"><canvas id="s5_dist_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top At-Risk SKUs — Bathroom Fittings (Known Signal)</div>
+          <div class="insight warn" id="s5_insight"></div>
+          <div id="s5_risk_bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Risk Matrix by Category</div>
+          <div class="chart-wrap"><canvas id="s5_matrix_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Full At-Risk SKU List (Score > 0.65)</div>
+          <div class="table-scroll"><table class="data-table" id="s5_table"></table></div>
+        </div>
+      </div>
+
+      <!-- ══ Data panel ══ -->
+      <div class="module-panel" id="panel-data">
+        <div class="module-header">
+          <div class="module-title">Load Dataset</div>
+          <div class="module-desc">Upload a CSV or XLSX, or use the built-in Renova Home 8,500 SKU inventory dataset.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Upload</div>
+          <div class="upload-zone" id="uploadZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">⊞</div>
+            <div class="upload-text">Drop CSV or XLSX here, or click to browse</div>
+            <div class="upload-sub">Expected columns: sku_id, category, supplier_type, annual_demand, unit_cost, demand_cv, lead_time_days, current_stock, revenue_annual</div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".csv,.xlsx" onchange="handleFileUpload(event)">
+        </div>
+        <div class="card">
+          <div class="card-title">Demo Dataset — Renova Home Inventory</div>
+          <div class="insight"><strong>8,500 SKUs</strong> across 6 categories and domestic/import supply chains. Known signals: import SKU lead time variance 2–3× domestic; elevated stockout risk in bathroom fittings category. Use this dataset to run all 5 supply chain analyses.</div>
+          <button class="btn btn-accent" onclick="loadDemoData(); showModule('s1')">Load Demo Data & Begin Analysis</button>
+          <div style="margin-top:16px"><table class="data-table" id="dataPreviewTable"></table></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <div class="export-bar">
+      <span class="export-label">Export</span>
+      <button class="btn btn-ghost" onclick="exportPDF()">PDF Report</button>
+      <button class="btn btn-ghost" onclick="exportPNG()">PNG</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">CSV Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AppState
+// ═══════════════════════════════════════════════
+const AppState = {
+  rows: [],
+  schema: {},
+  source: 'demo',
+  currentModule: 's1',
+  charts: {}
+};
+
+// ═══════════════════════════════════════════════
+//  Demo data — Renova Home 8,500 SKUs
+// ═══════════════════════════════════════════════
+function generateDemoData() {
+  const rng = (min, max) => min + Math.random() * (max - min);
+  const rngInt = (min, max) => Math.round(rng(min, max));
+  const categories = ['Bathroom Fittings', 'Floor Tiles', 'Paints & Coatings', 'Modular Kitchen', 'Plumbing Systems', 'Electrical Fixtures'];
+  const catWeights = [0.22, 0.20, 0.18, 0.15, 0.14, 0.11];
+  const rows = [];
+
+  // Signals: bathroom fittings has high stockout risk; import lead time variance 2-3x
+  for (let i = 0; i < 8500; i++) {
+    const catRoll = Math.random();
+    let cat = categories[5];
+    let cumWeight = 0;
+    for (let ci = 0; ci < categories.length; ci++) {
+      cumWeight += catWeights[ci];
+      if (catRoll < cumWeight) { cat = categories[ci]; break; }
+    }
+
+    const isImport = Math.random() < 0.38;
+    const isBathroom = cat === 'Bathroom Fittings';
+    const abcRoll = Math.random();
+    const abcClass = abcRoll < 0.15 ? 'A' : abcRoll < 0.40 ? 'B' : 'C';
+
+    // Revenue — A skus high, C low
+    const revenueBase = abcClass === 'A' ? rng(800000, 4500000) : abcClass === 'B' ? rng(80000, 800000) : rng(2000, 80000);
+
+    // Demand CV — XYZ
+    const cvBase = Math.random();
+    let demandCv;
+    if (cvBase < 0.40) demandCv = rng(0.05, 0.22); // X
+    else if (cvBase < 0.75) demandCv = rng(0.22, 0.55); // Y
+    else demandCv = rng(0.55, 1.8); // Z
+
+    // Bathroom fittings: elevated CV
+    if (isBathroom) demandCv = Math.min(2.0, demandCv * rng(1.2, 1.8));
+
+    // Lead time — import 2-3x domestic
+    const leadBase = isImport ? rng(28, 72) : rng(7, 22);
+    const leadTimeP90 = leadBase * rng(1.1, isImport ? 1.8 : 1.3); // import has higher variance
+
+    const annualDemand = Math.round(revenueBase / rng(300, 2000));
+    const unitCost = Math.round(revenueBase / annualDemand);
+    const currentStock = Math.round(annualDemand / 12 * rng(0.3, 3.5));
+    // Stockout risk higher for bathroom fittings
+    const stockAdj = isBathroom ? 0.6 : 1.0;
+    const currentStockAdj = Math.round(currentStock * stockAdj);
+
+    rows.push({
+      sku_id: `SKU${String(i+1).padStart(5,'0')}`,
+      category: cat,
+      supplier_type: isImport ? 'Import' : 'Domestic',
+      abc_class: abcClass,
+      annual_demand: annualDemand,
+      unit_cost: unitCost,
+      revenue_annual: Math.round(revenueBase),
+      demand_cv: Math.round(demandCv * 1000) / 1000,
+      lead_time_days: Math.round(leadBase),
+      lead_time_p90: Math.round(leadTimeP90),
+      current_stock: currentStockAdj,
+      reorder_point: Math.round(annualDemand / 365 * leadBase * 1.2),
+      holding_cost_rate: rng(0.18, 0.28),
+      order_cost: Math.round(rng(400, 2400))
+    });
+  }
+  return rows;
+}
+
+function loadDemoData() {
+  AppState.rows = generateDemoData();
+  AppState.source = 'demo';
+  document.getElementById('datasetLabel').textContent = `Renova Home · ${AppState.rows.length.toLocaleString()} SKUs`;
+  toast(`Renova Home inventory dataset loaded — ${AppState.rows.length.toLocaleString()} SKUs`, 'success');
+  showDataPreview();
+  renderAllModules();
+}
+
+function showDataPreview() {
+  const rows = AppState.rows.slice(0, 8);
+  if (!rows.length) return;
+  const keys = ['sku_id','category','supplier_type','abc_class','revenue_annual','demand_cv','lead_time_days','current_stock'];
+  const thead = `<thead><tr>${keys.map(k=>`<th>${k.replace(/_/g,' ')}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td class="${typeof r[k]==='number'?'num':''}">${typeof r[k]==='number'?r[k].toLocaleString():r[k]}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  document.getElementById('dataPreviewTable').innerHTML = thead+tbody;
+}
+
+// ═══════════════════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════════════════
+const moduleLabels = {
+  s1: 'Supply Chain — S1: ABC/XYZ Classification',
+  s2: 'Supply Chain — S2: Demand Forecasting',
+  s3: 'Supply Chain — S3: Lead Time Analysis',
+  s4: 'Supply Chain — S4: EOQ Optimisation',
+  s5: 'Supply Chain — S5: Stockout Risk Scoring',
+  data: 'Supply Chain — Data'
+};
+
+function showModule(id) {
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `showModule('${id}')`) n.classList.add('active');
+  });
+  document.getElementById('topbarModule').textContent = moduleLabels[id] || '';
+  AppState.currentModule = id;
+  if (id === 's1') renderS1();
+  if (id === 's2') renderS2();
+  if (id === 's3') renderS3();
+  if (id === 's4') renderS4();
+  if (id === 's5') renderS5();
+  if (id === 'data') showDataPreview();
+}
+
+function destroyChart(key) {
+  if (AppState.charts[key]) { AppState.charts[key].destroy(); delete AppState.charts[key]; }
+}
+const CD = { color: '#e8eaf0', grid: 'rgba(42,49,66,0.8)', font: 'DM Sans' };
+
+// ═══════════════════════════════════════════════
+//  S1 — ABC/XYZ
+// ═══════════════════════════════════════════════
+function renderS1() {
+  if (!AppState.rows.length) return;
+  destroyChart('s1_abc'); destroyChart('s1_xyz'); destroyChart('s1_pareto');
+
+  const aCut = parseFloat(document.getElementById('s1_a_cut').value) / 100 || 0.70;
+  const bCut = parseFloat(document.getElementById('s1_b_cut').value) / 100 || 0.90;
+  const xCv = parseFloat(document.getElementById('s1_x_cv').value) || 0.25;
+  const yCv = parseFloat(document.getElementById('s1_y_cv').value) || 0.60;
+
+  const rows = AppState.rows;
+  const sorted = [...rows].sort((a,b) => b.revenue_annual - a.revenue_annual);
+  const totalRev = sorted.reduce((s, r) => s + (r.revenue_annual || 0), 0);
+
+  let cumRev = 0;
+  sorted.forEach(r => {
+    cumRev += r.revenue_annual || 0;
+    const pct = cumRev / totalRev;
+    r._abc = pct <= aCut ? 'A' : pct <= bCut ? 'B' : 'C';
+    r._xyz = r.demand_cv <= xCv ? 'X' : r.demand_cv <= yCv ? 'Y' : 'Z';
+  });
+
+  const abcCount = { A: 0, B: 0, C: 0 };
+  const xyzCount = { X: 0, Y: 0, Z: 0 };
+  const abcRev = { A: 0, B: 0, C: 0 };
+  sorted.forEach(r => {
+    abcCount[r._abc]++; xyzCount[r._xyz]++;
+    abcRev[r._abc] += r.revenue_annual || 0;
+  });
+
+  // ABC chart
+  AppState.charts['s1_abc'] = new Chart(document.getElementById('s1_abc_chart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['A — Critical','B — Important','C — Long Tail'],
+      datasets: [{ data: [abcCount.A, abcCount.B, abcCount.C], backgroundColor: ['#4ade80','#60a5fa','#6b7590'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } } }
+  });
+
+  // XYZ chart
+  AppState.charts['s1_xyz'] = new Chart(document.getElementById('s1_xyz_chart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['X — Stable','Y — Variable','Z — Erratic'],
+      datasets: [{ data: [xyzCount.X, xyzCount.Y, xyzCount.Z], backgroundColor: ['#4ade80','#fbbf24','#f87171'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } } }
+  });
+
+  // Combined matrix
+  const matrix = {};
+  ['A','B','C'].forEach(a => ['X','Y','Z'].forEach(x => { matrix[a+x] = { count: 0, rev: 0 }; }));
+  sorted.forEach(r => { const key = r._abc + r._xyz; if (matrix[key]) { matrix[key].count++; matrix[key].rev += r.revenue_annual||0; } });
+
+  const cellStyle = (a, x) => {
+    if (a==='A' && x==='X') return 'background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3)';
+    if (a==='A') return 'background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2)';
+    if (a==='C' && x==='Z') return 'background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2)';
+    return 'background:var(--surface2);border:1px solid var(--border2)';
+  };
+
+  const matrixHtml = `<div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:2px;font-size:12px">
+    <div></div>
+    ${['X — Stable','Y — Variable','Z — Erratic'].map(l=>`<div style="text-align:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--muted)">${l}</div>`).join('')}
+    ${['A','B','C'].map(a => `
+      <div style="display:flex;align-items:center;padding:8px;font-family:var(--mono);font-size:11px;color:var(--muted)">${a}</div>
+      ${['X','Y','Z'].map(x => {
+        const cell = matrix[a+x];
+        return `<div style="padding:12px;border-radius:4px;text-align:center;${cellStyle(a,x)}">
+          <div style="font-size:16px;font-weight:600;font-family:var(--serif);color:var(--text)">${cell.count.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">₹${(cell.rev/1e7).toFixed(1)}Cr</div>
+          <div style="font-size:9px;color:var(--muted);font-family:var(--mono)">${a}${x}</div>
+        </div>`;
+      }).join('')}
+    `).join('')}
+  </div>`;
+  document.getElementById('s1_matrix').innerHTML = matrixHtml;
+
+  document.getElementById('s1_insight').innerHTML =
+    `<strong>A-class SKUs</strong>: ${abcCount.A.toLocaleString()} SKUs (${(abcCount.A/rows.length*100).toFixed(1)}%) account for ${(abcRev.A/totalRev*100).toFixed(0)}% of revenue. ` +
+    `<strong>AZ items</strong>: ${matrix['AZ'].count} high-value erratic-demand SKUs require safety stock and active replenishment monitoring. ` +
+    `<strong>CZ items</strong>: ${matrix['CZ'].count} low-value erratic SKUs — candidates for rationalisation or supplier consolidation.`;
+
+  // Pareto
+  const paretoLabels = [], paretoCumPct = [], paretoSKUPct = [];
+  let cumRevP = 0;
+  sorted.slice(0, 200).forEach((r, i) => {
+    cumRevP += r.revenue_annual || 0;
+    paretoLabels.push(i+1);
+    paretoCumPct.push(cumRevP / totalRev * 100);
+    paretoSKUPct.push((i+1) / rows.length * 100);
+  });
+
+  AppState.charts['s1_pareto'] = new Chart(document.getElementById('s1_pareto'), {
+    type: 'line',
+    data: {
+      labels: paretoSKUPct.map(v => v.toFixed(1)+'%'),
+      datasets: [{ label: 'Cumulative Revenue %', data: paretoCumPct, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.08)', fill: true, tension: 0.3, pointRadius: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11 } } } },
+      scales: {
+        x: { title: { display: true, text: '% of SKUs', color: '#6b7590' }, ticks: { color: '#6b7590', maxTicksLimit: 10 }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'Cumulative Revenue (%)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // Top 20 table
+  const top20 = sorted.slice(0, 20);
+  document.getElementById('s1_top_table').innerHTML =
+    `<thead><tr><th>SKU</th><th>Category</th><th>Supplier</th><th class="num">Revenue (₹)</th><th>ABC</th><th>XYZ</th><th class="num">Demand CV</th></tr></thead><tbody>` +
+    top20.map(r => {
+      const abcBadge = r._abc === 'A' ? 'badge-green' : r._abc === 'B' ? 'badge-blue' : 'badge-amber';
+      const xyzBadge = r._xyz === 'X' ? 'badge-green' : r._xyz === 'Y' ? 'badge-amber' : 'badge-red';
+      return `<tr><td style="font-family:var(--mono);font-size:11px">${r.sku_id}</td><td>${r.category}</td><td>${r.supplier_type}</td><td class="num">₹${r.revenue_annual.toLocaleString()}</td><td><span class="badge ${abcBadge}">${r._abc}</span></td><td><span class="badge ${xyzBadge}">${r._xyz}</span></td><td class="num">${r.demand_cv}</td></tr>`;
+    }).join('') + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  S2 — Demand Forecasting
+// ═══════════════════════════════════════════════
+function generateDemandSeries(cat, n = 24) {
+  // Deterministic seed-like generation per category
+  const catIndex = ['Bathroom Fittings','Floor Tiles','Paints & Coatings','Modular Kitchen','Plumbing Systems','Electrical Fixtures'].indexOf(cat);
+  const seed = (catIndex + 1) * 17;
+  const trend = [2.1, 1.4, 0.8, 3.2, 1.0, 2.6][catIndex] || 1.5;
+  const seasonal = [1.0, 1.2, 1.4, 1.6, 1.5, 1.3, 1.1, 0.9, 0.8, 0.9, 1.0, 1.2]; // monthly multipliers
+  const baseLevel = [42000, 58000, 75000, 28000, 38000, 22000][catIndex] || 35000;
+  const series = [];
+  for (let i = 0; i < n; i++) {
+    const trendVal = baseLevel + trend * 800 * i;
+    const seasonMultiplier = seasonal[i % 12];
+    const noise = (Math.sin(i * seed * 0.7) * 0.1 + 1);
+    series.push(Math.round(trendVal * seasonMultiplier * noise));
+  }
+  return series;
+}
+
+function linearRegression(y) {
+  const n = y.length;
+  const x = Array.from({ length: n }, (_, i) => i);
+  const xMean = (n - 1) / 2;
+  const yMean = y.reduce((a, b) => a + b, 0) / n;
+  const slope = x.reduce((s, xi, i) => s + (xi - xMean) * (y[i] - yMean), 0) /
+    x.reduce((s, xi) => s + Math.pow(xi - xMean, 2), 0);
+  const intercept = yMean - slope * xMean;
+  return { slope, intercept };
+}
+
+function renderS2() {
+  destroyChart('s2_forecast'); destroyChart('s2_seas');
+  const cat = document.getElementById('s2_category').value;
+  const horizon = parseInt(document.getElementById('s2_horizon').value) || 6;
+  const seasonPeriod = parseInt(document.getElementById('s2_seasonal').value) || 12;
+
+  const historical = generateDemandSeries(cat, 24);
+  const { slope, intercept } = linearRegression(historical);
+  const trend = historical.map((_, i) => Math.round(intercept + slope * i));
+
+  // Seasonal indices: ratio to trend
+  const seasonalIdx = new Array(seasonPeriod).fill(0);
+  const seasonalCount = new Array(seasonPeriod).fill(0);
+  historical.forEach((v, i) => {
+    const t = trend[i] || 1;
+    const m = i % seasonPeriod;
+    seasonalIdx[m] += v / t;
+    seasonalCount[m]++;
+  });
+  seasonalIdx.forEach((_, m) => { seasonalIdx[m] /= (seasonalCount[m] || 1); });
+
+  // Forecast
+  const forecastStart = 24;
+  const forecastVals = [];
+  for (let i = 0; i < horizon; i++) {
+    const t = intercept + slope * (forecastStart + i);
+    forecastVals.push(Math.round(t * seasonalIdx[(forecastStart + i) % seasonPeriod]));
+  }
+
+  // MAPE on last 6 historical
+  const testPeriod = 6;
+  const trainEnd = historical.length - testPeriod;
+  let mapeSum = 0;
+  for (let i = trainEnd; i < historical.length; i++) {
+    const fitted = Math.round((intercept + slope * i) * seasonalIdx[i % seasonPeriod]);
+    if (historical[i]) mapeSum += Math.abs((historical[i] - fitted) / historical[i]);
+  }
+  const mape = (mapeSum / testPeriod * 100).toFixed(1);
+
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const allLabels = [...Array.from({length:24},(_,i)=>`${months[i%12]} ${2023+Math.floor(i/12)}`),
+                     ...Array.from({length:horizon},(_,i)=>months[(24+i)%12]+' 2025')];
+
+  const allHistorical = historical.map((v, i) => ({ x: i, y: v }));
+  const forecastPoints = forecastVals.map((v, i) => ({ x: 24+i, y: v }));
+
+  AppState.charts['s2_forecast'] = new Chart(document.getElementById('s2_forecast_chart'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        { label: 'Actual Demand', data: historical, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.06)', fill: true, tension: 0.2, pointRadius: 2 },
+        { label: 'Trend', data: trend, borderColor: '#60a5fa', borderDash: [4,3], tension: 0, pointRadius: 0, fill: false },
+        { label: 'Forecast', data: [...Array(24).fill(null), ...forecastVals], borderColor: '#fbbf24', borderDash: [6,3], backgroundColor: 'rgba(251,191,36,0.08)', fill: true, tension: 0.2, pointRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } },
+      scales: {
+        x: { ticks: { color: '#6b7590', maxTicksLimit: 12 }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'Units', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // KPIs
+  const dir = slope > 0 ? '↑ Growing' : '↓ Declining';
+  document.getElementById('s2_trend_dir').textContent = dir;
+  document.getElementById('s2_trend_dir').style.color = slope > 0 ? '#4ade80' : '#f87171';
+  document.getElementById('s2_trend_val').textContent = `${Math.abs(slope).toFixed(0)} units/month`;
+  document.getElementById('s2_mape').textContent = `${mape}%`;
+  const peakFcast = forecastVals.indexOf(Math.max(...forecastVals));
+  document.getElementById('s2_peak').textContent = months[(24+peakFcast)%12]+' 2025';
+
+  // Seasonal chart
+  AppState.charts['s2_seas'] = new Chart(document.getElementById('s2_seasonal_chart'), {
+    type: 'bar',
+    data: {
+      labels: months.slice(0, seasonPeriod),
+      datasets: [{ label: 'Seasonal Index', data: seasonalIdx.map(v => Math.round(v*100)/100), backgroundColor: seasonalIdx.map(v => v > 1 ? 'rgba(74,222,128,0.6)' : 'rgba(248,113,113,0.5)'), borderColor: seasonalIdx.map(v => v > 1 ? '#4ade80' : '#f87171'), borderWidth: 1 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Index: ${ctx.raw}` } } },
+      scales: {
+        x: { ticks: { color: '#6b7590', font: { size: 10 } }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'Index (1.0 = average)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  S3 — Lead Time Analysis
+// ═══════════════════════════════════════════════
+function renderS3() {
+  if (!AppState.rows.length) return;
+  destroyChart('s3_dist'); destroyChart('s3_p90');
+
+  const rows = AppState.rows;
+  const domestic = rows.filter(r => r.supplier_type === 'Domestic');
+  const imports = rows.filter(r => r.supplier_type === 'Import');
+
+  const mean = arr => arr.reduce((s,v)=>s+v,0) / arr.length;
+  const p90 = arr => { const s = [...arr].sort((a,b)=>a-b); return s[Math.floor(s.length*0.9)]; };
+  const cv = arr => { const m = mean(arr); const sd = Math.sqrt(arr.reduce((s,v)=>s+Math.pow(v-m,2),0)/arr.length); return sd/m; };
+
+  const domLTs = domestic.map(r => r.lead_time_days);
+  const impLTs = imports.map(r => r.lead_time_days);
+
+  // KPIs
+  document.getElementById('s3_kpis').innerHTML = [
+    { label: 'Domestic avg LT', val: `${mean(domLTs).toFixed(1)}d`, sub: `P90: ${p90(domLTs)}d` },
+    { label: 'Import avg LT', val: `${mean(impLTs).toFixed(1)}d`, sub: `P90: ${p90(impLTs)}d` },
+    { label: 'Import/Domestic ratio', val: `${(mean(impLTs)/mean(domLTs)).toFixed(1)}×`, sub: 'Lead time premium', warn: true },
+    { label: 'Import LT variance', val: `CV ${cv(impLTs).toFixed(2)}`, sub: `vs Domestic ${cv(domLTs).toFixed(2)}`, warn: true }
+  ].map(k => `<div class="kpi-tile"><div class="kpi-label">${k.label}</div><div class="kpi-value" style="${k.warn?'color:var(--amber)':''}">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  document.getElementById('s3_insight').innerHTML =
+    `<strong>Import SKU lead time variance is ${(cv(impLTs)/cv(domLTs)).toFixed(1)}× that of domestic SKUs.</strong> ` +
+    `Average import lead time: ${mean(impLTs).toFixed(1)} days vs ${mean(domLTs).toFixed(1)} days domestic. ` +
+    `P90 import lead time of <strong>${p90(impLTs)} days</strong> drives safety stock requirements significantly above domestic equivalents — recommend reviewing buffer stock policy for import-dependent SKU families.`;
+
+  // Distribution chart (histogram bins)
+  const allBins = Array.from({length:12},(_,i)=>i*8);
+  const domHist = new Array(12).fill(0);
+  const impHist = new Array(12).fill(0);
+  domLTs.forEach(v => { const b = Math.min(11,Math.floor(v/8)); domHist[b]++; });
+  impLTs.forEach(v => { const b = Math.min(11,Math.floor(v/8)); impHist[b]++; });
+
+  AppState.charts['s3_dist'] = new Chart(document.getElementById('s3_dist_chart'), {
+    type: 'bar',
+    data: {
+      labels: allBins.map(b => `${b}–${b+7}d`),
+      datasets: [
+        { label: 'Domestic', data: domHist, backgroundColor: 'rgba(74,222,128,0.5)', borderColor: '#4ade80', borderWidth: 1 },
+        { label: 'Import', data: impHist, backgroundColor: 'rgba(248,113,113,0.45)', borderColor: '#f87171', borderWidth: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } },
+      scales: {
+        x: { title: { display: true, text: 'Lead Time (days)', color: '#6b7590' }, ticks: { color: '#6b7590', maxTicksLimit: 12 }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'SKU Count', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // P90 by category
+  const categories = ['Bathroom Fittings','Floor Tiles','Paints & Coatings','Modular Kitchen','Plumbing Systems','Electrical Fixtures'];
+  const catP90Dom = categories.map(cat => { const lts = domestic.filter(r=>r.category===cat).map(r=>r.lead_time_days); return lts.length ? p90(lts) : 0; });
+  const catP90Imp = categories.map(cat => { const lts = imports.filter(r=>r.category===cat).map(r=>r.lead_time_days); return lts.length ? p90(lts) : 0; });
+
+  AppState.charts['s3_p90'] = new Chart(document.getElementById('s3_p90_chart'), {
+    type: 'bar',
+    data: {
+      labels: categories.map(c => c.split(' ')[0]),
+      datasets: [
+        { label: 'P90 Domestic', data: catP90Dom, backgroundColor: 'rgba(74,222,128,0.5)', borderColor: '#4ade80', borderWidth: 1 },
+        { label: 'P90 Import', data: catP90Imp, backgroundColor: 'rgba(248,113,113,0.45)', borderColor: '#f87171', borderWidth: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } },
+      scales: {
+        x: { ticks: { color: '#6b7590', font: { size: 10 } }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'P90 Lead Time (days)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // Supplier table
+  const supplierData = ['Domestic','Import'].map(st => {
+    const subset = rows.filter(r => r.supplier_type === st);
+    const lts = subset.map(r => r.lead_time_days);
+    return { type: st, count: subset.length, mean: mean(lts).toFixed(1), p90: p90(lts), cv: cv(lts).toFixed(2) };
+  });
+
+  document.getElementById('s3_table').innerHTML =
+    `<thead><tr><th>Supplier Type</th><th class="num">SKUs</th><th class="num">Avg LT (d)</th><th class="num">P90 (d)</th><th class="num">CV</th></tr></thead><tbody>` +
+    supplierData.map(s => `<tr><td>${s.type}</td><td class="num">${s.count.toLocaleString()}</td><td class="num">${s.mean}</td><td class="num">${s.p90}</td><td class="num" style="color:${s.cv>0.3?'var(--amber)':'var(--accent)'}">${s.cv}</td></tr>`).join('') +
+    '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  S4 — EOQ
+// ═══════════════════════════════════════════════
+function renderS4() {
+  destroyChart('s4_cost'); destroyChart('s4_portfolio');
+
+  const D = parseFloat(document.getElementById('s4_demand').value) || 2400;
+  const P = parseFloat(document.getElementById('s4_unit_cost').value) || 850;
+  const S = parseFloat(document.getElementById('s4_order_cost').value) || 1200;
+  const h = parseFloat(document.getElementById('s4_holding_rate').value) / 100 || 0.22;
+  const L = parseFloat(document.getElementById('s4_lead').value) || 18;
+  const sigma = parseFloat(document.getElementById('s4_sigma').value) || 3.2;
+  const z = parseFloat(document.getElementById('s4_z').value) || 1.645;
+
+  const H = P * h; // annual holding cost per unit
+  const EOQ = Math.sqrt((2 * D * S) / H);
+  const ROP = (D / 365) * L + z * sigma * Math.sqrt(L);
+  const SS = z * sigma * Math.sqrt(L);
+  const ordersPerYear = D / EOQ;
+  const avgInventory = EOQ / 2 + SS;
+  const totalOrderCost = ordersPerYear * S;
+  const totalHoldingCost = avgInventory * H;
+  const totalCost = totalOrderCost + totalHoldingCost;
+
+  const fmt = v => v >= 100000 ? `₹${(v/100000).toFixed(2)}L` : `₹${v.toFixed(0)}`;
+  document.getElementById('s4_result').innerHTML = [
+    { key: 'Economic Order Quantity (EOQ)', val: `${Math.round(EOQ)} units` },
+    { key: 'Reorder Point (ROP)', val: `${Math.round(ROP)} units` },
+    { key: 'Safety Stock', val: `${Math.round(SS)} units` },
+    { key: 'Orders per year', val: ordersPerYear.toFixed(1) },
+    { key: 'Average inventory value', val: fmt(avgInventory * P) },
+    { key: 'Annual ordering cost', val: fmt(totalOrderCost) },
+    { key: 'Annual holding cost', val: fmt(totalHoldingCost) },
+    { key: 'Total annual inventory cost', val: fmt(totalCost), highlight: true }
+  ].map(r => `<div class="eoq-row"><div class="eoq-key">${r.key}</div><div class="eoq-val" style="${r.highlight?'font-size:18px':''}"">${r.val}</div></div>`).join('');
+
+  // Cost curve
+  const qRange = Array.from({length:80}, (_,i) => Math.round(EOQ * 0.2 + i * EOQ * 0.025));
+  const orderCosts = qRange.map(q => (D/q)*S);
+  const holdingCosts = qRange.map(q => (q/2+SS)*H);
+  const totalCosts = qRange.map((q,i) => orderCosts[i]+holdingCosts[i]);
+
+  AppState.charts['s4_cost'] = new Chart(document.getElementById('s4_cost_chart'), {
+    type: 'line',
+    data: {
+      labels: qRange,
+      datasets: [
+        { label: 'Order Cost', data: orderCosts, borderColor: '#60a5fa', fill: false, tension: 0.3, pointRadius: 0 },
+        { label: 'Holding Cost', data: holdingCosts, borderColor: '#fbbf24', fill: false, tension: 0.3, pointRadius: 0 },
+        { label: 'Total Cost', data: totalCosts, borderColor: '#4ade80', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ₹${ctx.raw.toFixed(0)}` } } },
+      scales: {
+        x: { title: { display: true, text: 'Order Quantity (units)', color: '#6b7590' }, ticks: { color: '#6b7590', maxTicksLimit: 10 }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'Annual Cost (₹)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // Portfolio EOQ — categories
+  const catData = [
+    { cat: 'Bathroom', D: 18000, P: 1240, S: 1800, h: 0.22, L: 42, sigma: 8.4 },
+    { cat: 'Floor Tiles', D: 32000, P: 680, S: 900, h: 0.20, L: 15, sigma: 4.2 },
+    { cat: 'Paints', D: 56000, P: 320, S: 600, h: 0.18, L: 12, sigma: 12.1 },
+    { cat: 'Kitchen', D: 9000, P: 2800, S: 2400, h: 0.25, L: 38, sigma: 3.8 },
+    { cat: 'Plumbing', D: 24000, P: 480, S: 780, h: 0.21, L: 18, sigma: 6.2 },
+    { cat: 'Electrical', D: 41000, P: 260, S: 550, h: 0.19, L: 11, sigma: 9.8 }
+  ];
+  const eoqVals = catData.map(c => Math.round(Math.sqrt((2*c.D*c.S)/(c.P*c.h))));
+  const ssVals = catData.map(c => Math.round(1.645 * c.sigma * Math.sqrt(c.L)));
+
+  AppState.charts['s4_portfolio'] = new Chart(document.getElementById('s4_portfolio_chart'), {
+    type: 'bar',
+    data: {
+      labels: catData.map(c=>c.cat),
+      datasets: [
+        { label: 'EOQ (units)', data: eoqVals, backgroundColor: 'rgba(74,222,128,0.5)', borderColor: '#4ade80', borderWidth: 1, yAxisID: 'y' },
+        { label: 'Safety Stock', data: ssVals, backgroundColor: 'rgba(251,191,36,0.5)', borderColor: '#fbbf24', borderWidth: 1, yAxisID: 'y' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } },
+      scales: {
+        x: { ticks: { color: '#6b7590' }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'Units', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  S5 — Stockout Risk
+// ═══════════════════════════════════════════════
+function renderS5() {
+  if (!AppState.rows.length) return;
+  destroyChart('s5_dist'); destroyChart('s5_matrix');
+
+  const rows = AppState.rows;
+  const mean = arr => arr.reduce((s,v)=>s+v,0)/arr.length;
+
+  // Composite risk score: 0.35*demand_cv_norm + 0.30*lead_time_variance_norm + 0.20*stock_cover_risk + 0.15*import_flag
+  const maxCV = Math.max(...rows.map(r=>r.demand_cv));
+  const maxLT = Math.max(...rows.map(r=>r.lead_time_p90));
+  const maxStockCoverRisk = 3; // months
+
+  rows.forEach(r => {
+    const cvNorm = r.demand_cv / maxCV;
+    const ltNorm = r.lead_time_p90 / maxLT;
+    const dailyDemand = r.annual_demand / 365;
+    const daysOfStock = dailyDemand > 0 ? r.current_stock / dailyDemand : 30;
+    const stockCoverRisk = Math.max(0, 1 - daysOfStock / 90); // lower stock cover = higher risk
+    const importFlag = r.supplier_type === 'Import' ? 0.15 : 0;
+    r._risk_score = Math.min(1, 0.35*cvNorm + 0.30*ltNorm + 0.20*stockCoverRisk + importFlag);
+  });
+
+  const highRisk = rows.filter(r => r._risk_score > 0.65);
+  const bathroomRisk = rows.filter(r => r.category === 'Bathroom Fittings');
+  const bathroomHighRisk = bathroomRisk.filter(r => r._risk_score > 0.65);
+
+  // KPIs
+  document.getElementById('s5_kpis').innerHTML = [
+    { label: 'Total SKUs assessed', val: rows.length.toLocaleString(), sub: 'Full inventory' },
+    { label: 'High risk (>0.65)', val: highRisk.length.toLocaleString(), sub: `${(highRisk.length/rows.length*100).toFixed(1)}% of portfolio`, warn: true },
+    { label: 'Bathroom Fittings at risk', val: bathroomHighRisk.length.toLocaleString(), sub: `${(bathroomHighRisk.length/bathroomRisk.length*100).toFixed(1)}% of category`, warn: true },
+    { label: 'Avg risk score (import)', val: mean(rows.filter(r=>r.supplier_type==='Import').map(r=>r._risk_score)).toFixed(3), sub: 'vs ' + mean(rows.filter(r=>r.supplier_type==='Domestic').map(r=>r._risk_score)).toFixed(3)+' domestic', warn: true }
+  ].map(k => `<div class="kpi-tile"><div class="kpi-label">${k.label}</div><div class="kpi-value" style="${k.warn?'color:var(--amber)':''}">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  document.getElementById('s5_insight').innerHTML =
+    `<strong>Bathroom Fittings is the highest-risk category</strong>: ${bathroomHighRisk.length} SKUs (${(bathroomHighRisk.length/bathroomRisk.length*100).toFixed(0)}% of category) score above 0.65 composite risk threshold. ` +
+    `Primary drivers: elevated demand CV (${mean(bathroomRisk.map(r=>r.demand_cv)).toFixed(2)} vs portfolio avg ${mean(rows.map(r=>r.demand_cv)).toFixed(2)}) and high import dependency with extended P90 lead times.`;
+
+  // Risk score distribution
+  const bins = Array.from({length:10},(_,i)=>i*0.1);
+  const hist = new Array(10).fill(0);
+  rows.forEach(r => { const b = Math.min(9,Math.floor(r._risk_score*10)); hist[b]++; });
+
+  AppState.charts['s5_dist'] = new Chart(document.getElementById('s5_dist_chart'), {
+    type: 'bar',
+    data: {
+      labels: bins.map(b => `${b.toFixed(1)}–${(b+0.1).toFixed(1)}`),
+      datasets: [{
+        label: 'SKU Count',
+        data: hist,
+        backgroundColor: bins.map(b => b >= 0.65 ? 'rgba(248,113,113,0.6)' : b >= 0.40 ? 'rgba(251,191,36,0.5)' : 'rgba(74,222,128,0.5)'),
+        borderColor: bins.map(b => b >= 0.65 ? '#f87171' : b >= 0.40 ? '#fbbf24' : '#4ade80'),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: 'Risk Score', color: '#6b7590' }, ticks: { color: '#6b7590', maxTicksLimit: 10 }, grid: { color: CD.grid } },
+        y: { title: { display: true, text: 'SKU Count', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } }
+      }
+    }
+  });
+
+  // Top 10 risk SKUs - bathroom fittings
+  const topRiskBath = [...bathroomRisk].sort((a,b)=>b._risk_score-a._risk_score).slice(0,10);
+  const maxRisk = topRiskBath[0]?._risk_score || 1;
+  document.getElementById('s5_risk_bars').innerHTML = topRiskBath.map(r => {
+    const pct = (r._risk_score / maxRisk * 100);
+    const col = r._risk_score > 0.8 ? '#f87171' : r._risk_score > 0.65 ? '#fbbf24' : '#4ade80';
+    return `<div class="risk-bar-wrap">
+      <div class="risk-label" title="${r.sku_id}">${r.sku_id}</div>
+      <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${pct}%;background:${col}22;border-left:3px solid ${col}"></div></div>
+      <div class="risk-val" style="color:${col}">${r._risk_score.toFixed(3)}</div>
+    </div>`;
+  }).join('');
+
+  // Category matrix chart
+  const categories = ['Bathroom Fittings','Floor Tiles','Paints & Coatings','Modular Kitchen','Plumbing Systems','Electrical Fixtures'];
+  const catAvgRisk = categories.map(cat => {
+    const subset = rows.filter(r=>r.category===cat);
+    return subset.length ? mean(subset.map(r=>r._risk_score)) : 0;
+  });
+  const catHighRisk = categories.map(cat => rows.filter(r=>r.category===cat && r._risk_score>0.65).length);
+
+  AppState.charts['s5_matrix'] = new Chart(document.getElementById('s5_matrix_chart'), {
+    type: 'bar',
+    data: {
+      labels: categories.map(c=>c.split(' ')[0]),
+      datasets: [
+        { label: 'Avg Risk Score', data: catAvgRisk.map(v=>Math.round(v*1000)/1000), backgroundColor: catAvgRisk.map(v=>v>0.5?'rgba(248,113,113,0.5)':'rgba(74,222,128,0.45)'), borderColor: catAvgRisk.map(v=>v>0.5?'#f87171':'#4ade80'), borderWidth: 1, yAxisID: 'y1' },
+        { label: 'High Risk SKU Count', data: catHighRisk, backgroundColor: 'rgba(251,191,36,0.3)', borderColor: '#fbbf24', borderWidth: 1, type: 'line', yAxisID: 'y2', tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CD.color, font: { size: 11, family: CD.font } } } },
+      scales: {
+        x: { ticks: { color: '#6b7590' }, grid: { color: CD.grid } },
+        y1: { type: 'linear', position: 'left', title: { display: true, text: 'Avg Risk Score', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CD.grid } },
+        y2: { type: 'linear', position: 'right', title: { display: true, text: 'High Risk SKU Count', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Full at-risk table
+  const atRisk = [...rows.filter(r=>r._risk_score>0.65)].sort((a,b)=>b._risk_score-a._risk_score).slice(0,50);
+  document.getElementById('s5_table').innerHTML =
+    `<thead><tr><th>SKU</th><th>Category</th><th>Supplier</th><th class="num">Risk Score</th><th class="num">Demand CV</th><th class="num">LT P90 (d)</th><th class="num">Stock (units)</th></tr></thead><tbody>` +
+    atRisk.map(r => {
+      const cls = r._risk_score > 0.8 ? 'badge-red' : 'badge-amber';
+      return `<tr><td style="font-family:var(--mono);font-size:11px">${r.sku_id}</td><td>${r.category}</td><td>${r.supplier_type}</td><td class="num"><span class="badge ${cls}">${r._risk_score.toFixed(3)}</span></td><td class="num">${r.demand_cv}</td><td class="num">${r.lead_time_p90}</td><td class="num">${r.current_stock}</td></tr>`;
+    }).join('') + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  File handling
+// ═══════════════════════════════════════════════
+function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) processFile(file); }
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function handleDragLeave(e) { document.getElementById('uploadZone').classList.remove('dragover'); }
+function handleFileUpload(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, { header: true, dynamicTyping: true, complete: r => {
+      AppState.rows = r.data.filter(row => row && Object.values(row).some(v => v !== null && v !== ''));
+      toast(`Loaded ${AppState.rows.length.toLocaleString()} rows from ${file.name}`, 'success');
+      document.getElementById('datasetLabel').textContent = `${file.name} · ${AppState.rows.length.toLocaleString()} rows`;
+      renderAllModules();
+    }});
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      AppState.rows = XLSX.utils.sheet_to_json(ws);
+      toast(`Loaded ${AppState.rows.length.toLocaleString()} rows from ${file.name}`, 'success');
+      document.getElementById('datasetLabel').textContent = `${file.name} · ${AppState.rows.length.toLocaleString()} rows`;
+      renderAllModules();
+    };
+    reader.readAsArrayBuffer(file);
+  } else { toast('Unsupported file type. Use CSV or XLSX.', 'error'); }
+}
+
+// ═══════════════════════════════════════════════
+//  Export
+// ═══════════════════════════════════════════════
+function exportPDF() {
+  toast('Generating PDF…', 'success');
+  html2canvas(document.getElementById('mainContent'), { backgroundColor: '#0d1117', scale: 1.5 }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
+    const ratio = canvas.width / canvas.height;
+    const imgH = Math.min(h, w / ratio);
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, imgH);
+    pdf.save('meridian-flow-report.pdf');
+  });
+}
+function exportPNG() { html2canvas(document.getElementById('mainContent'), { backgroundColor: '#0d1117', scale: 2 }).then(canvas => { const a = document.createElement('a'); a.download='meridian-flow.png'; a.href=canvas.toDataURL(); a.click(); }); }
+function exportCSV() {
+  if (!AppState.rows.length) { toast('No data loaded', 'error'); return; }
+  const keys = Object.keys(AppState.rows[0]).filter(k => !k.startsWith('_'));
+  const csv = [keys.join(','), ...AppState.rows.map(r=>keys.map(k=>JSON.stringify(r[k]??'')).join(','))].join('\n');
+  const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='meridian-flow-data.csv'; a.click();
+}
+
+// ═══════════════════════════════════════════════
+//  Toast
+// ═══════════════════════════════════════════════
+function toast(msg, type='') {
+  const el = document.createElement('div'); el.className=`toast ${type}`; el.textContent=msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ═══════════════════════════════════════════════
+//  AppHandoff — sessionStorage
+// ═══════════════════════════════════════════════
+function receiveHandoff(payload) {
+  AppState.rows = payload.rows || [];
+  AppState.schema = payload.schema || {};
+  AppState.source = 'handoff';
+  document.getElementById('datasetLabel').textContent = `Handoff · ${AppState.rows.length.toLocaleString()} rows`;
+  document.getElementById('handoffBadge').style.display = '';
+  toast(`Dataset received via handoff — ${AppState.rows.length.toLocaleString()} rows`, 'success');
+  renderAllModules();
+}
+function validateSchema(schema, required) { return required.every(k => schema[k]); }
+function initModule(rows, schema) { AppState.rows = rows; AppState.schema = schema; }
+function renderOutputs() { renderAllModules(); }
+
+function renderAllModules() {
+  if (AppState.currentModule === 's1') renderS1();
+  if (AppState.currentModule === 's2') renderS2();
+  if (AppState.currentModule === 's3') renderS3();
+  if (AppState.currentModule === 's4') renderS4();
+  if (AppState.currentModule === 's5') renderS5();
+}
+
+window.addEventListener('load', () => {
+  try {
+    const raw = sessionStorage.getItem('meridian_handoff');
+    if (raw) {
+      const payload = JSON.parse(raw);
+      if (payload.targetModule === 'flow' || payload.targetModule === 'supply-chain') {
+        receiveHandoff(payload);
+        return;
+      }
+    }
+  } catch(e) {}
+  loadDemoData();
+  showModule('s1');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Field — Market Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjs@13.0.0/lib/browser/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2230;
+  --surface3: #21283a;
+  --border: #2a3142;
+  --border2: #323d52;
+  --text: #e8eaf0;
+  --text2: #b0bac8;
+  --muted: #6b7590;
+  --accent: #60a5fa;
+  --accent-dim: rgba(96,165,250,0.12);
+  --accent-bd: rgba(96,165,250,0.3);
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --sans: 'DM Sans', sans-serif;
+  --serif: 'DM Serif Display', serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+/* ── Layout ── */
+.shell { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; gap: 16px; }
+.content { padding: 28px; flex: 1; }
+
+/* ── Sidebar ── */
+.brand { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.brand-tag { font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.brand-name { font-family: var(--serif); font-size: 20px; color: var(--text); }
+.brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.nav-section { padding: 8px 20px 4px; font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); border-left-color: var(--accent); color: var(--accent); }
+.nav-item .nav-code { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: auto; }
+.nav-item.active .nav-code { color: var(--accent); }
+
+/* ── Topbar ── */
+.topbar-title { font-family: var(--serif); font-size: 18px; color: var(--text); }
+.topbar-sep { color: var(--border2); }
+.topbar-module { font-size: 13px; color: var(--text2); }
+.dataset-pill { margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 12px; font-size: 12px; color: var(--text2); }
+.dataset-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+.handoff-badge { font-size: 10px; font-family: var(--mono); padding: 3px 8px; border-radius: 4px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-bd); }
+
+/* ── Module panel ── */
+.module-panel { display: none; }
+.module-panel.active { display: block; }
+.module-header { margin-bottom: 24px; }
+.module-title { font-family: var(--serif); font-size: 26px; color: var(--text); margin-bottom: 4px; }
+.module-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.card-title { font-size: 12px; font-family: var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title::before { content: ''; display: block; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+/* ── Grid layouts ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+/* ── KPI tiles ── */
+.kpi-tile { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 16px; }
+.kpi-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; }
+.kpi-value { font-family: var(--serif); font-size: 24px; color: var(--text); margin-bottom: 2px; }
+.kpi-sub { font-size: 11px; color: var(--muted); }
+.kpi-change { font-size: 11px; font-family: var(--mono); margin-top: 4px; }
+.kpi-change.up { color: var(--green); }
+.kpi-change.down { color: var(--red); }
+
+/* ── Controls ── */
+.control-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.control-group { display: flex; flex-direction: column; gap: 4px; }
+.control-label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.control-input { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 10px; outline: none; }
+.control-input:focus { border-color: var(--accent); }
+.control-select { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 10px; outline: none; cursor: pointer; }
+.btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-family: var(--sans); font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.btn-accent { background: var(--accent); color: #0d1117; }
+.btn-accent:hover { background: #93c5fd; }
+.btn-ghost { background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.slider { width: 160px; accent-color: var(--accent); }
+
+/* ── Chart wrappers ── */
+.chart-wrap { position: relative; height: 260px; }
+.chart-wrap-lg { position: relative; height: 320px; }
+.chart-wrap-sm { position: relative; height: 200px; }
+
+/* ── Table ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { background: var(--surface2); color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.data-table tr:hover td { background: var(--surface2); }
+.data-table .num { text-align: right; font-family: var(--mono); }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-family: var(--mono); }
+.badge-green { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+.badge-amber { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.25); }
+.badge-red { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+.badge-blue { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-bd); }
+
+/* ── Sensitivity table ── */
+.sensitivity-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: var(--mono); }
+.sensitivity-table th, .sensitivity-table td { padding: 6px 10px; border: 1px solid var(--border); text-align: center; }
+.sensitivity-table th { background: var(--surface2); color: var(--muted); }
+.sensitivity-table .high { background: rgba(74,222,128,0.1); color: var(--green); }
+.sensitivity-table .mid { background: rgba(251,191,36,0.08); color: var(--amber); }
+.sensitivity-table .low { background: rgba(248,113,113,0.08); color: var(--red); }
+.sensitivity-table .corner { background: var(--surface3); color: var(--muted); }
+
+/* ── Funnel ── */
+.funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.funnel-label { font-size: 12px; color: var(--muted); width: 60px; flex-shrink: 0; font-family: var(--mono); }
+.funnel-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 28px; position: relative; overflow: hidden; }
+.funnel-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 10px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.funnel-val { font-family: var(--mono); font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; text-align: right; }
+
+/* ── BCG ── */
+.bcg-wrap { position: relative; width: 100%; height: 320px; }
+.bcg-dot { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: var(--mono); color: white; cursor: pointer; transition: all 0.2s; }
+.bcg-dot:hover { border-color: var(--accent); z-index: 10; }
+.bcg-label { position: absolute; font-size: 10px; font-family: var(--mono); color: var(--muted); }
+
+/* ── Cluster table ── */
+.cluster-card { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 14px; }
+.cluster-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cluster-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cluster-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.cluster-count { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-left: auto; }
+.cluster-attr { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* ── Waterfall ── */
+.waterfall-summary { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.wf-tile { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 14px; }
+.wf-label { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-bottom: 3px; }
+.wf-val { font-size: 15px; font-weight: 600; font-family: var(--mono); }
+
+/* ── Upload zone ── */
+.upload-zone { border: 2px dashed var(--border2); border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-dim); }
+.upload-icon { font-size: 32px; margin-bottom: 12px; }
+.upload-text { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+.upload-sub { font-size: 12px; color: var(--muted); }
+
+/* ── Export bar ── */
+.export-bar { background: var(--surface); border-top: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; gap: 12px; }
+.export-label { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-right: 4px; }
+
+/* ── Toast ── */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text2); animation: fadeIn 0.2s ease; max-width: 320px; }
+.toast.success { border-color: rgba(74,222,128,0.3); color: var(--green); }
+.toast.error { border-color: rgba(248,113,113,0.3); color: var(--red); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Insight banner ── */
+.insight { background: var(--accent-dim); border: 1px solid var(--accent-bd); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+.insight strong { color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="shell">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-tag">Meridian Platform</div>
+      <div class="brand-name">Field</div>
+      <div class="brand-sub">Market Intelligence</div>
+    </div>
+    <span class="nav-section">Analyses</span>
+    <div class="nav-item active" onclick="showModule('f1')">
+      <span>TAM/SAM/SOM</span><span class="nav-code">F1</span>
+    </div>
+    <div class="nav-item" onclick="showModule('f2')">
+      <span>Share Waterfall</span><span class="nav-code">F2</span>
+    </div>
+    <div class="nav-item" onclick="showModule('f3')">
+      <span>Benchmarking</span><span class="nav-code">F3</span>
+    </div>
+    <div class="nav-item" onclick="showModule('f4')">
+      <span>BCG Matrix</span><span class="nav-code">F4</span>
+    </div>
+    <div class="nav-item" onclick="showModule('f5')">
+      <span>Archetype Clusters</span><span class="nav-code">F5</span>
+    </div>
+    <span class="nav-section">Data</span>
+    <div class="nav-item" onclick="showModule('data')">
+      <span>Load Dataset</span>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Meridian</span>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-module" id="topbarModule">Market Intelligence — F1: TAM/SAM/SOM</span>
+      <div class="dataset-pill" id="datasetPill">
+        <div class="dot"></div>
+        <span id="datasetLabel">Renova Home · 200 districts</span>
+      </div>
+      <span class="handoff-badge" id="handoffBadge" style="display:none">← Handoff</span>
+    </div>
+
+    <div class="content" id="mainContent">
+
+      <!-- ══ F1: TAM/SAM/SOM ══ -->
+      <div class="module-panel active" id="panel-f1">
+        <div class="module-header">
+          <div class="module-title">TAM / SAM / SOM Sizing</div>
+          <div class="module-desc">Market sizing with adjustable assumptions and sensitivity output across penetration and capture rate scenarios.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Sizing Assumptions</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Total addressable districts</div>
+              <input class="control-input" type="number" id="f1_tam_units" value="4800" style="width:120px" oninput="renderF1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Avg revenue / district (₹ Cr)</div>
+              <input class="control-input" type="number" id="f1_avg_rev" value="8.4" step="0.1" style="width:120px" oninput="renderF1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">SAM penetration rate (%)</div>
+              <input class="control-input" type="number" id="f1_sam_pct" value="38" min="1" max="100" style="width:100px" oninput="renderF1()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">SOM capture rate (%)</div>
+              <input class="control-input" type="number" id="f1_som_pct" value="12" min="1" max="100" style="width:100px" oninput="renderF1()">
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="kpi-tile">
+              <div class="kpi-label">TAM</div>
+              <div class="kpi-value" id="f1_tam_val">—</div>
+              <div class="kpi-sub">Total addressable market</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">SAM</div>
+              <div class="kpi-value" id="f1_sam_val">—</div>
+              <div class="kpi-sub" id="f1_sam_sub">Serviceable addressable market</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-label">SOM</div>
+              <div class="kpi-value" id="f1_som_val">—</div>
+              <div class="kpi-sub" id="f1_som_sub">Serviceable obtainable market</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Funnel Visualisation</div>
+          <div id="f1_funnel"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Sensitivity Analysis — SOM (₹ Cr)</div>
+          <div style="overflow-x:auto"><table class="sensitivity-table" id="f1_sensitivity"></table></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">District-Level Whitespace Analysis</div>
+          <div class="insight" id="f1_insight"></div>
+          <div class="chart-wrap"><canvas id="f1_chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ══ F2: Share Waterfall ══ -->
+      <div class="module-panel" id="panel-f2">
+        <div class="module-header">
+          <div class="module-title">Market Share Waterfall</div>
+          <div class="module-desc">Share shift decomposition across periods — new entrant gains, incumbent erosion, category expansion, and net position change.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Period Comparison</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Base period</div>
+              <select class="control-select" id="f2_period1" onchange="renderF2()">
+                <option value="Q1 2023">Q1 2023</option>
+                <option value="Q2 2023">Q2 2023</option>
+                <option value="Q3 2023">Q3 2023</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <div class="control-label">Comparison period</div>
+              <select class="control-select" id="f2_period2" onchange="renderF2()">
+                <option value="Q1 2024">Q1 2024</option>
+                <option value="Q2 2024">Q2 2024</option>
+                <option value="Q3 2024" selected>Q3 2024</option>
+              </select>
+            </div>
+          </div>
+          <div class="waterfall-summary" id="f2_summary"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Share Shift Decomposition</div>
+          <div class="chart-wrap-lg"><canvas id="f2_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Component Breakdown</div>
+          <table class="data-table" id="f2_table"></table>
+        </div>
+      </div>
+
+      <!-- ══ F3: Competitive Benchmarking ══ -->
+      <div class="module-panel" id="panel-f3">
+        <div class="module-header">
+          <div class="module-title">Competitive Benchmarking</div>
+          <div class="module-desc">Radar chart comparison across strategic dimensions. Gap analysis vs leading competitor with performance scoring.</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Radar — Strategic Dimensions</div>
+            <div class="chart-wrap"><canvas id="f3_radar"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Gap vs Market Leader</div>
+            <div id="f3_gap_viz"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Competitor Scorecards</div>
+          <table class="data-table" id="f3_table"></table>
+        </div>
+      </div>
+
+      <!-- ══ F4: BCG Matrix ══ -->
+      <div class="module-panel" id="panel-f4">
+        <div class="module-header">
+          <div class="module-title">BCG Growth-Share Matrix</div>
+          <div class="module-desc">Market growth vs relative share quadrant classification. Bubble size = revenue. Quadrant thresholds adjustable.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Matrix Controls</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Growth threshold (%)</div>
+              <input class="control-input" type="number" id="f4_growth_thresh" value="10" step="1" style="width:100px" oninput="renderF4()">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Relative share threshold</div>
+              <input class="control-input" type="number" id="f4_share_thresh" value="1.0" step="0.1" style="width:100px" oninput="renderF4()">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">BCG Matrix</div>
+          <div class="chart-wrap-lg"><canvas id="f4_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Quadrant Classification</div>
+          <table class="data-table" id="f4_table"></table>
+        </div>
+      </div>
+
+      <!-- ══ F5: Archetype Clusters ══ -->
+      <div class="module-panel" id="panel-f5">
+        <div class="module-header">
+          <div class="module-title">Customer Archetype Clustering</div>
+          <div class="module-desc">K-means style district clustering on revenue intensity, market penetration, and tier characteristics. Identify whitespace archetypes.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cluster Configuration</div>
+          <div class="control-row">
+            <div class="control-group">
+              <div class="control-label">Number of clusters (k)</div>
+              <input class="control-input" type="number" id="f5_k" value="4" min="2" max="8" style="width:80px">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Clustering dimensions</div>
+              <select class="control-select" id="f5_dims">
+                <option value="all">Revenue + Penetration + Tier</option>
+                <option value="rev_pen">Revenue + Penetration</option>
+                <option value="rev_tier">Revenue + Tier Score</option>
+              </select>
+            </div>
+            <button class="btn btn-accent" onclick="runClustering()">Run Clustering</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cluster Map (Revenue vs Penetration)</div>
+          <div class="chart-wrap-lg"><canvas id="f5_chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Archetype Profiles</div>
+          <div class="grid-2" id="f5_profiles"></div>
+        </div>
+      </div>
+
+      <!-- ══ Data panel ══ -->
+      <div class="module-panel" id="panel-data">
+        <div class="module-header">
+          <div class="module-title">Load Dataset</div>
+          <div class="module-desc">Upload a CSV or XLSX, or continue with the built-in Renova Home demo dataset.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Upload</div>
+          <div class="upload-zone" id="uploadZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">⊞</div>
+            <div class="upload-text">Drop CSV or XLSX here, or click to browse</div>
+            <div class="upload-sub">Required columns: district_id, tier, revenue, penetration_rate, market_share_pct, market_growth_pct</div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".csv,.xlsx" onchange="handleFileUpload(event)">
+        </div>
+        <div class="card">
+          <div class="card-title">Demo Dataset — Renova Home District Data</div>
+          <div class="insight"><strong>200 districts</strong> across Tier 1, Tier 2, and Tier 3 markets. Known signals: whitespace concentration in high-income Tier 2 districts; over-indexing in Tier 3 relative to addressable size. Use this dataset to explore all 5 analyses.</div>
+          <button class="btn btn-accent" onclick="loadDemoData(); showModule('f1')">Load Demo Data & Begin Analysis</button>
+          <div style="margin-top:16px">
+            <table class="data-table" id="dataPreviewTable"></table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- ── Export bar ── -->
+    <div class="export-bar">
+      <span class="export-label">Export</span>
+      <button class="btn btn-ghost" onclick="exportPDF()">PDF Report</button>
+      <button class="btn btn-ghost" onclick="exportPNG()">PNG</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">CSV Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AppState
+// ═══════════════════════════════════════════════
+const AppState = {
+  rows: [],
+  schema: {},
+  source: 'demo',
+  currentModule: 'f1',
+  charts: {}
+};
+
+// ═══════════════════════════════════════════════
+//  Demo data — Renova Home 200 districts
+// ═══════════════════════════════════════════════
+function generateDemoData() {
+  const tiers = ['T1','T2','T3'];
+  const tierWeights = [0.2, 0.45, 0.35];
+  const tierLabels = { T1: 'Tier 1', T2: 'Tier 2', T3: 'Tier 3' };
+  const rows = [];
+  const rng = (min, max) => min + Math.random() * (max - min);
+
+  for (let i = 0; i < 200; i++) {
+    // weighted tier selection
+    const r = Math.random();
+    let tier = 'T3';
+    if (r < 0.20) tier = 'T1';
+    else if (r < 0.65) tier = 'T2';
+
+    // Whitespace signal: high-income T2 has low penetration (opportunity)
+    const isHighIncomeT2 = tier === 'T2' && Math.random() < 0.45;
+    // T3 over-indexing: high penetration relative to addressable
+    const isHighT3 = tier === 'T3' && Math.random() < 0.4;
+
+    let revenue, penetration, marketShare, marketGrowth, income;
+
+    if (tier === 'T1') {
+      revenue = rng(18, 42);
+      penetration = rng(0.55, 0.82);
+      marketShare = rng(0.18, 0.34);
+      marketGrowth = rng(6, 14);
+      income = rng(120, 280);
+    } else if (isHighIncomeT2) {
+      // Whitespace: high income, low penetration
+      revenue = rng(8, 22);
+      penetration = rng(0.12, 0.28);
+      marketShare = rng(0.08, 0.18);
+      marketGrowth = rng(14, 28);
+      income = rng(90, 160);
+    } else if (tier === 'T2') {
+      revenue = rng(5, 18);
+      penetration = rng(0.28, 0.55);
+      marketShare = rng(0.12, 0.26);
+      marketGrowth = rng(10, 20);
+      income = rng(50, 100);
+    } else if (isHighT3) {
+      // Over-indexed T3
+      revenue = rng(2, 7);
+      penetration = rng(0.62, 0.88);
+      marketShare = rng(0.28, 0.42);
+      marketGrowth = rng(3, 8);
+      income = rng(20, 45);
+    } else {
+      revenue = rng(1, 6);
+      penetration = rng(0.25, 0.55);
+      marketShare = rng(0.12, 0.28);
+      marketGrowth = rng(4, 12);
+      income = rng(18, 50);
+    }
+
+    rows.push({
+      district_id: `D${String(i+1).padStart(3,'0')}`,
+      tier,
+      tier_label: tierLabels[tier],
+      revenue: Math.round(revenue * 100) / 100,
+      penetration_rate: Math.round(penetration * 1000) / 1000,
+      market_share_pct: Math.round(marketShare * 1000) / 1000,
+      market_growth_pct: Math.round(marketGrowth * 100) / 100,
+      avg_income: Math.round(income),
+      is_whitespace: isHighIncomeT2 ? 1 : 0,
+      addressable_size: Math.round(rng(5, 50))
+    });
+  }
+  return rows;
+}
+
+function loadDemoData() {
+  AppState.rows = generateDemoData();
+  AppState.source = 'demo';
+  document.getElementById('datasetLabel').textContent = `Renova Home · ${AppState.rows.length} districts`;
+  toast('Renova Home demo dataset loaded — 200 districts', 'success');
+  showDataPreview();
+  renderAllModules();
+}
+
+function showDataPreview() {
+  const rows = AppState.rows.slice(0, 8);
+  if (!rows.length) return;
+  const keys = ['district_id','tier_label','revenue','penetration_rate','market_share_pct','market_growth_pct'];
+  const thead = `<thead><tr>${keys.map(k=>`<th>${k.replace(/_/g,' ')}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td class="${typeof r[k]==='number'?'num':''}">${typeof r[k]==='number'?r[k].toFixed(2):r[k]}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  document.getElementById('dataPreviewTable').innerHTML = thead+tbody;
+}
+
+// ═══════════════════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════════════════
+const moduleLabels = {
+  f1: 'Market Intelligence — F1: TAM/SAM/SOM',
+  f2: 'Market Intelligence — F2: Share Waterfall',
+  f3: 'Market Intelligence — F3: Benchmarking',
+  f4: 'Market Intelligence — F4: BCG Matrix',
+  f5: 'Market Intelligence — F5: Archetype Clusters',
+  data: 'Market Intelligence — Data'
+};
+
+function showModule(id) {
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `showModule('${id}')`) n.classList.add('active');
+  });
+  document.getElementById('topbarModule').textContent = moduleLabels[id] || '';
+  AppState.currentModule = id;
+  // render on switch
+  if (id === 'f1') renderF1();
+  if (id === 'f2') renderF2();
+  if (id === 'f3') renderF3();
+  if (id === 'f4') renderF4();
+  if (id === 'f5') runClustering();
+  if (id === 'data') showDataPreview();
+}
+
+// ═══════════════════════════════════════════════
+//  Chart helpers
+// ═══════════════════════════════════════════════
+function destroyChart(key) {
+  if (AppState.charts[key]) {
+    AppState.charts[key].destroy();
+    delete AppState.charts[key];
+  }
+}
+
+const CHART_DEFAULTS = {
+  color: '#e8eaf0',
+  gridColor: 'rgba(42,49,66,0.8)',
+  font: 'DM Sans'
+};
+
+// ═══════════════════════════════════════════════
+//  F1 — TAM/SAM/SOM
+// ═══════════════════════════════════════════════
+function renderF1() {
+  const tamUnits = parseFloat(document.getElementById('f1_tam_units').value) || 4800;
+  const avgRev = parseFloat(document.getElementById('f1_avg_rev').value) || 8.4;
+  const samPct = parseFloat(document.getElementById('f1_sam_pct').value) / 100 || 0.38;
+  const somPct = parseFloat(document.getElementById('f1_som_pct').value) / 100 || 0.12;
+
+  const tam = tamUnits * avgRev;
+  const sam = tam * samPct;
+  const som = sam * somPct;
+
+  const fmt = v => v >= 1000 ? `₹${(v/1000).toFixed(1)}K Cr` : `₹${v.toFixed(0)} Cr`;
+  document.getElementById('f1_tam_val').textContent = fmt(tam);
+  document.getElementById('f1_sam_val').textContent = fmt(sam);
+  document.getElementById('f1_som_val').textContent = fmt(som);
+  document.getElementById('f1_sam_sub').textContent = `${(samPct*100).toFixed(0)}% of TAM`;
+  document.getElementById('f1_som_sub').textContent = `${(somPct*100).toFixed(0)}% of SAM`;
+
+  // Funnel
+  const funnelData = [
+    { label: 'TAM', value: tam, color: '#60a5fa', pct: 1 },
+    { label: 'SAM', value: sam, color: '#4ade80', pct: samPct },
+    { label: 'SOM', value: som, color: '#fbbf24', pct: samPct * somPct }
+  ];
+  document.getElementById('f1_funnel').innerHTML = funnelData.map(d => `
+    <div class="funnel-row">
+      <div class="funnel-label">${d.label}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${Math.max(d.pct*100,3)}%;background:${d.color}22;border-left:3px solid ${d.color}">
+          <span style="color:${d.color};font-size:12px;font-family:var(--mono)">${fmt(d.value)}</span>
+        </div>
+      </div>
+      <div class="funnel-val">${(d.pct*100).toFixed(1)}% of TAM</div>
+    </div>
+  `).join('');
+
+  // Sensitivity table: rows = SAM%, cols = SOM%
+  const samOptions = [0.25, 0.30, 0.35, 0.38, 0.45, 0.55];
+  const somOptions = [0.06, 0.08, 0.10, 0.12, 0.15, 0.20];
+  const maxSom = tam * 0.55 * 0.20;
+  let html = `<thead><tr><th class="corner">SAM% \\ SOM%</th>${somOptions.map(s=>`<th>${(s*100).toFixed(0)}%</th>`).join('')}</tr></thead><tbody>`;
+  samOptions.forEach(sp => {
+    html += `<tr><th style="background:var(--surface2);color:var(--muted)">${(sp*100).toFixed(0)}%</th>`;
+    somOptions.forEach(so => {
+      const val = tam * sp * so;
+      const pct = val / maxSom;
+      const cls = pct > 0.65 ? 'high' : pct > 0.35 ? 'mid' : 'low';
+      html += `<td class="${cls}">${fmt(val)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('f1_sensitivity').innerHTML = html;
+
+  // Whitespace chart
+  if (AppState.rows.length) renderF1Chart();
+}
+
+function renderF1Chart() {
+  destroyChart('f1');
+  const rows = AppState.rows;
+  const tierColors = { T1: '#60a5fa', T2: '#4ade80', T3: '#fbbf24' };
+
+  document.getElementById('f1_insight').innerHTML =
+    `Renova Home has <strong>${rows.filter(r=>r.is_whitespace).length} high-income Tier 2 districts</strong> with penetration below 28% — identified as primary whitespace. ` +
+    `<strong>${rows.filter(r=>r.tier==='T3' && r.penetration_rate>0.6).length} Tier 3 districts</strong> show over-indexing (penetration >60%) relative to addressable market size.`;
+
+  const datasets = ['T1','T2','T3'].map(t => ({
+    label: `Tier ${t.slice(1)}`,
+    data: rows.filter(r=>r.tier===t).map(r=>({ x: r.avg_income, y: r.penetration_rate*100, r: Math.sqrt(r.revenue)*2.5 })),
+    backgroundColor: tierColors[t]+'55',
+    borderColor: tierColors[t],
+    borderWidth: 1.5,
+    pointRadius: 5
+  }));
+
+  AppState.charts['f1'] = new Chart(document.getElementById('f1_chart'), {
+    type: 'bubble',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: CHART_DEFAULTS.color, font: { family: CHART_DEFAULTS.font, size: 11 } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: Income ₹${ctx.raw.x}K, Pen. ${ctx.raw.y.toFixed(1)}%` } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Avg Household Income (₹K)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor } },
+        y: { title: { display: true, text: 'Penetration Rate (%)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  F2 — Market Share Waterfall
+// ═══════════════════════════════════════════════
+function renderF2() {
+  destroyChart('f2');
+
+  // Synthetic waterfall data — consistent structure
+  const base = { renova: 18.4, competitor_a: 22.1, competitor_b: 15.8, others: 43.7 };
+  const comp = { renova: 21.6, competitor_a: 20.3, competitor_b: 14.2, others: 43.9 };
+
+  const delta = Object.keys(base).reduce((acc, k) => { acc[k] = comp[k] - base[k]; return acc; }, {});
+
+  const components = [
+    { label: 'Base share', value: base.renova, type: 'base' },
+    { label: 'New market entry', value: 1.8, type: 'pos' },
+    { label: 'Incumbent erosion capture', value: 2.4, type: 'pos' },
+    { label: 'Category expansion', value: 0.9, type: 'pos' },
+    { label: 'Churn to competitors', value: -1.6, type: 'neg' },
+    { label: 'Price-driven share loss', value: -0.3, type: 'neg' },
+    { label: 'Final share', value: comp.renova, type: 'total' }
+  ];
+
+  // Summary tiles
+  document.getElementById('f2_summary').innerHTML = [
+    { label: 'Base share', val: `${base.renova.toFixed(1)}%`, color: '#60a5fa' },
+    { label: 'Net change', val: `+${(comp.renova - base.renova).toFixed(1)}pp`, color: '#4ade80' },
+    { label: 'Current share', val: `${comp.renova.toFixed(1)}%`, color: '#fbbf24' },
+    { label: 'vs Leader gap', val: `${(20.3 - comp.renova).toFixed(1)}pp`, color: '#f87171' }
+  ].map(t => `<div class="wf-tile"><div class="wf-label">${t.label}</div><div class="wf-val" style="color:${t.color}">${t.val}</div></div>`).join('');
+
+  // Waterfall chart
+  let running = base.renova;
+  const labels = [], data = [], colors = [];
+  components.forEach((c,i) => {
+    labels.push(c.label);
+    if (c.type === 'base' || c.type === 'total') {
+      data.push([0, c.value]);
+      colors.push(c.type === 'base' ? '#60a5fa' : '#fbbf24');
+    } else {
+      const start = running;
+      running += c.value;
+      data.push([Math.min(start, running), Math.max(start, running)]);
+      colors.push(c.value >= 0 ? '#4ade80' : '#f87171');
+    }
+  });
+
+  AppState.charts['f2'] = new Chart(document.getElementById('f2_chart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderColor: colors.map(c => c+'aa'),
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Share: ${Array.isArray(ctx.raw) ? ctx.raw[1].toFixed(1) : ctx.raw}%` } } },
+      scales: {
+        x: { ticks: { color: '#6b7590', font: { size: 11 } }, grid: { color: CHART_DEFAULTS.gridColor } },
+        y: { ticks: { color: '#6b7590', callback: v => v+'%' }, grid: { color: CHART_DEFAULTS.gridColor }, title: { display: true, text: 'Market Share (%)', color: '#6b7590' } }
+      }
+    }
+  });
+
+  // Table
+  const tbl = components.slice(1,-1);
+  document.getElementById('f2_table').innerHTML =
+    `<thead><tr><th>Driver</th><th class="num">Share impact (pp)</th><th class="num">Direction</th></tr></thead><tbody>` +
+    tbl.map(c => `<tr><td>${c.label}</td><td class="num" style="color:${c.value>=0?'#4ade80':'#f87171'}">${c.value>=0?'+':''}${c.value.toFixed(1)}</td><td class="num"><span class="badge ${c.value>=0?'badge-green':'badge-red'}">${c.value>=0?'gain':'loss'}</span></td></tr>`).join('') +
+    '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  F3 — Competitive Benchmarking
+// ═══════════════════════════════════════════════
+function renderF3() {
+  destroyChart('f3');
+
+  const dims = ['Distribution reach','Brand equity','Price competitiveness','Product range','Service quality','Digital presence','Margin structure'];
+  const competitors = [
+    { name: 'Renova Home', scores: [72, 65, 68, 80, 74, 58, 71], color: '#60a5fa' },
+    { name: 'Orion Build', scores: [88, 82, 61, 72, 68, 74, 65], color: '#f87171' },
+    { name: 'Apex Materials', scores: [64, 55, 82, 68, 71, 45, 78], color: '#fbbf24' },
+    { name: 'NexBuild', scores: [58, 70, 75, 60, 65, 88, 60], color: '#a78bfa' }
+  ];
+
+  AppState.charts['f3'] = new Chart(document.getElementById('f3_radar'), {
+    type: 'radar',
+    data: {
+      labels: dims,
+      datasets: competitors.map(c => ({
+        label: c.name,
+        data: c.scores,
+        backgroundColor: c.color + '22',
+        borderColor: c.color,
+        borderWidth: 1.8,
+        pointBackgroundColor: c.color,
+        pointRadius: 3
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CHART_DEFAULTS.color, font: { size: 11, family: CHART_DEFAULTS.font } } } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { color: '#6b7590', backdropColor: 'transparent', stepSize: 20 },
+          grid: { color: CHART_DEFAULTS.gridColor },
+          pointLabels: { color: '#b0bac8', font: { size: 11, family: CHART_DEFAULTS.font } },
+          angleLines: { color: CHART_DEFAULTS.gridColor }
+        }
+      }
+    }
+  });
+
+  // Gap viz vs leader (Orion Build)
+  const leader = competitors[1];
+  const renova = competitors[0];
+  document.getElementById('f3_gap_viz').innerHTML = dims.map((d, i) => {
+    const gap = renova.scores[i] - leader.scores[i];
+    const barWidth = Math.abs(gap);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+        <span>${d}</span>
+        <span style="font-family:var(--mono);color:${gap>=0?'#4ade80':'#f87171'}">${gap>=0?'+':''}${gap}</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:3px;height:8px;position:relative">
+        <div style="position:absolute;${gap>=0?'left:50%':'right:50%;'}width:${barWidth/2}%;background:${gap>=0?'#4ade80':'#f87171'};height:100%;border-radius:3px"></div>
+        <div style="position:absolute;left:50%;top:0;height:100%;width:1px;background:var(--border2)"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Scorecards table
+  document.getElementById('f3_table').innerHTML =
+    `<thead><tr><th>Competitor</th>${dims.map(d=>`<th>${d.split(' ')[0]}</th>`).join('')}<th class="num">Overall</th></tr></thead><tbody>` +
+    competitors.map(c => {
+      const avg = (c.scores.reduce((a,b)=>a+b,0)/c.scores.length).toFixed(1);
+      const isRenova = c.name === 'Renova Home';
+      return `<tr${isRenova?' style="background:var(--accent-dim)"':''}><td>${c.name}${isRenova?' <span class="badge badge-blue">us</span>':''}</td>${c.scores.map(s=>`<td class="num">${s}</td>`).join('')}<td class="num"><strong>${avg}</strong></td></tr>`;
+    }).join('') + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  F4 — BCG Matrix
+// ═══════════════════════════════════════════════
+function renderF4() {
+  destroyChart('f4');
+
+  const growthThresh = parseFloat(document.getElementById('f4_growth_thresh').value) || 10;
+  const shareThresh = parseFloat(document.getElementById('f4_share_thresh').value) || 1.0;
+
+  const segments = [
+    { name: 'Bathroom Fittings', growth: 18.4, relShare: 1.42, revenue: 48 },
+    { name: 'Floor Tiles', growth: 12.1, relShare: 1.18, revenue: 62 },
+    { name: 'Modular Kitchen', growth: 22.6, relShare: 0.68, revenue: 38 },
+    { name: 'Paints & Coatings', growth: 8.2, relShare: 1.88, revenue: 85 },
+    { name: 'Electrical Fixtures', growth: 6.4, relShare: 0.92, revenue: 28 },
+    { name: 'Plumbing Systems', growth: 15.8, relShare: 0.54, revenue: 22 },
+    { name: 'Ceiling Solutions', growth: 5.1, relShare: 1.24, revenue: 34 },
+    { name: 'Smart Home', growth: 38.2, relShare: 0.32, revenue: 14 },
+    { name: 'Exterior Cladding', growth: 9.8, relShare: 0.78, revenue: 19 },
+    { name: 'Waterproofing', growth: 7.6, relShare: 2.12, revenue: 41 }
+  ];
+
+  const quadrantColor = (g, s) => {
+    if (g >= growthThresh && s >= shareThresh) return '#4ade80';  // Star
+    if (g < growthThresh && s >= shareThresh) return '#60a5fa';   // Cash Cow
+    if (g >= growthThresh && s < shareThresh) return '#fbbf24';   // Question Mark
+    return '#f87171';  // Dog
+  };
+
+  AppState.charts['f4'] = new Chart(document.getElementById('f4_chart'), {
+    type: 'bubble',
+    data: {
+      datasets: segments.map(s => ({
+        label: s.name,
+        data: [{ x: s.relShare, y: s.growth, r: Math.sqrt(s.revenue) * 2.2 }],
+        backgroundColor: quadrantColor(s.growth, s.relShare) + '55',
+        borderColor: quadrantColor(s.growth, s.relShare),
+        borderWidth: 1.8
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: CHART_DEFAULTS.color, font: { size: 10, family: CHART_DEFAULTS.font }, boxWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: Growth ${ctx.raw.y}%, Rel. Share ${ctx.raw.x}x` } },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          type: 'linear', min: 0, max: 2.8,
+          title: { display: true, text: 'Relative Market Share (×)', color: '#6b7590' },
+          ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor }
+        },
+        y: {
+          title: { display: true, text: 'Market Growth Rate (%)', color: '#6b7590' },
+          ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor }
+        }
+      }
+    }
+  });
+
+  // Table
+  document.getElementById('f4_table').innerHTML =
+    `<thead><tr><th>Segment</th><th class="num">Growth (%)</th><th class="num">Rel. Share (×)</th><th class="num">Revenue (₹ Cr)</th><th>Quadrant</th></tr></thead><tbody>` +
+    segments.map(s => {
+      const isHighG = s.growth >= growthThresh, isHighS = s.relShare >= shareThresh;
+      const q = isHighG && isHighS ? ['Star','badge-green'] : !isHighG && isHighS ? ['Cash Cow','badge-blue'] : isHighG && !isHighS ? ['Question','badge-amber'] : ['Dog','badge-red'];
+      return `<tr><td>${s.name}</td><td class="num">${s.growth.toFixed(1)}</td><td class="num">${s.relShare.toFixed(2)}</td><td class="num">${s.revenue}</td><td><span class="badge ${q[1]}">${q[0]}</span></td></tr>`;
+    }).join('') + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════
+//  F5 — Archetype Clustering (k-means)
+// ═══════════════════════════════════════════════
+function kmeans(data, k, maxIter = 100) {
+  if (!data.length) return { assignments: [], centroids: [] };
+  // init centroids from data
+  const indices = [];
+  while (indices.length < k) {
+    const i = Math.floor(Math.random() * data.length);
+    if (!indices.includes(i)) indices.push(i);
+  }
+  let centroids = indices.map(i => [...data[i]]);
+
+  let assignments = new Array(data.length).fill(0);
+  for (let iter = 0; iter < maxIter; iter++) {
+    let changed = false;
+    for (let i = 0; i < data.length; i++) {
+      let best = 0, bestDist = Infinity;
+      centroids.forEach((c, ci) => {
+        const d = data[i].reduce((sum, v, j) => sum + Math.pow(v - c[j], 2), 0);
+        if (d < bestDist) { bestDist = d; best = ci; }
+      });
+      if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+    }
+    if (!changed) break;
+    // update centroids
+    centroids = centroids.map((_, ci) => {
+      const pts = data.filter((_, i) => assignments[i] === ci);
+      if (!pts.length) return centroids[ci];
+      return data[0].map((_, j) => pts.reduce((s, p) => s + p[j], 0) / pts.length);
+    });
+  }
+  return { assignments, centroids };
+}
+
+function normalize(data) {
+  const mins = data[0].map((_, j) => Math.min(...data.map(r => r[j])));
+  const maxs = data[0].map((_, j) => Math.max(...data.map(r => r[j])));
+  return data.map(r => r.map((v, j) => maxs[j] > mins[j] ? (v - mins[j]) / (maxs[j] - mins[j]) : 0));
+}
+
+function runClustering() {
+  if (!AppState.rows.length) { loadDemoData(); return; }
+  destroyChart('f5');
+
+  const k = parseInt(document.getElementById('f5_k').value) || 4;
+  const rows = AppState.rows;
+  const tierScore = { T1: 3, T2: 2, T3: 1 };
+
+  const rawData = rows.map(r => [r.revenue, r.penetration_rate * 100, tierScore[r.tier] || 1]);
+  const normData = normalize(rawData);
+  const { assignments } = kmeans(normData, k);
+
+  const clusterColors = ['#60a5fa','#4ade80','#fbbf24','#a78bfa','#f87171','#fb923c','#34d399','#e879f9'];
+  const clusterNames = ['Established Core','Growth Frontier','Whitespace High-Value','Saturated Mature','Premium Urban','Emerging Mid-Tier','Rural Aspirational','Niche Premium'];
+
+  const grouped = {};
+  for (let ci = 0; ci < k; ci++) grouped[ci] = [];
+  assignments.forEach((ci, i) => grouped[ci].push({ ...rows[i], raw: rawData[i] }));
+
+  // Scatter chart
+  AppState.charts['f5'] = new Chart(document.getElementById('f5_chart'), {
+    type: 'scatter',
+    data: {
+      datasets: Array.from({ length: k }, (_, ci) => ({
+        label: clusterNames[ci],
+        data: grouped[ci].map(r => ({ x: r.revenue, y: r.penetration_rate * 100 })),
+        backgroundColor: clusterColors[ci] + '77',
+        borderColor: clusterColors[ci],
+        borderWidth: 1,
+        pointRadius: 4
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CHART_DEFAULTS.color, font: { size: 11, family: CHART_DEFAULTS.font } } } },
+      scales: {
+        x: { title: { display: true, text: 'Revenue (₹ Cr)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor } },
+        y: { title: { display: true, text: 'Penetration Rate (%)', color: '#6b7590' }, ticks: { color: '#6b7590' }, grid: { color: CHART_DEFAULTS.gridColor } }
+      }
+    }
+  });
+
+  // Profiles
+  document.getElementById('f5_profiles').innerHTML = Array.from({ length: k }, (_, ci) => {
+    const pts = grouped[ci];
+    if (!pts.length) return '';
+    const avgRev = pts.reduce((s, r) => s + r.revenue, 0) / pts.length;
+    const avgPen = pts.reduce((s, r) => s + r.penetration_rate, 0) / pts.length * 100;
+    const tierDist = { T1: 0, T2: 0, T3: 0 };
+    pts.forEach(r => tierDist[r.tier]++);
+    const dominantTier = Object.entries(tierDist).sort((a,b)=>b[1]-a[1])[0][0];
+    return `<div class="cluster-card">
+      <div class="cluster-header">
+        <div class="cluster-dot" style="background:${clusterColors[ci]}"></div>
+        <div class="cluster-name">${clusterNames[ci]}</div>
+        <div class="cluster-count">${pts.length} districts</div>
+      </div>
+      <div class="cluster-attr">Avg revenue: <strong style="color:var(--text)">₹${avgRev.toFixed(1)} Cr</strong></div>
+      <div class="cluster-attr">Avg penetration: <strong style="color:var(--text)">${avgPen.toFixed(1)}%</strong></div>
+      <div class="cluster-attr">Dominant tier: <strong style="color:var(--text)">${dominantTier.replace('T','Tier ')}</strong></div>
+      <div class="cluster-attr">T1/T2/T3 split: ${tierDist.T1}/${tierDist.T2}/${tierDist.T3}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  File handling
+// ═══════════════════════════════════════════════
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function handleDragLeave(e) { document.getElementById('uploadZone').classList.remove('dragover'); }
+function handleFileUpload(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, { header: true, dynamicTyping: true, complete: r => { AppState.rows = r.data.filter(row => row && Object.values(row).some(v => v !== null && v !== '')); toast(`Loaded ${AppState.rows.length} rows from ${file.name}`, 'success'); document.getElementById('datasetLabel').textContent = `${file.name} · ${AppState.rows.length} rows`; renderAllModules(); } });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      AppState.rows = XLSX.utils.sheet_to_json(ws);
+      toast(`Loaded ${AppState.rows.length} rows from ${file.name}`, 'success');
+      document.getElementById('datasetLabel').textContent = `${file.name} · ${AppState.rows.length} rows`;
+      renderAllModules();
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    toast('Unsupported file type. Use CSV or XLSX.', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  Export
+// ═══════════════════════════════════════════════
+function exportPDF() {
+  toast('Generating PDF…', 'success');
+  html2canvas(document.getElementById('mainContent'), { backgroundColor: '#0d1117', scale: 1.5 }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
+    const ratio = canvas.width / canvas.height;
+    const imgH = Math.min(h, w / ratio);
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, imgH);
+    pdf.save('meridian-field-report.pdf');
+  });
+}
+
+function exportPNG() {
+  html2canvas(document.getElementById('mainContent'), { backgroundColor: '#0d1117', scale: 2 }).then(canvas => {
+    const a = document.createElement('a');
+    a.download = 'meridian-field.png';
+    a.href = canvas.toDataURL();
+    a.click();
+  });
+}
+
+function exportCSV() {
+  if (!AppState.rows.length) { toast('No data loaded', 'error'); return; }
+  const keys = Object.keys(AppState.rows[0]);
+  const csv = [keys.join(','), ...AppState.rows.map(r => keys.map(k => JSON.stringify(r[k] ?? '')).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'meridian-field-data.csv';
+  a.click();
+}
+
+// ═══════════════════════════════════════════════
+//  Toast
+// ═══════════════════════════════════════════════
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ═══════════════════════════════════════════════
+//  AppHandoff — sessionStorage listener
+// ═══════════════════════════════════════════════
+function receiveHandoff(payload) {
+  AppState.rows = payload.rows || [];
+  AppState.schema = payload.schema || {};
+  AppState.source = 'handoff';
+  document.getElementById('datasetLabel').textContent = `Handoff · ${AppState.rows.length} rows`;
+  document.getElementById('handoffBadge').style.display = '';
+  toast(`Dataset received via handoff — ${AppState.rows.length} rows`, 'success');
+  renderAllModules();
+}
+
+function validateSchema(schema, required) {
+  return required.every(k => schema[k]);
+}
+
+function initModule(rows, schema) {
+  AppState.rows = rows;
+  AppState.schema = schema;
+}
+
+function renderOutputs() {
+  renderAllModules();
+}
+
+function renderAllModules() {
+  if (AppState.currentModule === 'f1') renderF1();
+  if (AppState.currentModule === 'f2') renderF2();
+  if (AppState.currentModule === 'f3') renderF3();
+  if (AppState.currentModule === 'f4') renderF4();
+  if (AppState.currentModule === 'f5') runClustering();
+}
+
+window.addEventListener('load', () => {
+  // Check sessionStorage handoff
+  try {
+    const raw = sessionStorage.getItem('meridian_handoff');
+    if (raw) {
+      const payload = JSON.parse(raw);
+      if (payload.targetModule === 'field' || payload.targetModule === 'market-intel') {
+        receiveHandoff(payload);
+        return;
+      }
+    }
+  } catch(e) {}
+  // Default: load demo
+  loadDemoData();
+  showModule('f1');
+});
+</script>
+</body>
+</html>

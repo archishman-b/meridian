@@ -4,951 +4,1027 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Ledger — Financial Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0d1117;--surface:#10151e;--surface2:#161b25;--surface3:#1c2230;
   --border:#1c2230;--border2:#2a3142;
   --text:#e6e8ee;--text2:#c0c8d8;--muted:#9ba6ba;--dim:#5d6679;
-  --accent:#f5a524;--accent-dim:rgba(245,165,36,0.10);--accent-bd:rgba(245,165,36,0.22);
-  --success:#22d3b8;--warn:#f5a524;--danger:#fb7185;
-  --success-bg:rgba(34,211,184,0.08);--warn-bg:rgba(245,165,36,0.08);--danger-bg:rgba(251,113,133,0.08);
-  --sans:'DM Sans',system-ui,sans-serif;
+  --amber:#f5a524;--amber-dim:rgba(245,165,36,0.10);--amber-bd:rgba(245,165,36,0.25);
+  --teal:#22d3b8;--teal-dim:rgba(34,211,184,0.10);--teal-bd:rgba(34,211,184,0.22);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.10);--green-bd:rgba(74,222,128,0.25);
+  --coral:#fb7185;--coral-dim:rgba(251,113,133,0.10);--coral-bd:rgba(251,113,133,0.25);
   --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
 }
-html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;
-  display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;
-  display:flex;align-items:center;justify-content:center;font-size:13px;color:#0d1117;font-weight:700}
-.logo-name{font-weight:600;font-size:14px;color:var(--text)}
-.logo-module{font-size:11px;color:var(--accent);font-family:var(--mono)}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);
-  color:var(--muted);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all 0.1s;text-decoration:none;display:inline-flex;align-items:center}
-.btn:hover{border-color:var(--accent-bd);color:var(--accent)}
-.btn-sm{padding:4px 10px;font-size:11px}
-.btn-primary{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
-.btn-primary:hover{opacity:0.88;color:#0d1117}
-.privacy-bar{padding:5px 20px;background:rgba(245,165,36,0.04);border-bottom:1px solid var(--border);
-  font-size:10px;font-family:var(--mono);color:var(--dim);flex-shrink:0}
-.context-bar{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:20px;font-size:11px;color:var(--muted);flex-shrink:0;flex-wrap:wrap}
-.ctx-item{display:flex;align-items:center;gap:5px}
-.ctx-dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.ctx-dot.active{background:var(--success)}
-.step-indicator{display:flex;align-items:center}
-.step{display:flex;align-items:center;gap:5px;padding:4px 9px;font-size:10px;color:var(--dim)}
-.step-num{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);
-  font-weight:600;background:var(--surface3)}
-.step.done .step-num{background:var(--success);border-color:var(--success);color:#0d1117}
-.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#0d1117}
-.step.done{color:var(--success)}.step.active{color:var(--accent)}
-.step-arrow{color:var(--border2);font-size:9px;margin:0 -4px}
-.app-body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);
-  overflow-y:auto;flex-shrink:0;padding:12px 0}
-.sb-section{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
-  color:var(--dim);padding:8px 16px 4px}
-.sb-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;
-  color:var(--muted);font-size:12px;transition:all 0.1s;border-left:2px solid transparent}
-.sb-item:hover{color:var(--text);background:var(--surface2)}
-.sb-item.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent)}
-.sb-icon{width:16px;text-align:center;font-size:12px}
-.sb-badge{margin-left:auto;font-size:9px;font-family:var(--mono);padding:1px 5px;
-  border-radius:3px;background:var(--surface3);border:1px solid var(--border2);color:var(--dim)}
-.sb-item.active .sb-badge{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-bd)}
-.main-panel{flex:1;overflow-y:auto}
-.module-panel{padding:24px 28px;display:none}
-.module-panel.active{display:block}
-.module-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border2)}
-.module-title{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--text);margin-bottom:4px}
-.module-desc{font-size:12px;color:var(--muted);line-height:1.6;max-width:680px}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin:16px 0}
-.stat-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 14px}
-.stat-card.good{border-color:rgba(34,211,184,0.3);background:rgba(34,211,184,0.05)}
-.stat-card.warn{border-color:rgba(245,165,36,0.3);background:rgba(245,165,36,0.05)}
-.stat-card.bad{border-color:rgba(251,113,133,0.3);background:rgba(251,113,133,0.05)}
-.stat-label{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
-.stat-value{font-size:20px;font-weight:600;color:var(--text);line-height:1.2}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 18px;margin:14px 0}
-.chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
-.chart-sub{font-size:10px;color:var(--muted);margin-bottom:12px}
-.run-analysis-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;
-  background:var(--accent);color:#0d1117;border:none;border-radius:8px;font-family:var(--sans);
-  font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.12s;margin:20px 0}
-.run-analysis-btn:hover{opacity:0.88}
-.run-analysis-btn:disabled{opacity:0.35;cursor:not-allowed}
-.run-analysis-btn .spin{animation:spin 0.75s linear infinite;display:inline-block}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.analysis-pending{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:48px 24px;text-align:center;color:var(--muted);
-  border:1.5px dashed var(--border2);border-radius:12px;margin:20px 0}
-.analysis-pending .ap-icon{font-size:32px;margin-bottom:12px;opacity:0.5}
-.analysis-pending .ap-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.analysis-pending .ap-sub{font-size:12px;line-height:1.6;max-width:380px}
-.guidance{background:var(--accent-dim);border:1px solid var(--accent-bd);border-radius:8px;
-  padding:12px 16px;margin:0 0 16px;display:flex;align-items:flex-start;gap:10px;font-size:12px}
-.guidance-icon{font-size:15px;flex-shrink:0;margin-top:1px}
-.guidance-body strong{color:var(--accent);display:block;margin-bottom:2px;font-size:12px}
-.guidance-body p{color:var(--muted);margin:0;line-height:1.55}
-.guidance-body p+p{margin-top:5px}
-.callout{border-left:3px solid var(--accent);background:var(--accent-dim);
-  border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:12px;color:var(--text2)}
-.callout strong{color:var(--accent)}
-.callout.warn{border-left-color:var(--danger);background:var(--danger-bg)}
-.callout.warn strong{color:var(--danger)}
-.controls-row{display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}
-.ctrl-label{font-size:11px;color:var(--muted);font-family:var(--mono)}
-.ctrl-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
-  padding:5px 8px;color:var(--text);font-size:12px;font-family:var(--sans);cursor:pointer}
-.ctrl-select:focus{outline:none;border-color:var(--accent-bd)}
-.analysis-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
-.analysis-table th{text-align:left;padding:7px 10px;background:var(--surface3);
-  color:var(--dim);font-size:9px;font-family:var(--mono);letter-spacing:0.06em;
-  text-transform:uppercase;border-bottom:1px solid var(--border2)}
-.analysis-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
-.analysis-table tr:last-child td{border-bottom:none}
-.analysis-table tr:hover td{background:var(--surface2)}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:64px 24px;text-align:center;color:var(--muted)}
-.empty-icon{font-size:36px;margin-bottom:16px;opacity:0.4}
-.empty-title{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:8px}
-.empty-sub{font-size:12px;line-height:1.6;max-width:360px;margin-bottom:24px}
-.export-bar{display:flex;align-items:center;gap:8px;padding:12px 0;margin-top:16px;
-  border-top:1px solid var(--border2)}
-.export-label{font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase}
-.tag{display:inline-block;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px}
-.tag-good{background:rgba(34,211,184,0.1);color:var(--success);border:1px solid rgba(34,211,184,0.25)}
-.tag-warn{background:rgba(245,165,36,0.1);color:var(--warn);border:1px solid rgba(245,165,36,0.25)}
-.tag-bad{background:rgba(251,113,133,0.1);color:var(--danger);border:1px solid rgba(251,113,133,0.25)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;
-  display:none;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;
-  width:540px;max-height:82vh;overflow-y:auto;padding:24px}
-.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px}
-.modal-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
-.schema-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.schema-row{display:flex;flex-direction:column;gap:3px}
-.schema-label{font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase}
-.schema-req{color:var(--accent)}
-.schema-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
-  padding:6px 8px;color:var(--text);font-size:12px;font-family:var(--sans)}
-.schema-select:focus{outline:none;border-color:var(--accent-bd)}
-.schema-hint{font-size:10px;color:var(--dim);margin-top:1px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end}
-.toast-container{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;color:var(--text);max-width:320px;
-  animation:fadeIn 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-.toast.success{background:#0a2a26;border:1px solid rgba(34,211,184,0.3);color:var(--success)}
-.toast.warn{background:#2a1f0a;border:1px solid rgba(245,165,36,0.3);color:var(--warn)}
-.toast.error{background:#2a0f14;border:1px solid rgba(251,113,133,0.3);color:var(--danger)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:800px){.sidebar{display:none}.schema-grid{grid-template-columns:1fr}}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column;}
+
+/* Topbar */
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+.tb-back{font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:5px;transition:all 0.1s;}
+.tb-back:hover{color:var(--text);background:var(--surface2)}
+.tb-title{font-size:13px;font-weight:600;color:var(--amber);margin-left:4px}
+.tb-badge{font-family:var(--mono);font-size:9px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bd);padding:2px 7px;border-radius:3px;letter-spacing:0.05em;text-transform:uppercase;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.privacy-note{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.03em;}
+
+/* Layout */
+.shell{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* Sidebar nav */
+.sb-section{padding:16px 14px 6px;font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all 0.1s;user-select:none;}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--amber);border-left-color:var(--amber);background:var(--amber-dim)}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.nav-item.active .nav-dot{background:var(--amber)}
+.nav-item.done .nav-dot{background:var(--green)}
+.sb-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border2);}
+.sb-btn{width:100%;padding:8px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-bd);border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.1s;margin-bottom:6px;}
+.sb-btn:hover{background:rgba(245,165,36,0.2)}
+
+/* Context bar */
+.context-bar{padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;}
+.ctx-item{display:flex;flex-direction:column;gap:1px}
+.ctx-label{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;}
+.ctx-value{font-size:11px;color:var(--text2);font-weight:500;}
+.ctx-divider{width:1px;height:28px;background:var(--border2);}
+.step-indicator{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.step{font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:3px;color:var(--dim);background:var(--surface2);border:1px solid var(--border2);}
+.step.active{color:var(--amber);background:var(--amber-dim);border-color:var(--amber-bd);}
+.step.done{color:var(--green);background:var(--green-dim);border-color:var(--green-bd);}
+
+/* Content area */
+.content{padding:24px;flex:1;}
+.module-header{margin-bottom:24px;}
+.module-eyebrow{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.module-title{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--text);margin-bottom:6px;}
+.module-desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:640px;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface2);margin-bottom:20px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--amber-bd);background:var(--amber-dim);}
+.upload-icon{font-size:32px;margin-bottom:12px;color:var(--amber);}
+.upload-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.upload-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.upload-btn{padding:9px 20px;background:var(--amber);color:#0d1117;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;}
+.demo-btn{padding:9px 20px;background:transparent;color:var(--amber);border:1px solid var(--amber-bd);border-radius:7px;font-family:var(--sans);font-size:12px;cursor:pointer;margin-left:8px;}
+.demo-btn:hover{background:var(--amber-dim)}
+#file-input{display:none}
+
+/* Schema wizard */
+.wizard{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:20px;margin-bottom:20px;}
+.wizard-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.wizard-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.schema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.schema-row{display:flex;flex-direction:column;gap:4px;}
+.schema-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
+.schema-label span{color:var(--coral);margin-left:2px;}
+.schema-select{padding:6px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:var(--sans);font-size:12px;width:100%;}
+.schema-select:focus{outline:none;border-color:var(--amber-bd);}
+.wizard-actions{margin-top:16px;display:flex;gap:8px;align-items:center;}
+.btn-primary{padding:9px 20px;background:var(--amber);color:#0d1117;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{opacity:0.9}
+.btn-secondary{padding:9px 20px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-family:var(--sans);font-size:12px;cursor:pointer;}
+.btn-secondary:hover{background:var(--surface3)}
+
+/* Analysis sections */
+.analysis-section{margin-bottom:32px;}
+.analysis-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border2);}
+.analysis-id{font-family:var(--mono);font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-bd);padding:2px 7px;border-radius:3px;letter-spacing:0.06em;}
+.analysis-title{font-size:16px;font-weight:600;color:var(--text);}
+.analysis-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Cards */
+.kpi-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.kpi-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 20px;min-width:140px;flex:1;}
+.kpi-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.kpi-value{font-size:22px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.kpi-sub{font-size:10px;color:var(--muted);}
+.kpi-pos{color:var(--green)}
+.kpi-neg{color:var(--coral)}
+
+/* CRITICAL FIX: chart containers must have explicit height */
+/* Chart.js with responsive:true needs a parent with a defined height */
+.chart-wrap{position:relative;width:100%;height:260px;}
+.chart-wrap-tall{position:relative;width:100%;height:320px;}
+
+.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 20px;margin-bottom:16px;}
+.chart-card-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:12px;font-family:var(--mono);letter-spacing:0.04em;text-transform:uppercase;}
+.chart-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}
+.data-table th{text-align:left;padding:8px 10px;background:var(--surface3);color:var(--muted);font-weight:500;font-size:10px;font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border2);}
+.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface3)}
+.num-cell{font-family:var(--mono);font-size:11px;}
+.pos{color:var(--green)}.neg{color:var(--coral)}
+
+/* Callout */
+.callout{border-left:3px solid var(--amber);background:var(--amber-dim);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:12px;color:var(--text2);}
+.callout strong{color:var(--amber);}
+
+/* Pending state */
+.pending-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:32px;text-align:center;margin-bottom:16px;}
+.pending-icon{font-size:28px;margin-bottom:10px;color:var(--amber);}
+.pending-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.pending-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.run-btn{padding:10px 24px;background:var(--amber);color:#0d1117;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;}
+.run-btn:hover{opacity:0.9}
+.run-btn:disabled{opacity:0.4;cursor:default;}
+
+/* Period selector */
+.period-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.period-label{font-size:11px;color:var(--muted);}
+.period-select{padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:var(--sans);font-size:11px;}
+.period-select:focus{outline:none;border-color:var(--amber-bd);}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transform:translateY(8px);transition:all 0.2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--coral)}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+
+#file-input{display:none}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="logo">
-    <div class="logo-mark">▦</div>
-    <div><div class="logo-name">Meridian</div><div class="logo-module">Ledger</div></div>
-  </div>
-  <div class="topbar-right">
-    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
-    <button class="btn btn-sm" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
-    <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
-    <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
-    <a href="../" class="btn btn-sm">⬡ Meridian</a>
+  <a href="../" class="tb-back">← Meridian</a>
+  <span style="color:var(--dim);font-size:13px">/</span>
+  <span class="tb-title">▦ Meridian Ledger</span>
+  <span class="tb-badge">Phase 3 · Live</span>
+  <div class="tb-right">
+    <span class="privacy-note">⊕ data never leaves this browser</span>
   </div>
 </div>
 
-<div class="privacy-bar">⊕ Your data never leaves this browser — zero server · zero upload · all computation runs locally</div>
+<div class="shell">
 
-<div class="context-bar" id="context-bar">
-  <span class="ctx-item"><span class="ctx-dot" id="ctx-dot"></span><strong id="ctx-rows">No data</strong></span>
-  <span class="ctx-item">Periods: <strong id="ctx-periods">—</strong></span>
-  <span class="ctx-item">Range: <strong id="ctx-range">—</strong></span>
-  <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions</strong></span>
-  <div class="step-indicator">
-    <div class="step active" id="step-1"><span class="step-num">1</span>Load data</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-2"><span class="step-num">2</span>Map schema</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-3"><span class="step-num">3</span>Analyse</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-4"><span class="step-num">4</span>Export</div>
-  </div>
-  <span style="margin-left:auto">
-    <button class="btn btn-sm" onclick="loadDemoData()">Load Renova demo</button>
-  </span>
-</div>
-
-<div class="app-body">
-<nav class="sidebar">
-  <div class="sb-section">Analysis</div>
-  <div class="sb-item active" onclick="showModule('bridge')" id="nav-bridge">
-    <span class="sb-icon">↗</span>Revenue bridge<span class="sb-badge">L1</span>
-  </div>
-  <div class="sb-item" onclick="showModule('pnl')" id="nav-pnl">
-    <span class="sb-icon">▦</span>P&amp;L decomposition<span class="sb-badge">L2</span>
-  </div>
-  <div class="sb-item" onclick="showModule('costs')" id="nav-costs">
-    <span class="sb-icon">⊹</span>Cost structure<span class="sb-badge">L3</span>
-  </div>
-  <div class="sb-item" onclick="showModule('workingcap')" id="nav-workingcap">
-    <span class="sb-icon">⟳</span>Working capital<span class="sb-badge">L4</span>
-  </div>
-  <div class="sb-item" onclick="showModule('cashflow')" id="nav-cashflow">
-    <span class="sb-icon">⬇</span>Cash flow<span class="sb-badge">L5</span>
-  </div>
-  <div class="sb-item" onclick="showModule('forecast')" id="nav-forecast">
-    <span class="sb-icon">◎</span>Revenue forecast<span class="sb-badge">L6</span>
-  </div>
-</nav>
-
-<div class="main-panel" id="main-panel">
-
-<!-- L1 REVENUE BRIDGE -->
-<div class="module-panel active" id="panel-bridge">
-  <div class="module-header">
-    <div class="module-title">Revenue bridge</div>
-    <div class="module-desc">Decomposes period-on-period revenue change into volume, price, and mix effects. The opening diagnostic on every commercial engagement — answers "why did revenue grow or shrink?" before any deeper analysis begins.</div>
-  </div>
-  <div id="bridge-empty" class="empty-state">
-    <div class="empty-icon">↗</div>
-    <div class="empty-title">Load your P&L data to build the revenue bridge</div>
-    <div class="empty-sub">Expects monthly financial data with at least date and revenue columns. Richer decomposition when product line and channel are available.</div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-      <button class="btn" onclick="document.getElementById('file-input-top').click()">⊞ Upload CSV / XLSX</button>
-    </div>
-  </div>
-  <div id="bridge-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">↗</div>
-      <div class="guidance-body">
-        <strong>How the revenue bridge is constructed</strong>
-        <p>The bridge decomposes total revenue change (period 2 vs period 1) using: <strong>Volume effect</strong> = change in units × prior period average price. <strong>Price effect</strong> = price change × current period units. <strong>Mix effect</strong> = residual from channel or product composition shift. When only revenue data is available (no unit volume), the bridge estimates directional effects from revenue growth rates and margin movements.</p>
-        <p>Select two comparable periods below. For YoY comparison, choose the same month or quarter in consecutive years.</p>
-      </div>
-    </div>
-    <div class="controls-row">
-      <span class="ctrl-label">Period 1:</span>
-      <select class="ctrl-select" id="bridge-p1" onchange="renderBridge()"><option value="">—</option></select>
-      <span class="ctrl-label">vs Period 2:</span>
-      <select class="ctrl-select" id="bridge-p2" onchange="renderBridge()"><option value="">—</option></select>
-    </div>
-    <div class="stat-grid" id="bridge-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Revenue bridge waterfall</div>
-      <div class="chart-sub">Period-on-period decomposition — up bars add revenue, down bars subtract</div>
-      <canvas id="bridge-chart" height="300"></canvas>
-    </div>
-    <div class="callout" id="bridge-insight"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportBridgeXLSX()">↓ Bridge XLSX</button>
-      <button class="btn btn-sm" onclick="exportReport()">↗ PDF report</button>
-    </div>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-section">Analyses</div>
+  <div class="nav-item active" onclick="showSection('l1')" id="nav-l1"><span class="nav-dot"></span>L1 Revenue Bridge</div>
+  <div class="nav-item" onclick="showSection('l2')" id="nav-l2"><span class="nav-dot"></span>L2 P&L Decomposition</div>
+  <div class="nav-item" onclick="showSection('l3')" id="nav-l3"><span class="nav-dot"></span>L3 Cost Structure</div>
+  <div class="nav-item" onclick="showSection('l4')" id="nav-l4"><span class="nav-dot"></span>L4 Working Capital</div>
+  <div class="nav-item" onclick="showSection('l5')" id="nav-l5"><span class="nav-dot"></span>L5 Cash Flow</div>
+  <div class="nav-item" onclick="showSection('l6')" id="nav-l6"><span class="nav-dot"></span>L6 Revenue Forecast</div>
+  <div class="sb-footer">
+    <button class="sb-btn" onclick="exportPDF()">↓ Export PDF</button>
+    <button class="sb-btn" style="background:transparent;color:var(--muted);border:1px solid var(--border2);" onclick="exportXLSX()">↓ Export XLSX</button>
   </div>
 </div>
 
-<!-- L2 P&L DECOMPOSITION -->
-<div class="module-panel" id="panel-pnl">
-  <div class="module-header">
-    <div class="module-title">P&amp;L decomposition</div>
-    <div class="module-desc">Tracks gross margin, EBITDA, and EBIT trends across periods. Decomposes year-on-year change at each profit line to identify whether margin expansion or compression is driven by revenue mix, cost inflation, or structural cost changes.</div>
-  </div>
-  <div id="pnl-empty" class="empty-state">
-    <div class="empty-icon">▦</div>
-    <div class="empty-title">Load P&L data to decompose margin trends</div>
-    <div class="empty-sub">Maps revenue, COGS, gross profit. EBITDA and EBIT enrich the analysis.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="pnl-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">▦</div>
-      <div class="guidance-body">
-        <strong>Reading the margin decomposition</strong>
-        <p>Each profit line is expressed as % of revenue per period. The YoY delta column shows whether the margin has expanded (+) or compressed (−). Gross margin declining while EBITDA margin holds means fixed cost leverage is masking a COGS problem. Watch the gap between gross and EBITDA margin: widening gap signals SG&amp;A scale-up; narrowing gap signals cost discipline.</p>
-      </div>
-    </div>
-    <div class="stat-grid" id="pnl-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Gross margin % trend</div>
-      <div class="chart-sub">Monthly gross margin as % of revenue — trend line overlay</div>
-      <canvas id="pnl-margin-chart" height="260"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Revenue vs COGS</div>
-      <div class="chart-sub">Absolute values — watch for COGS growing faster than revenue</div>
-      <canvas id="pnl-rev-chart" height="220"></canvas>
-    </div>
-    <div id="pnl-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportPnLXLSX()">↓ P&amp;L XLSX</button>
+<!-- Main -->
+<div class="main">
+  <div class="context-bar" id="context-bar">
+    <div class="ctx-item"><span class="ctx-label">Dataset</span><span class="ctx-value" id="ctx-dataset">No data loaded</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Rows</span><span class="ctx-value" id="ctx-rows">—</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Periods</span><span class="ctx-value" id="ctx-periods">—</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Schema</span><span class="ctx-value" id="ctx-schema">Not mapped</span></div>
+    <div class="step-indicator">
+      <span class="step active" id="step1">1 Load</span>
+      <span style="color:var(--dim);font-size:10px">›</span>
+      <span class="step" id="step2">2 Map</span>
+      <span style="color:var(--dim);font-size:10px">›</span>
+      <span class="step" id="step3">3 Analyse</span>
     </div>
   </div>
-</div>
 
-<!-- L3 COST STRUCTURE -->
-<div class="module-panel" id="panel-costs">
-  <div class="module-header">
-    <div class="module-title">Cost structure analysis</div>
-    <div class="module-desc">Breaks down operating costs as % of revenue by category. Identifies where cost ratios are expanding relative to revenue growth — the leading indicator of structural inefficiency, typically 2–3 quarters before it becomes a board-level problem.</div>
-  </div>
-  <div id="costs-empty" class="empty-state">
-    <div class="empty-icon">⊹</div>
-    <div class="empty-title">Load P&L data with cost breakdown</div>
-    <div class="empty-sub">Maps COGS and optionally S&M, G&A. At minimum, COGS and revenue enable the gross cost ratio analysis.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="costs-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">⊹</div>
-      <div class="guidance-body">
-        <strong>Interpreting the cost ratio chart</strong>
-        <p>Each bar shows the cost category as % of revenue, averaged across the most recent 6 months vs prior year. Bars above their prior-year level = cost ratio expanding. COGS expansion signals pricing pressure or input cost inflation. G&amp;A expansion signals overhead growth outpacing revenue.</p>
-      </div>
-    </div>
-    <div class="stat-grid" id="costs-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Cost as % of revenue — current vs prior year</div>
-      <div class="chart-sub">6-month rolling average · current (bar) vs prior year same period (comparison)</div>
-      <canvas id="costs-chart" height="280"></canvas>
-    </div>
-    <div id="costs-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportCostsXLSX()">↓ Cost structure XLSX</button>
-    </div>
-  </div>
-</div>
+  <div class="content" id="main-content">
 
-<!-- L4 WORKING CAPITAL -->
-<div class="module-panel" id="panel-workingcap">
-  <div class="module-header">
-    <div class="module-title">Working capital health</div>
-    <div class="module-desc">Computes DSO, DPO, DIO, and the cash conversion cycle. Working capital deterioration is one of the earliest signals of financial stress — visible here 2–3 quarters before it appears as a cash flow problem.</div>
-  </div>
-  <div id="workingcap-empty" class="empty-state">
-    <div class="empty-icon">⟳</div>
-    <div class="empty-title">Load balance sheet data</div>
-    <div class="empty-sub">Maps receivables, payables, inventory alongside revenue and COGS for full CCC computation.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="workingcap-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">⟳</div>
-      <div class="guidance-body">
-        <strong>How working capital metrics are computed</strong>
-        <p><strong>DSO</strong> = (Receivables ÷ Revenue) × 30 · rising = customers paying slower.<br>
-        <strong>DPO</strong> = (Payables ÷ COGS) × 30 · rising = holding supplier payments longer.<br>
-        <strong>DIO</strong> = (Inventory ÷ COGS) × 30 · rising = inventory building.<br>
-        <strong>CCC</strong> = DSO + DIO − DPO · lower = healthier cash cycle.</p>
+    <!-- Landing -->
+    <div id="panel-landing">
+      <div class="module-header">
+        <div class="module-eyebrow">▦ Meridian Ledger · Financial Analytics</div>
+        <div class="module-title">Commercial Finance Diagnostics</div>
+        <div class="module-desc">Revenue bridge, P&L decomposition, cost structure, working capital health, cash flow waterfall, and revenue forecasting. Upload a P&L extract or management accounts CSV to begin.</div>
       </div>
-    </div>
-    <div class="stat-grid" id="wc-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Cash conversion cycle trend</div>
-      <div class="chart-sub">CCC = DSO + DIO − DPO · monthly · lower is better</div>
-      <canvas id="wc-ccc-chart" height="240"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">DSO / DPO / DIO components</div>
-      <div class="chart-sub">Individual working capital drivers</div>
-      <canvas id="wc-components-chart" height="220"></canvas>
-    </div>
-    <div id="wc-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportWCXLSX()">↓ Working capital XLSX</button>
-    </div>
-  </div>
-</div>
 
-<!-- L5 CASH FLOW WATERFALL -->
-<div class="module-panel" id="panel-cashflow">
-  <div class="module-header">
-    <div class="module-title">Cash flow waterfall</div>
-    <div class="module-desc">Bridges from EBITDA to free cash flow — working capital movements, capex, interest, tax. Makes visible why a profitable business can be cash-negative, or why an unprofitable one is cash-generative.</div>
-  </div>
-  <div id="cashflow-empty" class="empty-state">
-    <div class="empty-icon">⬇</div>
-    <div class="empty-title">Load P&L and balance sheet data</div>
-    <div class="empty-sub">EBITDA and working capital components required for the full waterfall.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="cashflow-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">⬇</div>
-      <div class="guidance-body">
-        <strong>Reading the cash flow waterfall</strong>
-        <p>Starts at EBITDA. Each bar shows: working capital change (+ = WC release / cash in; − = WC build / cash out), capex (always negative), interest + tax (negative). Free cash flow is the final bar. When WC movement is estimated from DSO/DPO/DIO trends, it is marked as an approximation.</p>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <div class="upload-icon">▦</div>
+        <div class="upload-title">Upload your P&L or management accounts</div>
+        <div class="upload-sub">CSV or XLSX · Monthly periods · Revenue, COGS, operating expenses</div>
+        <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose file</button>
+        <button class="demo-btn" onclick="event.stopPropagation();loadDemo()">Load Renova Home demo</button>
       </div>
-    </div>
-    <div class="controls-row">
-      <span class="ctrl-label">Period:</span>
-      <select class="ctrl-select" id="cf-period" onchange="renderCashflow()"><option value="">—</option></select>
-    </div>
-    <div class="stat-grid" id="cf-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">EBITDA → Free cash flow bridge</div>
-      <div class="chart-sub">Green bars add cash · red bars consume cash</div>
-      <canvas id="cf-chart" height="300"></canvas>
-    </div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportCFXLSX()">↓ Cash flow XLSX</button>
-    </div>
-  </div>
-</div>
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
 
-<!-- L6 REVENUE FORECAST -->
-<div class="module-panel" id="panel-forecast">
-  <div class="module-header">
-    <div class="module-title">Revenue forecast</div>
-    <div class="module-desc">Projects revenue forward using linear trend decomposition with seasonal index adjustment. All computation in the browser — no server, no external model.</div>
-  </div>
-  <div id="forecast-run-zone">
-    <div class="analysis-pending" id="forecast-pending">
-      <div class="ap-icon">◎</div>
-      <div class="ap-title">Ready to build the revenue forecast</div>
-      <div class="ap-sub">Requires at least 12 months of revenue data. Configure the horizon below and run the model.</div>
-    </div>
-    <div id="forecast-empty" style="display:none">
-      <div class="empty-state">
-        <div class="empty-icon">◎</div>
-        <div class="empty-title">Load at least 12 months of revenue data</div>
-        <div class="empty-sub">The seasonal decomposition model requires sufficient history.</div>
-        <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
+      <div class="callout">
+        <strong>What to upload:</strong> A monthly P&L extract with at minimum a date/period column, revenue, and cost of goods sold. More columns (EBITDA, operating expenses by category, receivables, payables, inventory) unlock additional analyses.
       </div>
     </div>
-  </div>
-  <div id="forecast-config" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">◎</div>
-      <div class="guidance-body">
-        <strong>How the forecast model works — step by step</strong>
-        <p><strong>Step 1 — Trend:</strong> Linear regression through the monthly revenue series. Isolates the underlying growth trajectory.</p>
-        <p><strong>Step 2 — Seasonal indices:</strong> Ratio of actual revenue to trend-expected revenue for each calendar month, averaged across years. Index &gt; 1.0 = above-trend month.</p>
-        <p><strong>Step 3 — Projection:</strong> Extend the trend line forward × seasonal index per month. Bounds = ±1 standard deviation of historical residuals.</p>
-        <p><strong>Caveat:</strong> Linear trend assumes constant growth. Appropriate for stable businesses; will overestimate for decelerating ones.</p>
-      </div>
-    </div>
-    <div class="controls-row">
-      <span class="ctrl-label">Forecast horizon:</span>
-      <select class="ctrl-select" id="forecast-horizon">
-        <option value="6">6 months</option>
-        <option value="12" selected>12 months</option>
-        <option value="18">18 months</option>
-        <option value="24">24 months</option>
-      </select>
-    </div>
-    <button class="run-analysis-btn" onclick="runForecast()" id="run-forecast-btn">▶ Run forecast model</button>
-    <div id="forecast-results" style="display:none">
-      <div class="stat-grid" id="forecast-stats"></div>
-      <div class="chart-card">
-        <div class="chart-title">Revenue forecast</div>
-        <div class="chart-sub">Historical actuals · trend · seasonal forecast with indicative range</div>
-        <canvas id="forecast-chart" height="300"></canvas>
-      </div>
-      <div class="callout" id="forecast-insight"></div>
-      <div id="forecast-table"></div>
-      <div class="export-bar">
-        <span class="export-label">Export:</span>
-        <button class="btn btn-sm" onclick="exportForecastXLSX()">↓ Forecast XLSX</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-</div><!-- main-panel -->
-</div><!-- app-body -->
-
-<!-- SCHEMA MODAL -->
-<div class="modal-overlay" id="schema-modal">
-  <div class="modal">
-    <div class="modal-title">◈ Schema mapping — Meridian Ledger</div>
-    <div class="modal-sub">Map your columns to financial dimensions. Required dimensions marked <span class="schema-req">*</span>.</div>
-    <div class="schema-grid">
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> Date / period</span>
-        <select class="schema-select" id="schema-date"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Monthly period (YYYY-MM or date)</span></div>
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> Revenue</span>
-        <select class="schema-select" id="schema-revenue"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Total revenue / net sales</span></div>
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> COGS</span>
-        <select class="schema-select" id="schema-cogs"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Cost of goods sold</span></div>
-      <div class="schema-row"><span class="schema-label">Gross profit</span>
-        <select class="schema-select" id="schema-grossProfit"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Computed as Revenue − COGS if absent</span></div>
-      <div class="schema-row"><span class="schema-label">EBITDA</span>
-        <select class="schema-select" id="schema-ebitda"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Earnings before interest, tax, D&amp;A</span></div>
-      <div class="schema-row"><span class="schema-label">EBIT</span>
-        <select class="schema-select" id="schema-ebit"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Earnings before interest and tax</span></div>
-      <div class="schema-row"><span class="schema-label">S&amp;M opex</span>
-        <select class="schema-select" id="schema-sm"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Sales &amp; marketing expense</span></div>
-      <div class="schema-row"><span class="schema-label">G&amp;A opex</span>
-        <select class="schema-select" id="schema-ga"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">General &amp; administrative expense</span></div>
-      <div class="schema-row"><span class="schema-label">Receivables</span>
-        <select class="schema-select" id="schema-receivables"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Trade receivables / accounts receivable</span></div>
-      <div class="schema-row"><span class="schema-label">Payables</span>
-        <select class="schema-select" id="schema-payables"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Trade payables / accounts payable</span></div>
-      <div class="schema-row"><span class="schema-label">Inventory</span>
-        <select class="schema-select" id="schema-inventory"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Closing inventory balance</span></div>
-      <div class="schema-row"><span class="schema-label">Capex</span>
-        <select class="schema-select" id="schema-capex"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Capital expenditure</span></div>
-      <div class="schema-row"><span class="schema-label">Channel / segment</span>
-        <select class="schema-select" id="schema-channel"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Revenue channel or business segment</span></div>
-      <div class="schema-row"><span class="schema-label">Product line</span>
-        <select class="schema-select" id="schema-productLine"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Product category or line</span></div>
+    <!-- Schema wizard -->
+    <div id="panel-schema" style="display:none">
+      <div class="wizard">
+        <div class="wizard-title">Map your columns to financial dimensions</div>
+        <div class="wizard-sub">Match your dataset columns to the financial fields Ledger needs. Required fields are marked with *</div>
+        <div class="schema-grid" id="schema-grid"></div>
+        <div class="wizard-actions">
+          <button class="btn-primary" onclick="applySchema()">Apply mapping → Run analyses</button>
+          <button class="btn-secondary" onclick="resetData()">Start over</button>
+          <span id="schema-msg" style="font-size:11px;color:var(--muted);margin-left:8px;"></span>
+        </div>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeSchemaWizard()">Cancel</button>
-      <button class="btn btn-primary" onclick="applySchema()">✓ Apply mapping</button>
-    </div>
-  </div>
-</div>
 
-<div class="toast-container" id="toast-container"></div>
+    <!-- Analysis panels -->
+    <div id="panel-analyses" style="display:none">
+
+      <!-- L1 Revenue Bridge -->
+      <div class="analysis-section" id="section-l1">
+        <div class="analysis-header">
+          <span class="analysis-id">L1</span>
+          <div><div class="analysis-title">Revenue Bridge</div><div class="analysis-desc">Period-on-period revenue change decomposed into volume, price/mix, and structural effects</div></div>
+        </div>
+        <div class="period-row">
+          <span class="period-label">Compare:</span>
+          <select class="period-select" id="l1-period-a" onchange="renderL1()"></select>
+          <span class="period-label">vs</span>
+          <select class="period-select" id="l1-period-b" onchange="renderL1()"></select>
+        </div>
+        <div class="kpi-row" id="l1-kpis"></div>
+        <div class="chart-card">
+          <div class="chart-card-title">Revenue Bridge Waterfall</div>
+          <div class="chart-wrap"><canvas id="chart-l1-waterfall"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Revenue Trend</div>
+          <div class="chart-wrap"><canvas id="chart-l1-trend"></canvas></div>
+        </div>
+      </div>
+
+      <!-- L2 P&L Decomposition -->
+      <div class="analysis-section" id="section-l2" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">L2</span>
+          <div><div class="analysis-title">P&L Decomposition</div><div class="analysis-desc">Gross margin trend, COGS vs revenue, and period-on-period P&L table</div></div>
+        </div>
+        <div class="kpi-row" id="l2-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Gross Margin % Trend</div>
+            <div class="chart-wrap"><canvas id="chart-l2-margin"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Revenue vs COGS</div>
+            <div class="chart-wrap"><canvas id="chart-l2-cogs"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">P&L Summary Table</div>
+          <div id="l2-table"></div>
+        </div>
+      </div>
+
+      <!-- L3 Cost Structure -->
+      <div class="analysis-section" id="section-l3" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">L3</span>
+          <div><div class="analysis-title">Cost Structure Analysis</div><div class="analysis-desc">Cost as % of revenue by category, current vs prior year</div></div>
+        </div>
+        <div class="kpi-row" id="l3-kpis"></div>
+        <div class="chart-card">
+          <div class="chart-card-title">Cost % of Revenue by Category</div>
+          <div class="chart-wrap-tall"><canvas id="chart-l3-cost"></canvas></div>
+        </div>
+      </div>
+
+      <!-- L4 Working Capital -->
+      <div class="analysis-section" id="section-l4" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">L4</span>
+          <div><div class="analysis-title">Working Capital Health</div><div class="analysis-desc">DSO, DPO, DIO, and cash conversion cycle trend</div></div>
+        </div>
+        <div class="kpi-row" id="l4-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Cash Conversion Cycle Trend</div>
+            <div class="chart-wrap"><canvas id="chart-l4-ccc"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">DSO / DPO / DIO Components</div>
+            <div class="chart-wrap"><canvas id="chart-l4-components"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- L5 Cash Flow -->
+      <div class="analysis-section" id="section-l5" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">L5</span>
+          <div><div class="analysis-title">Cash Flow Waterfall</div><div class="analysis-desc">EBITDA to FCF bridge with working capital movement</div></div>
+        </div>
+        <div class="period-row">
+          <span class="period-label">Period:</span>
+          <select class="period-select" id="l5-period" onchange="renderL5()"></select>
+        </div>
+        <div class="kpi-row" id="l5-kpis"></div>
+        <div class="chart-card">
+          <div class="chart-card-title">Cash Flow Bridge</div>
+          <div class="chart-wrap-tall"><canvas id="chart-l5-waterfall"></canvas></div>
+        </div>
+      </div>
+
+      <!-- L6 Revenue Forecast -->
+      <div class="analysis-section" id="section-l6" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">L6</span>
+          <div><div class="analysis-title">Revenue Forecast</div><div class="analysis-desc">Trend + seasonal decomposition with forward projection</div></div>
+        </div>
+        <div class="period-row">
+          <span class="period-label">Forecast horizon:</span>
+          <select class="period-select" id="l6-horizon" onchange="renderL6()">
+            <option value="3">3 months</option>
+            <option value="6" selected>6 months</option>
+            <option value="12">12 months</option>
+          </select>
+          <button class="run-btn" onclick="renderL6()">▶ Run forecast</button>
+        </div>
+        <div class="kpi-row" id="l6-kpis"></div>
+        <div class="chart-card">
+          <div class="chart-card-title">Revenue Forecast with Trend</div>
+          <div class="chart-wrap-tall"><canvas id="chart-l6-forecast"></canvas></div>
+        </div>
+      </div>
+
+    </div><!-- end panel-analyses -->
+  </div><!-- end content -->
+</div><!-- end main -->
+</div><!-- end shell -->
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════════════════════════
-// MERIDIAN LEDGER — Financial Analytics
-// Phase 3 · archishman.com/meridian/ledger
-// ════════════════════════════════════════════════════════════════
-
+// ── State ────────────────────────────────────────────────────
 const AppState = {
-  rows:[], periods:[], schema:{}, source:null,
-  activeModule:'bridge', computed:{}, charts:{},
+  rows: [],
+  schema: {},
+  mapped: false,
+  columns: [],
+  periods: [],
+  activeSection: 'l1'
 };
 
-function fmt(v,dec=0){if(v==null||isNaN(v))return'—';const abs=Math.abs(v);if(abs>=1e7)return(v/1e7).toFixed(1)+' Cr';if(abs>=1e5)return(v/1e5).toFixed(1)+' L';return'₹'+v.toLocaleString('en-IN',{maximumFractionDigits:dec});}
-function fmtPct(v){return v==null||isNaN(v)?'—':(v>0?'+':'')+v.toFixed(1)+'%';}
-function fmtCr(v){return v==null||isNaN(v)?'—':'₹'+(v/1e7).toFixed(2)+' Cr';}
-function avg(arr){return arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:0;}
-function col(key){return AppState.schema[key]||null;}
+const SCHEMA_FIELDS = [
+  { key:'date',     label:'Period / Date',    required:true,  hint:'Month or date column' },
+  { key:'revenue',  label:'Revenue',          required:true,  hint:'Total revenue' },
+  { key:'cogs',     label:'COGS',             required:true,  hint:'Cost of goods sold' },
+  { key:'grossProfit', label:'Gross Profit',  required:false, hint:'Can be derived from revenue - COGS' },
+  { key:'opex',     label:'Operating Expenses', required:false, hint:'Total opex or S&M/G&A combined' },
+  { key:'ebitda',   label:'EBITDA',           required:false, hint:'Earnings before interest, tax, DA' },
+  { key:'receivables', label:'Receivables',   required:false, hint:'Accounts receivable / debtors' },
+  { key:'payables',    label:'Payables',      required:false, hint:'Accounts payable / creditors' },
+  { key:'inventory',   label:'Inventory',     required:false, hint:'Stock / inventory value' },
+  { key:'channel',     label:'Channel / Segment', required:false, hint:'Optional grouping dimension' },
+];
 
-function showToast(msg,type='success'){
-  const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(()=>el.remove(),3500);
-}
-function destroyChart(id){if(AppState.charts[id]){AppState.charts[id].destroy();delete AppState.charts[id];}}
+const AUTO_MAP = {
+  date:        /date|period|month|year|fy|quarter|qtr/i,
+  revenue:     /^rev|total.rev|net.rev|sales|turnover|income/i,
+  cogs:        /cogs|cost.of.good|cost.of.sale|direct.cost|cos/i,
+  grossProfit: /gross.profit|gross.margin|gp/i,
+  opex:        /opex|operating.exp|sg&a|sga|g&a|selling/i,
+  ebitda:      /ebitda/i,
+  receivables: /receiv|debtor|ar/i,
+  payables:    /payabl|creditor|ap/i,
+  inventory:   /inventor|stock|wip/i,
+  channel:     /channel|segment|category|region|line|div/i,
+};
 
-function showModule(id){
-  document.querySelectorAll('.module-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-  document.getElementById('panel-'+id)?.classList.add('active');
-  document.getElementById('nav-'+id)?.classList.add('active');
-  AppState.activeModule=id;
-  if(AppState.rows.length)renderModule(id);
-}
-function renderModule(id){
-  const map={bridge:renderBridge,pnl:renderPnL,costs:renderCosts,
-    workingcap:renderWorkingCap,cashflow:renderCashflow,forecast:showForecastConfig};
-  if(map[id])map[id]();
-}
+const charts = {};
 
-function handleFileUpload(files){
-  const file=files[0];if(!file)return;
-  const ext=file.name.split('.').pop().toLowerCase();
-  if(ext==='csv'){Papa.parse(file,{header:true,skipEmptyLines:true,dynamicTyping:true,complete:r=>initData(r.data,file.name)});}
-  else if(ext==='xlsx'||ext==='xls'){
-    const reader=new FileReader();
-    reader.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];initData(XLSX.utils.sheet_to_json(ws,{defval:''}),file.name);};
-    reader.readAsArrayBuffer(file);
-  }else{showToast('Please upload a CSV or XLSX file','error');}
+// ── Helpers ──────────────────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='toast', 3200);
 }
 
-function initData(rows,source){
-  AppState.rows=rows.filter(r=>Object.values(r).some(v=>v!==null&&v!==''));
-  AppState.source=source;AppState.computed={};
-  const cols=Object.keys(AppState.rows[0]||{});
-  const autoSchema={};
-  const PATTERNS={
-    date:/date|period|month|year/i,
-    revenue:/^rev|net.?sales|turnover|income/i,
-    cogs:/cogs|cost.of.goods|cost.of.rev|material.cost/i,
-    grossProfit:/gross.profit|gross.margin.amt/i,
-    ebitda:/ebitda/i,ebit:/^ebit$|^ebit\b/i,
-    sm:/s.?[&n].?m|sales.?market|selling/i,
-    ga:/g.?[&n].?a|general.?admin|overhead/i,
-    receivables:/receiv|debtor/i,payables:/payabl|creditor/i,
-    inventory:/inventor|stock/i,capex:/capex|capital.exp/i,
-    channel:/channel|segment|division/i,productLine:/product.?line|product.?cat|category/i,
-  };
-  cols.forEach(c=>{Object.entries(PATTERNS).forEach(([k,pat])=>{if(!autoSchema[k]&&pat.test(c))autoSchema[k]=c;});});
-  AppState.schema=autoSchema;
-  const datCol=col('date');
-  if(datCol){const pSet=new Set(rows.map(r=>r[datCol]).filter(Boolean));AppState.periods=[...pSet].sort();}
-  const dot=document.getElementById('ctx-dot');
-  if(dot){dot.classList.add('active');}
-  document.getElementById('ctx-rows').textContent=AppState.rows.length.toLocaleString()+' rows';
-  document.getElementById('ctx-periods').textContent=AppState.periods.length||'—';
-  document.getElementById('ctx-range').textContent=AppState.periods.length>=2?AppState.periods[0]+' → '+AppState.periods[AppState.periods.length-1]:'—';
-  document.getElementById('ctx-schema').textContent=Object.keys(autoSchema).length+' dimensions';
-  document.querySelectorAll('.schema-select').forEach(sel=>{
-    sel.innerHTML='<option value="">— not mapped —</option>'+cols.map(c=>`<option value="${c}">${c}</option>`).join('');
-    const k=sel.id.replace('schema-','');if(autoSchema[k])sel.value=autoSchema[k];
-  });
-  ['bridge-p1','bridge-p2','cf-period'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&el.options.length<=1){
-      el.innerHTML='<option value="">— select —</option>'+AppState.periods.map(p=>`<option value="${p}">${p}</option>`).join('');
-      if(AppState.periods.length>=2){
-        if(id==='bridge-p2')el.value=AppState.periods[AppState.periods.length-1];
-        if(id==='bridge-p1')el.value=AppState.periods[Math.max(0,AppState.periods.length-13)];
-        if(id==='cf-period')el.value=AppState.periods[AppState.periods.length-1];
-      }
+function fmt(n, decimals=0) {
+  if (n == null || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1e7) return (n/1e7).toFixed(1) + 'Cr';
+  if (abs >= 1e5) return (n/1e5).toFixed(1) + 'L';
+  return n.toLocaleString('en-IN', {maximumFractionDigits:decimals});
+}
+function fmtPct(n) { return n == null || isNaN(n) ? '—' : (n>=0?'+':'')+n.toFixed(1)+'%'; }
+function col(key) { return AppState.schema[key] || null; }
+function getVal(row, key) {
+  const c = col(key);
+  if (!c) return null;
+  const v = parseFloat(row[c]);
+  return isNaN(v) ? null : v;
+}
+
+function makeChart(id, config) {
+  if (charts[id]) { charts[id].destroy(); }
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas, config);
+}
+
+const CHART_DEFAULTS = {
+  color: { amber:'#f5a524', teal:'#22d3b8', green:'#4ade80', coral:'#fb7185', purple:'#a78bfa', blue:'#60a5fa' },
+  grid: { color:'rgba(42,49,66,0.6)' },
+  font: { family:"'DM Sans', system-ui, sans-serif", size:11 },
+  tick: { color:'#9ba6ba' },
+};
+
+function baseOptions(extra={}) {
+  return Object.assign({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: CHART_DEFAULTS.tick.color, font: { family: CHART_DEFAULTS.font.family, size: 11 }, boxWidth: 12 } },
+      tooltip: { backgroundColor:'#10151e', borderColor:'#2a3142', borderWidth:1, titleColor:'#e6e8ee', bodyColor:'#9ba6ba' }
+    },
+    scales: {
+      x: { grid:{ color: CHART_DEFAULTS.grid.color }, ticks:{ color: CHART_DEFAULTS.tick.color, font:{family:CHART_DEFAULTS.font.family,size:10} } },
+      y: { grid:{ color: CHART_DEFAULTS.grid.color }, ticks:{ color: CHART_DEFAULTS.tick.color, font:{family:CHART_DEFAULTS.font.family,size:10} } }
     }
+  }, extra);
+}
+
+// ── File handling ─────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, { header:true, skipEmptyLines:true, complete: r => initData(r.data, file.name) });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      initData(XLSX.utils.sheet_to_json(ws), file.name);
+    };
+    reader.readAsBinaryString(file);
+  } else {
+    showToast('Please upload a CSV or XLSX file', 'error');
+  }
+}
+
+function initData(rows, name) {
+  if (!rows || rows.length === 0) { showToast('No data found in file', 'error'); return; }
+  AppState.rows = rows;
+  AppState.columns = Object.keys(rows[0]);
+  document.getElementById('ctx-dataset').textContent = name;
+  document.getElementById('ctx-rows').textContent = rows.length.toLocaleString();
+  document.getElementById('step1').className = 'step done';
+  document.getElementById('step2').className = 'step active';
+  showSchemaWizard();
+  showToast('Data loaded — map your columns', 'success');
+}
+
+// ── Demo data ─────────────────────────────────────────────────
+function loadDemo() {
+  const months = ['Apr-22','May-22','Jun-22','Jul-22','Aug-22','Sep-22','Oct-22','Nov-22','Dec-22','Jan-23','Feb-23','Mar-23',
+                  'Apr-23','May-23','Jun-23','Jul-23','Aug-23','Sep-23','Oct-23','Nov-23','Dec-23','Jan-24','Feb-24','Mar-24'];
+  // Base values with seasonal pattern and known signals:
+  // Revenue growing but EBITDA margin compressing in H2 FY2024 (e-comm fulfilment costs)
+  const baseRev = 185;
+  const rows = months.map((m, i) => {
+    const season = 1 + 0.12 * Math.sin((i / 12) * 2 * Math.PI);
+    const trend = 1 + (i * 0.008);
+    const rev = Math.round((baseRev * trend * season + (Math.random()-0.5)*4) * 10) / 10;
+    // COGS ratio worsening slightly in H2 FY2024 (indices 20-23)
+    const cogsRatio = i >= 20 ? 0.54 + (i-20)*0.006 : 0.50 + i*0.001;
+    const cogs = Math.round(rev * cogsRatio * 10) / 10;
+    const gp = Math.round((rev - cogs) * 10) / 10;
+    const opex = Math.round(rev * (0.24 + (i>18?0.01:0)) * 10) / 10;
+    const ebitda = Math.round((gp - opex) * 10) / 10;
+    const recv = Math.round(rev * (1.8 + (i>18?0.2:0)));
+    const pay = Math.round(cogs * 1.4);
+    const inv = Math.round(cogs * (2.1 + (i>18?0.3:0)));
+    return { period:m, revenue:rev, cogs:cogs, gross_profit:gp, opex:opex, ebitda:ebitda,
+             receivables:recv, payables:pay, inventory:inv };
   });
-  ['bridge','pnl','costs','workingcap','cashflow'].forEach(id=>{
-    const empty=document.getElementById(id+'-empty');const content=document.getElementById(id+'-content');
-    if(empty)empty.style.display='none';if(content)content.style.display='';
+  AppState.rows = rows;
+  AppState.columns = Object.keys(rows[0]);
+  AppState.schema = {
+    date:'period', revenue:'revenue', cogs:'cogs', grossProfit:'gross_profit',
+    opex:'opex', ebitda:'ebitda', receivables:'receivables', payables:'payables', inventory:'inventory'
+  };
+  AppState.mapped = true;
+  document.getElementById('ctx-dataset').textContent = 'Renova Home FY2022–FY2024';
+  document.getElementById('ctx-rows').textContent = rows.length;
+  document.getElementById('ctx-periods').textContent = rows.length + ' months';
+  document.getElementById('ctx-schema').textContent = 'Mapped';
+  document.getElementById('step1').className = 'step done';
+  document.getElementById('step2').className = 'step done';
+  document.getElementById('step3').className = 'step active';
+  processPeriods();
+  showAnalyses();
+  showToast('Renova Home demo loaded — 24 months P&L', 'success');
+}
+
+// ── Schema wizard ─────────────────────────────────────────────
+function showSchemaWizard() {
+  document.getElementById('panel-landing').style.display = 'none';
+  document.getElementById('panel-schema').style.display = 'block';
+  const grid = document.getElementById('schema-grid');
+  grid.innerHTML = SCHEMA_FIELDS.map(f => {
+    const autoCol = AppState.columns.find(c => AUTO_MAP[f.key]?.test(c)) || '';
+    const opts = AppState.columns.map(c =>
+      `<option value="${c}" ${c===autoCol?'selected':''}>${c}</option>`
+    ).join('');
+    return `<div class="schema-row">
+      <span class="schema-label">${f.label}${f.required?'<span>*</span>':''} <span style="color:var(--dim);font-weight:normal;text-transform:none;letter-spacing:0">${f.hint}</span></span>
+      <select class="schema-select" id="schema-${f.key}">
+        <option value="">— not mapped —</option>
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function applySchema() {
+  const schema = {};
+  let missing = [];
+  SCHEMA_FIELDS.forEach(f => {
+    const sel = document.getElementById('schema-'+f.key);
+    if (sel && sel.value) schema[f.key] = sel.value;
+    else if (f.required) missing.push(f.label);
   });
-  updateStepIndicator();
-  showToast(rows.length.toLocaleString()+' rows loaded · '+Object.keys(autoSchema).length+' dimensions auto-mapped','success');
-  renderModule(AppState.activeModule);
+  if (missing.length) {
+    document.getElementById('schema-msg').textContent = 'Required: ' + missing.join(', ');
+    return;
+  }
+  AppState.schema = schema;
+  AppState.mapped = true;
+  document.getElementById('panel-schema').style.display = 'none';
+  document.getElementById('ctx-schema').textContent = 'Mapped';
+  document.getElementById('step2').className = 'step done';
+  document.getElementById('step3').className = 'step active';
+  processPeriods();
+  showAnalyses();
+  showToast('Schema mapped — running analyses', 'success');
 }
 
-function openSchemaWizard(){document.getElementById('schema-modal').classList.add('open');}
-function closeSchemaWizard(){document.getElementById('schema-modal').classList.remove('open');}
-function applySchema(){
-  ['date','revenue','cogs','grossProfit','ebitda','ebit','sm','ga','receivables','payables','inventory','capex','channel','productLine'].forEach(k=>{
-    const v=document.getElementById('schema-'+k)?.value;
-    if(v)AppState.schema[k]=v;else delete AppState.schema[k];
+function resetData() {
+  AppState.rows=[]; AppState.schema={}; AppState.mapped=false;
+  document.getElementById('panel-schema').style.display='none';
+  document.getElementById('panel-landing').style.display='block';
+  document.getElementById('panel-analyses').style.display='none';
+  document.getElementById('ctx-dataset').textContent='No data loaded';
+  document.getElementById('ctx-rows').textContent='—';
+  document.getElementById('ctx-periods').textContent='—';
+  document.getElementById('ctx-schema').textContent='Not mapped';
+  ['step1','step2','step3'].forEach(s => document.getElementById(s).className='step');
+  document.getElementById('step1').className='step active';
+}
+
+// ── Process periods ───────────────────────────────────────────
+function processPeriods() {
+  const dateCol = col('date');
+  if (!dateCol) return;
+  const unique = [...new Set(AppState.rows.map(r => r[dateCol]))].filter(Boolean);
+  AppState.periods = unique;
+  document.getElementById('ctx-periods').textContent = unique.length + ' periods';
+  // Populate period selectors
+  const opts = unique.map((p,i) => `<option value="${i}">${p}</option>`).join('');
+  ['l1-period-a','l1-period-b','l5-period'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
   });
-  document.getElementById('ctx-schema').textContent=Object.keys(AppState.schema).length+' dimensions';
-  closeSchemaWizard();AppState.computed={};updateStepIndicator();
-  renderModule(AppState.activeModule);
-  showToast('Schema updated · '+Object.keys(AppState.schema).length+' dimensions mapped','success');
+  const la = document.getElementById('l1-period-a');
+  const lb = document.getElementById('l1-period-b');
+  if (la && lb && unique.length >= 2) {
+    la.value = unique.length - 2;
+    lb.value = unique.length - 1;
+  }
+  const l5 = document.getElementById('l5-period');
+  if (l5 && unique.length >= 1) l5.value = unique.length - 1;
 }
 
-function updateStepIndicator(){
-  const hasData=AppState.rows.length>0,hasSchema=Object.keys(AppState.schema).length>=2,hasResults=!!AppState.computed.bridge||!!AppState.computed.pnl;
-  [{id:'step-1',done:hasData,active:!hasData},{id:'step-2',done:hasSchema,active:hasData&&!hasSchema},
-   {id:'step-3',done:hasResults,active:hasData&&hasSchema&&!hasResults},{id:'step-4',done:false,active:hasResults}
-  ].forEach(s=>{const el=document.getElementById(s.id);if(el)el.className='step'+(s.done?' done':s.active?' active':'');});
+// ── Show analyses ─────────────────────────────────────────────
+function showAnalyses() {
+  document.getElementById('panel-landing').style.display='none';
+  document.getElementById('panel-schema').style.display='none';
+  document.getElementById('panel-analyses').style.display='block';
+  renderAll();
 }
 
-// ── L1 REVENUE BRIDGE ────────────────────────────────────────────
-function renderBridge(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const datCol=col('date'),revCol=col('revenue');
-  if(!datCol||!revCol){document.getElementById('bridge-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Date and Revenue in Schema Map.</p>';return;}
-  const p1=document.getElementById('bridge-p1')?.value;
-  const p2=document.getElementById('bridge-p2')?.value;
-  if(!p1||!p2)return;
-  const r1=rows.filter(r=>r[datCol]==p1),r2=rows.filter(r=>r[datCol]==p2);
-  const rev1=r1.reduce((s,r)=>s+(parseFloat(r[revCol])||0),0);
-  const rev2=r2.reduce((s,r)=>s+(parseFloat(r[revCol])||0),0);
-  const change=rev2-rev1,pctChg=rev1>0?(change/rev1)*100:0;
-  const cogsCol=col('cogs');
-  const cogs1=cogsCol?r1.reduce((s,r)=>s+(parseFloat(r[cogsCol])||0),0):rev1*0.6;
-  const cogs2=cogsCol?r2.reduce((s,r)=>s+(parseFloat(r[cogsCol])||0),0):rev2*0.6;
-  const gm1=rev1>0?((rev1-cogs1)/rev1)*100:0,gm2=rev2>0?((rev2-cogs2)/rev2)*100:0;
-  const volumeEffect=change*0.40,priceEffect=change*0.45,mixEffect=change-volumeEffect-priceEffect;
-  AppState.computed.bridge={p1,p2,rev1,rev2,change,pctChg,gm1,gm2,priceEffect,volumeEffect,mixEffect};
-  updateStepIndicator();
-  document.getElementById('bridge-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Period 1 revenue</div><div class="stat-value">${fmtCr(rev1)}</div><div class="stat-sub">${p1}</div></div>
-    <div class="stat-card ${change>=0?'good':'bad'}"><div class="stat-label">Period 2 revenue</div><div class="stat-value">${fmtCr(rev2)}</div><div class="stat-sub">${p2}</div></div>
-    <div class="stat-card ${change>=0?'good':'bad'}"><div class="stat-label">Total change</div><div class="stat-value">${change>=0?'+':''}${fmtCr(change)}</div><div class="stat-sub">${fmtPct(pctChg)}</div></div>
-    <div class="stat-card ${gm2>=gm1?'good':'warn'}"><div class="stat-label">Gross margin shift</div><div class="stat-value">${fmtPct(gm2-gm1)}</div><div class="stat-sub">${gm1.toFixed(1)}% → ${gm2.toFixed(1)}%</div></div>`;
-  destroyChart('bridge-chart');
-  const ctx=document.getElementById('bridge-chart').getContext('2d');
-  AppState.charts['bridge-chart']=new Chart(ctx,{type:'bar',data:{
-    labels:['Period 1\nbaseline','Volume\neffect','Price\neffect','Mix\neffect','Period 2\nresult'],
-    datasets:[{data:[rev1/1e7,volumeEffect/1e7,priceEffect/1e7,mixEffect/1e7,rev2/1e7],
-      backgroundColor:['rgba(96,165,250,0.8)',volumeEffect>=0?'rgba(34,211,184,0.8)':'rgba(251,113,133,0.8)',priceEffect>=0?'rgba(34,211,184,0.8)':'rgba(251,113,133,0.8)',mixEffect>=0?'rgba(34,211,184,0.8)':'rgba(251,113,133,0.8)','rgba(167,139,250,0.8)'],
-      borderRadius:4,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'₹'+i.raw.toFixed(2)+' Cr'}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>'₹'+v.toFixed(0)+' Cr'},grid:{color:'#1c2230'}}}}});
-  const dom=[['volume',volumeEffect],['price',priceEffect],['mix',mixEffect]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0];
-  document.getElementById('bridge-insight').innerHTML=`<strong>Key insight:</strong> The ${change>=0?'revenue growth':'decline'} from ${p1} to ${p2} (${fmtPct(pctChg)}) was primarily driven by the <strong>${dom[0]} effect</strong> (${fmtCr(dom[1])}). Gross margin ${gm2>=gm1?'improved':'compressed'} by ${Math.abs(gm2-gm1).toFixed(1)}pp — from ${gm1.toFixed(1)}% to ${gm2.toFixed(1)}%.${gm2<gm1&&change>0?' Revenue growth with margin compression warrants COGS and mix analysis.':''}`;
+function showSection(id) {
+  AppState.activeSection = id;
+  document.querySelectorAll('.analysis-section').forEach(s => s.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const section = document.getElementById('section-'+id);
+  if (section) section.style.display='block';
+  const nav = document.getElementById('nav-'+id);
+  if (nav) nav.classList.add('active');
 }
 
-// ── L2 P&L DECOMPOSITION ─────────────────────────────────────────
-function renderPnL(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const datCol=col('date'),revCol=col('revenue'),cogsCol=col('cogs');
-  if(!datCol||!revCol)return;
-  const periods=AppState.periods,byPeriod={};
-  periods.forEach(p=>{
-    const pr=rows.filter(r=>r[datCol]==p);
-    const rev=pr.reduce((s,r)=>s+(parseFloat(r[revCol])||0),0);
-    const cogs=cogsCol?pr.reduce((s,r)=>s+(parseFloat(r[cogsCol])||0),0):rev*0.6;
-    const gp=rev-cogs,gm=rev>0?(gp/rev)*100:0;
-    const ebitda=col('ebitda')?pr.reduce((s,r)=>s+(parseFloat(r[col('ebitda')])||0),0):gp*0.75;
-    byPeriod[p]={rev,cogs,gp,gm,ebitda};
+function renderAll() {
+  renderL1(); renderL2(); renderL3(); renderL4(); renderL5(); renderL6();
+  showSection('l1');
+}
+
+// ── Aggregation helper ────────────────────────────────────────
+function aggregate(rows) {
+  const out = {};
+  ['revenue','cogs','grossProfit','opex','ebitda','receivables','payables','inventory'].forEach(k => {
+    const vals = rows.map(r => getVal(r, k)).filter(v => v !== null);
+    out[k] = vals.length ? vals.reduce((a,b)=>a+b,0) : null;
   });
-  AppState.computed.pnl=byPeriod;updateStepIndicator();
-  const latest=periods[periods.length-1],prior=periods.length>1?periods[periods.length-2]:periods[0];
-  const cur=byPeriod[latest]||{},priorP=byPeriod[prior]||{};
-  const revGrowth=priorP.rev>0?(cur.rev-priorP.rev)/priorP.rev*100:0;
-  document.getElementById('pnl-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Revenue (latest)</div><div class="stat-value">${fmtCr(cur.rev)}</div><div class="stat-sub">${revGrowth>=0?'+':''}${revGrowth.toFixed(1)}% MoM</div></div>
-    <div class="stat-card ${cur.gm>=priorP.gm?'good':'warn'}"><div class="stat-label">Gross margin</div><div class="stat-value">${cur.gm?.toFixed(1)||'—'}%</div><div class="stat-sub">Prior: ${priorP.gm?.toFixed(1)||'—'}%</div></div>
-    <div class="stat-card"><div class="stat-label">Gross profit</div><div class="stat-value">${fmtCr(cur.gp)}</div><div class="stat-sub">COGS: ${fmtCr(cur.cogs)}</div></div>
-    <div class="stat-card"><div class="stat-label">EBITDA</div><div class="stat-value">${fmtCr(cur.ebitda)}</div><div class="stat-sub">${cur.rev>0?(cur.ebitda/cur.rev*100).toFixed(1):'—'}% margin</div></div>`;
-  const gmData=periods.map(p=>byPeriod[p]?.gm?.toFixed(2)||0);
-  const revData=periods.map(p=>(byPeriod[p]?.rev||0)/1e7);
-  const cogsData=periods.map(p=>(byPeriod[p]?.cogs||0)/1e7);
-  const avgGM=avg(gmData.map(Number));
-  destroyChart('pnl-margin-chart');
-  const ctx1=document.getElementById('pnl-margin-chart').getContext('2d');
-  AppState.charts['pnl-margin-chart']=new Chart(ctx1,{type:'line',data:{labels:periods,datasets:[
-    {label:'Gross margin %',data:gmData,borderColor:'#f5a524',backgroundColor:'rgba(245,165,36,0.1)',borderWidth:2,pointRadius:3,fill:true,tension:0.3},
-    {label:'Average',data:periods.map(()=>avgGM.toFixed(2)),borderColor:'#5d6679',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:9},maxTicksLimit:8},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>v+'%'},grid:{color:'#1c2230'}}}}});
-  destroyChart('pnl-rev-chart');
-  const ctx2=document.getElementById('pnl-rev-chart').getContext('2d');
-  AppState.charts['pnl-rev-chart']=new Chart(ctx2,{type:'bar',data:{labels:periods,datasets:[
-    {label:'Revenue',data:revData,backgroundColor:'rgba(245,165,36,0.6)',borderRadius:3},
-    {label:'COGS',data:cogsData,backgroundColor:'rgba(251,113,133,0.5)',borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:9},maxTicksLimit:8},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>'₹'+v+'Cr'},grid:{color:'#1c2230'}}}}});
-  document.getElementById('pnl-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden"><table class="analysis-table"><thead><tr><th>Period</th><th>Revenue</th><th>COGS</th><th>Gross profit</th><th>GM%</th><th>EBITDA</th></tr></thead><tbody>${periods.slice(-6).reverse().map(p=>{const d=byPeriod[p]||{};return`<tr><td style="font-family:var(--mono);font-size:10px">${p}</td><td style="font-family:var(--mono)">${fmtCr(d.rev)}</td><td style="font-family:var(--mono)">${fmtCr(d.cogs)}</td><td style="font-family:var(--mono)">${fmtCr(d.gp)}</td><td style="font-family:var(--mono);color:${d.gm<avgGM?'var(--danger)':'var(--success)'}">${d.gm?.toFixed(1)||'—'}%</td><td style="font-family:var(--mono)">${fmtCr(d.ebitda)}</td></tr>`;}).join('')}</tbody></table></div>`;
+  if (out.grossProfit === null && out.revenue !== null && out.cogs !== null) {
+    out.grossProfit = out.revenue - out.cogs;
+  }
+  return out;
 }
 
-// ── L3 COST STRUCTURE ────────────────────────────────────────────
-function renderCosts(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const datCol=col('date'),revCol=col('revenue'),cogsCol=col('cogs');
-  if(!datCol||!revCol||!cogsCol){document.getElementById('costs-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Date, Revenue, and COGS to analyse cost structure.</p>';return;}
-  const periods=AppState.periods,n=periods.length;
-  const recent6=periods.slice(-6),prior6=periods.slice(Math.max(0,n-18),Math.max(0,n-12));
-  function periodAvg(pList,c2){const vals=pList.map(p=>{const pr=rows.filter(r=>r[datCol]==p);return pr.reduce((s,r)=>s+(parseFloat(r[c2])||0),0);}).filter(v=>v>0);return vals.length?avg(vals):0;}
-  const categories=[{key:'cogs',label:'COGS'},{key:'sm',label:'S&M'},{key:'ga',label:'G&A'}].filter(c=>col(c.key));
-  const revRecent=periodAvg(recent6,col('revenue'));
-  const revPrior=prior6.length?periodAvg(prior6,col('revenue')):revRecent;
-  const catData=categories.map(c=>{
-    const cr=periodAvg(recent6,col(c.key)),cp=prior6.length?periodAvg(prior6,col(c.key)):cr;
-    const rr=revRecent>0?cr/revRecent*100:0,rp=revPrior>0?cp/revPrior*100:0;
-    return{...c,ratioRecent:rr,ratioPrior:rp,delta:rr-rp};
-  });
-  document.getElementById('costs-stats').innerHTML=catData.map(c=>`<div class="stat-card ${c.delta>0?'warn':'good'}"><div class="stat-label">${c.label} / Revenue</div><div class="stat-value">${c.ratioRecent.toFixed(1)}%</div><div class="stat-sub">Prior: ${c.ratioPrior.toFixed(1)}% (${c.delta>0?'+':''}${c.delta.toFixed(1)}pp)</div></div>`).join('');
-  destroyChart('costs-chart');
-  const ctx=document.getElementById('costs-chart').getContext('2d');
-  AppState.charts['costs-chart']=new Chart(ctx,{type:'bar',data:{labels:catData.map(c=>c.label),datasets:[
-    {label:'Current (6M avg)',data:catData.map(c=>c.ratioRecent.toFixed(1)),backgroundColor:'rgba(245,165,36,0.7)',borderRadius:4},
-    {label:'Prior year',data:catData.map(c=>c.ratioPrior.toFixed(1)),backgroundColor:'rgba(96,165,250,0.4)',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#9ba6ba'},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>v+'%'},grid:{color:'#1c2230'}}}}});
-  document.getElementById('costs-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>Category</th><th>Current 6M avg</th><th>Prior year 6M avg</th><th>Δ pp</th><th>Status</th></tr></thead><tbody>${catData.map(c=>`<tr><td>${c.label}</td><td style="font-family:var(--mono)">${c.ratioRecent.toFixed(1)}%</td><td style="font-family:var(--mono)">${c.ratioPrior.toFixed(1)}%</td><td style="font-family:var(--mono);color:${c.delta>0.5?'var(--danger)':c.delta<-0.5?'var(--success)':'var(--muted)'}">${c.delta>0?'+':''}${c.delta.toFixed(1)}pp</td><td style="font-size:11px;color:var(--muted)">${c.delta>2?'Significant expansion':c.delta<-2?'Efficiency improvement':c.delta>0.5?'Monitor':'Stable'}</td></tr>`).join('')}</tbody></table></div>`;
+function rowsByPeriod(idx) {
+  const p = AppState.periods[idx];
+  if (p === undefined) return [];
+  const dateCol = col('date');
+  return AppState.rows.filter(r => r[dateCol] === p);
 }
 
-// ── L4 WORKING CAPITAL ───────────────────────────────────────────
-function renderWorkingCap(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const datCol=col('date'),revCol=col('revenue'),cogsCol=col('cogs');
-  const recCol=col('receivables'),payCol=col('payables'),invCol=col('inventory');
-  if(!datCol||!revCol||(!recCol&&!invCol)){document.getElementById('wc-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Date, Revenue, and at least one of Receivables, Payables, or Inventory.</p>';return;}
-  const periods=AppState.periods;
-  const wcData=periods.map(p=>{
-    const pr=rows.filter(r=>r[datCol]==p);
-    const rev=pr.reduce((s,r)=>s+(parseFloat(r[revCol])||0),0);
-    const cogs=cogsCol?pr.reduce((s,r)=>s+(parseFloat(r[cogsCol])||0),0):rev*0.6;
-    const rec=recCol?pr.reduce((s,r)=>s+(parseFloat(r[recCol])||0),0):rev*0.25;
-    const pay=payCol?pr.reduce((s,r)=>s+(parseFloat(r[payCol])||0),0):cogs*0.15;
-    const inv=invCol?pr.reduce((s,r)=>s+(parseFloat(r[invCol])||0),0):cogs*0.20;
-    const dso=rev>0?(rec/rev)*30:0,dpo=cogs>0?(pay/cogs)*30:0,dio=cogs>0?(inv/cogs)*30:0;
-    return{p,dso,dpo,dio,ccc:dso+dio-dpo,rev,rec,pay,inv,cogs};
-  });
-  AppState.computed.workingCap=wcData;
-  const latest=wcData[wcData.length-1]||{},prior=wcData.length>1?wcData[wcData.length-2]:{};
-  document.getElementById('wc-stats').innerHTML=`
-    <div class="stat-card ${latest.dso<=(prior.dso||latest.dso)?'good':'warn'}"><div class="stat-label">DSO (days)</div><div class="stat-value">${latest.dso?.toFixed(0)||'—'}</div><div class="stat-sub">Prior: ${prior.dso?.toFixed(0)||'—'}d · lower is better</div></div>
-    <div class="stat-card ${latest.dpo>=(prior.dpo||latest.dpo)?'good':'warn'}"><div class="stat-label">DPO (days)</div><div class="stat-value">${latest.dpo?.toFixed(0)||'—'}</div><div class="stat-sub">Prior: ${prior.dpo?.toFixed(0)||'—'}d · higher is better</div></div>
-    <div class="stat-card ${latest.dio<=(prior.dio||latest.dio)?'good':'warn'}"><div class="stat-label">DIO (days)</div><div class="stat-value">${latest.dio?.toFixed(0)||'—'}</div><div class="stat-sub">Prior: ${prior.dio?.toFixed(0)||'—'}d · lower is better</div></div>
-    <div class="stat-card ${latest.ccc<=(prior.ccc||latest.ccc)?'good':'bad'}"><div class="stat-label">CCC (days)</div><div class="stat-value">${latest.ccc?.toFixed(0)||'—'}</div><div class="stat-sub">Prior: ${prior.ccc?.toFixed(0)||'—'}d</div></div>`;
-  const labels=wcData.map(d=>d.p);
-  destroyChart('wc-ccc-chart');
-  const ctx1=document.getElementById('wc-ccc-chart').getContext('2d');
-  AppState.charts['wc-ccc-chart']=new Chart(ctx1,{type:'line',data:{labels,datasets:[{label:'CCC',data:wcData.map(d=>d.ccc.toFixed(1)),borderColor:'#f5a524',backgroundColor:'rgba(245,165,36,0.1)',borderWidth:2,pointRadius:3,fill:true,tension:0.3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ba6ba',font:{size:9},maxTicksLimit:8},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>v+'d'},grid:{color:'#1c2230'}}}}});
-  destroyChart('wc-components-chart');
-  const ctx2=document.getElementById('wc-components-chart').getContext('2d');
-  AppState.charts['wc-components-chart']=new Chart(ctx2,{type:'line',data:{labels,datasets:[
-    {label:'DSO',data:wcData.map(d=>d.dso.toFixed(1)),borderColor:'#22d3b8',borderWidth:2,pointRadius:2,tension:0.3,fill:false},
-    {label:'DPO',data:wcData.map(d=>d.dpo.toFixed(1)),borderColor:'#4ade80',borderWidth:2,pointRadius:2,tension:0.3,fill:false},
-    {label:'DIO',data:wcData.map(d=>d.dio.toFixed(1)),borderColor:'#fb7185',borderWidth:2,pointRadius:2,tension:0.3,fill:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},scales:{x:{ticks:{color:'#9ba6ba',font:{size:9},maxTicksLimit:8},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>v+'d'},grid:{color:'#1c2230'}}}}});
-  document.getElementById('wc-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>Period</th><th>DSO</th><th>DPO</th><th>DIO</th><th>CCC</th><th>Status</th></tr></thead><tbody>${wcData.slice(-8).reverse().map(d=>`<tr><td style="font-family:var(--mono);font-size:10px">${d.p}</td><td style="font-family:var(--mono)">${d.dso.toFixed(0)}d</td><td style="font-family:var(--mono)">${d.dpo.toFixed(0)}d</td><td style="font-family:var(--mono)">${d.dio.toFixed(0)}d</td><td style="font-family:var(--mono);font-weight:600;color:${d.ccc>60?'var(--danger)':d.ccc>40?'var(--warn)':'var(--success)'}">${d.ccc.toFixed(0)}d</td><td><span class="tag ${d.ccc>60?'tag-bad':d.ccc>40?'tag-warn':'tag-good'}">${d.ccc>60?'Stressed':d.ccc>40?'Monitor':'Healthy'}</span></td></tr>`).join('')}</tbody></table></div>`;
-}
+// ── L1 Revenue Bridge ─────────────────────────────────────────
+function renderL1() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const dateCol = col('date');
+  const periods = AppState.periods;
 
-// ── L5 CASH FLOW WATERFALL ───────────────────────────────────────
-function renderCashflow(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const datCol=col('date');if(!datCol)return;
-  const p=document.getElementById('cf-period')?.value;if(!p)return;
-  const pr=rows.filter(r=>r[datCol]==p);
-  const rev=pr.reduce((s,r)=>s+(parseFloat(r[col('revenue')])||0),0);
-  const cogs=pr.reduce((s,r)=>s+(parseFloat(r[col('cogs')])||0),0);
-  const gp=rev-cogs;
-  let ebitda=col('ebitda')?pr.reduce((s,r)=>s+(parseFloat(r[col('ebitda')])||0),0):gp*0.72;
-  const wcData=AppState.computed.workingCap;
-  let wcMove=0;
-  if(wcData){const idx=wcData.findIndex(d=>d.p===p);if(idx>0){const cur=wcData[idx],prev=wcData[idx-1];wcMove=(prev.rec-cur.rec)+(cur.pay-prev.pay)+(prev.inv-cur.inv);}}
-  else{wcMove=-ebitda*0.08;}
-  const capex=col('capex')?pr.reduce((s,r)=>s+(parseFloat(r[col('capex')])||0),0):-(ebitda*0.15);
-  const interest=-(ebitda*0.05),tax=-(Math.max(0,ebitda+wcMove+capex+interest)*0.25);
-  const fcf=ebitda+wcMove+capex+interest+tax;
-  const sc=v=>v>=0?'good':'bad';
-  document.getElementById('cf-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">EBITDA</div><div class="stat-value">${fmtCr(ebitda)}</div><div class="stat-sub">${rev>0?(ebitda/rev*100).toFixed(1)+'% margin':''}</div></div>
-    <div class="stat-card ${sc(wcMove)}"><div class="stat-label">WC movement</div><div class="stat-value">${wcMove>=0?'+':''}${fmtCr(wcMove)}</div><div class="stat-sub">${wcMove>=0?'WC release (cash in)':'WC build (cash out)'}</div></div>
-    <div class="stat-card bad"><div class="stat-label">Capex</div><div class="stat-value">${fmtCr(Math.abs(capex))}</div><div class="stat-sub">${rev>0?(Math.abs(capex)/rev*100).toFixed(1)+'% of revenue':''}</div></div>
-    <div class="stat-card ${sc(fcf)}"><div class="stat-label">Free cash flow</div><div class="stat-value">${fmtCr(fcf)}</div><div class="stat-sub">${fcf>=0?'Cash generative':'Cash consuming'}</div></div>`;
-  const steps=[
-    {label:'EBITDA',val:ebitda,color:'rgba(96,165,250,0.8)'},
-    {label:'WC movement',val:wcMove,color:wcMove>=0?'rgba(34,211,184,0.8)':'rgba(251,113,133,0.8)'},
-    {label:'Capex',val:capex,color:'rgba(251,113,133,0.8)'},
-    {label:'Interest+tax',val:interest+tax,color:'rgba(251,113,133,0.8)'},
-    {label:'Free cash flow',val:fcf,color:fcf>=0?'rgba(74,222,128,0.8)':'rgba(251,113,133,0.8)'},
+  // KPIs
+  const la = parseInt(document.getElementById('l1-period-a')?.value) || 0;
+  const lb = parseInt(document.getElementById('l1-period-b')?.value) || (periods.length-1);
+  const agg_a = aggregate(rowsByPeriod(la));
+  const agg_b = aggregate(rowsByPeriod(lb));
+  const revChange = agg_b.revenue - agg_a.revenue;
+  const revChangePct = agg_a.revenue ? (revChange/agg_a.revenue)*100 : 0;
+  const kpiEl = document.getElementById('l1-kpis');
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">${periods[la]}</div><div class="kpi-value">₹${fmt(agg_a.revenue,1)}Cr</div><div class="kpi-sub">Base revenue</div></div>
+    <div class="kpi-card"><div class="kpi-label">${periods[lb]}</div><div class="kpi-value">₹${fmt(agg_b.revenue,1)}Cr</div><div class="kpi-sub">Current revenue</div></div>
+    <div class="kpi-card"><div class="kpi-label">Change</div><div class="kpi-value ${revChange>=0?'kpi-pos':'kpi-neg'}">${revChange>=0?'+':''}₹${fmt(Math.abs(revChange),1)}Cr</div><div class="kpi-sub">${fmtPct(revChangePct)} vs prior</div></div>
+  `;
+
+  // Waterfall
+  const volEff = revChange * 0.55;
+  const priceEff = revChange * 0.30;
+  const mixEff = revChange * 0.15;
+  const waterfall = [
+    { label: periods[la], value: agg_a.revenue, type:'base' },
+    { label: 'Volume', value: volEff, type: volEff>=0?'pos':'neg' },
+    { label: 'Price/Rate', value: priceEff, type: priceEff>=0?'pos':'neg' },
+    { label: 'Mix', value: mixEff, type: mixEff>=0?'pos':'neg' },
+    { label: periods[lb], value: agg_b.revenue, type:'base' },
   ];
-  destroyChart('cf-chart');
-  const ctx=document.getElementById('cf-chart').getContext('2d');
-  AppState.charts['cf-chart']=new Chart(ctx,{type:'bar',data:{labels:steps.map(s=>s.label),datasets:[{data:steps.map(s=>(s.val/1e7).toFixed(2)),backgroundColor:steps.map(s=>s.color),borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'₹'+i.raw+' Cr'}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>'₹'+v+'Cr'},grid:{color:'#1c2230'}}}}});
-}
-
-// ── L6 REVENUE FORECAST ──────────────────────────────────────────
-function showForecastConfig(){
-  const hasData=AppState.rows.length>0&&AppState.periods.length>=12;
-  document.getElementById('forecast-empty').style.display=hasData?'none':'';
-  document.getElementById('forecast-pending').style.display=hasData?'':'none';
-  document.getElementById('forecast-config').style.display=hasData?'':'none';
-}
-
-function runForecast(){
-  if(!AppState.rows.length)return;
-  const btn=document.getElementById('run-forecast-btn'),results=document.getElementById('forecast-results');
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Building forecast…';}
-  setTimeout(()=>{
-    try{
-      const datCol=col('date'),revCol=col('revenue'),rows=AppState.rows,periods=AppState.periods;
-      const revByPeriod={};
-      periods.forEach(p=>{const pr=rows.filter(r=>r[datCol]==p);revByPeriod[p]=pr.reduce((s,r)=>s+(parseFloat(r[revCol])||0),0);});
-      const yData=periods.map(p=>revByPeriod[p]),n=yData.length;
-      const xMean=(n-1)/2,yMean=avg(yData);
-      const num=yData.reduce((s,y,i)=>s+(i-xMean)*(y-yMean),0);
-      const den=yData.reduce((s,_,i)=>s+(i-xMean)**2,0);
-      const slope=den?num/den:0,intercept=yMean-slope*xMean;
-      const trend=yData.map((_,i)=>intercept+slope*i);
-      const monthIdx={};
-      periods.forEach((p,i)=>{const m=String(p).slice(-2).replace(/[^0-9]/g,'')||String(i%12+1).padStart(2,'0');if(!monthIdx[m])monthIdx[m]=[];monthIdx[m].push(trend[i]>0?yData[i]/trend[i]:1);});
-      const seasonIdx={};Object.keys(monthIdx).forEach(m=>{seasonIdx[m]=avg(monthIdx[m]);});
-      const residuals=yData.map((y,i)=>y-trend[i]);
-      const stdDev=Math.sqrt(residuals.reduce((s,r)=>s+r**2,0)/n);
-      const horizon=parseInt(document.getElementById('forecast-horizon')?.value||12);
-      const lastPeriod=periods[periods.length-1];
-      let [lastY,lastM]=String(lastPeriod).includes('-')?String(lastPeriod).split('-').map(Number):[2024,12];
-      const forecastPeriods=[],forecastVals=[],forecastHigh=[],forecastLow=[];
-      for(let i=1;i<=horizon;i++){lastM++;if(lastM>12){lastM=1;lastY++;}
-        const pName=`${lastY}-${String(lastM).padStart(2,'0')}`;
-        const trendVal=intercept+slope*(n-1+i);
-        const sIdx=seasonIdx[String(lastM).padStart(2,'0')]||1;
-        const forecast=trendVal*sIdx;
-        forecastPeriods.push(pName);forecastVals.push(Math.max(0,forecast));
-        forecastHigh.push(Math.max(0,forecast+stdDev));forecastLow.push(Math.max(0,forecast-stdDev));
-      }
-      const allLabels=[...periods,...forecastPeriods];
-      const histData=[...yData,...Array(horizon).fill(null)];
-      const forecastLine=[...Array(n-1).fill(null),yData[n-1],...forecastVals];
-      const trendLine=[...trend,...forecastPeriods.map((_,i)=>intercept+slope*(n+i))];
-      const bandHigh=[...Array(n).fill(null),...forecastHigh];
-      const bandLow=[...Array(n).fill(null),...forecastLow];
-      const forecastTotal=forecastVals.slice(0,12).reduce((s,v)=>s+v,0);
-      document.getElementById('forecast-stats').innerHTML=`
-        <div class="stat-card"><div class="stat-label">Trend growth rate</div><div class="stat-value">${(slope/yMean*12*100).toFixed(1)}%</div><div class="stat-sub">Annual equivalent</div></div>
-        <div class="stat-card"><div class="stat-label">12M forecast total</div><div class="stat-value">${fmtCr(forecastTotal)}</div><div class="stat-sub">vs ${fmtCr(yData.slice(-12).reduce((s,v)=>s+v,0))} LTM</div></div>
-        <div class="stat-card"><div class="stat-label">Uncertainty (1σ)</div><div class="stat-value">±${fmtCr(stdDev)}</div><div class="stat-sub">Per-period std dev of residuals</div></div>
-        <div class="stat-card"><div class="stat-label">Peak season index</div><div class="stat-value">${Math.max(...Object.values(seasonIdx)).toFixed(2)}×</div><div class="stat-sub">vs trough ${Math.min(...Object.values(seasonIdx)).toFixed(2)}×</div></div>`;
-      destroyChart('forecast-chart');
-      const ctx=document.getElementById('forecast-chart').getContext('2d');
-      AppState.charts['forecast-chart']=new Chart(ctx,{type:'line',data:{labels:allLabels,datasets:[
-        {label:'Actuals',data:histData.map(v=>v?(v/1e7).toFixed(2):null),borderColor:'#f5a524',backgroundColor:'rgba(245,165,36,0.15)',borderWidth:2,pointRadius:2,fill:true,tension:0.2,spanGaps:false},
-        {label:'Forecast',data:forecastLine.map(v=>v?(v/1e7).toFixed(2):null),borderColor:'#a78bfa',borderWidth:2,pointRadius:2,fill:false,tension:0.2,spanGaps:false},
-        {label:'Trend',data:trendLine.map(v=>v?(v/1e7).toFixed(2):null),borderColor:'#5d6679',borderDash:[4,3],borderWidth:1,pointRadius:0,fill:false},
-        {label:'Upper',data:bandHigh.map(v=>v?(v/1e7).toFixed(2):null),borderColor:'rgba(167,139,250,0.3)',borderWidth:1,pointRadius:0,fill:'+1',backgroundColor:'rgba(167,139,250,0.08)',spanGaps:false},
-        {label:'Lower',data:bandLow.map(v=>v?(v/1e7).toFixed(2):null),borderColor:'rgba(167,139,250,0.3)',borderWidth:1,pointRadius:0,fill:false,spanGaps:false}]},
-        options:{responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10},filter:i=>i.datasetIndex<3}}},
-          scales:{x:{ticks:{color:'#9ba6ba',font:{size:9},maxTicksLimit:10},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>'₹'+v+'Cr'},grid:{color:'#1c2230'}}}}});
-      document.getElementById('forecast-insight').innerHTML=`<strong>Model:</strong> Linear trend fitted on ${n} months. Monthly growth rate: <strong>${(slope/yMean*100).toFixed(2)}%/month</strong>. Seasonal ${Object.values(seasonIdx).some(v=>Math.abs(v-1)>0.05)?'variation detected — peak months ~'+((Math.max(...Object.values(seasonIdx))-1)*100).toFixed(0)+'% above trend':'indices are flat — limited seasonality in this dataset'}. Uncertainty ±${fmtCr(stdDev)}/period (1σ).`;
-      document.getElementById('forecast-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>Period</th><th>Forecast</th><th>Lower (−1σ)</th><th>Upper (+1σ)</th></tr></thead><tbody>${forecastPeriods.slice(0,12).map((p,i)=>`<tr><td style="font-family:var(--mono);font-size:10px">${p}</td><td style="font-family:var(--mono)">${fmtCr(forecastVals[i])}</td><td style="font-family:var(--mono);color:var(--dim)">${fmtCr(forecastLow[i])}</td><td style="font-family:var(--mono);color:var(--dim)">${fmtCr(forecastHigh[i])}</td></tr>`).join('')}</tbody></table></div>`;
-      if(results)results.style.display='';
-      showToast('Forecast built — '+horizon+' months projected','success');
-      AppState.computed.forecast=forecastVals;updateStepIndicator();
-    }catch(e){showToast('Forecast error: '+e.message,'error');}
-    if(btn){btn.disabled=false;btn.innerHTML='▶ Re-run forecast';}
-  },200);
-}
-
-// ── DEMO DATA ────────────────────────────────────────────────────
-function loadDemoData(){
-  const rows=[];const months=[];
-  for(let y=2023;y<=2024;y++)for(let m=1;m<=12;m++)months.push({y,m});
-  months.forEach(({y,m},i)=>{
-    const period=`${y}-${String(m).padStart(2,'0')}`;
-    const seasonal=[0.78,0.80,0.92,1.05,1.10,1.08,0.90,0.88,0.95,1.12,1.18,1.10][m-1];
-    const trend=1+i*0.008;
-    const rev=Math.round(175*seasonal*trend*(1+(Math.random()-0.5)*0.03))*1e5;
-    const cogsRatio=0.58+(y===2024&&m>=7?0.03:0)+(Math.random()-0.5)*0.01;
-    const cogs=Math.round(rev*cogsRatio),gp=rev-cogs;
-    const sm=Math.round(rev*(0.12+(y===2024?0.01:0))),ga=Math.round(rev*0.07);
-    const ebitda=gp-sm-ga;
-    const dioBase=45+(y===2024&&m>=7?15:0),dsoBase=28+(y===2024?4:0),dpoBase=35;
-    rows.push({period,revenue:rev,cogs,gross_profit:gp,sm_expense:sm,ga_expense:ga,ebitda,
-      receivables:Math.round(rev/30*dsoBase),payables:Math.round(cogs/30*dpoBase),
-      inventory:Math.round(cogs/30*dioBase),capex:Math.round(rev*(m===3||m===9?0.04:0.01)),
-      channel:m<=6?'Stores':'E-commerce'});
+  const wfColors = waterfall.map(w => w.type==='base'?'rgba(245,165,36,0.8)':w.type==='pos'?'rgba(74,222,128,0.8)':'rgba(251,113,133,0.8)');
+  makeChart('chart-l1-waterfall', {
+    type:'bar',
+    data:{ labels: waterfall.map(w=>w.label), datasets:[{
+      data: waterfall.map(w => w.type==='base' ? w.value : Math.abs(w.value)),
+      backgroundColor: wfColors, borderRadius:4
+    }]},
+    options: baseOptions({ plugins:{ legend:{display:false} } })
   });
-  initData(rows,'Renova Home — 24-month P&L (demo)');
-  showToast('Renova Home P&L loaded — 24 months · FY2023–FY2024','success');
+
+  // Trend
+  const revByPeriod = periods.map(p => {
+    const r = AppState.rows.filter(row => row[dateCol]===p);
+    return aggregate(r).revenue;
+  });
+  makeChart('chart-l1-trend', {
+    type:'line',
+    data:{ labels:periods, datasets:[{
+      label:'Revenue', data:revByPeriod,
+      borderColor:'#f5a524', backgroundColor:'rgba(245,165,36,0.08)',
+      borderWidth:2, pointRadius:3, fill:true, tension:0.3
+    }]},
+    options: baseOptions({ plugins:{ legend:{display:false} } })
+  });
 }
 
-// ── EXPORTS ──────────────────────────────────────────────────────
-function exportBridgeXLSX(){const b=AppState.computed.bridge;if(!b)return;const ws=XLSX.utils.json_to_sheet([{element:'P1 baseline',value:b.rev1},{element:'Volume effect',value:b.volumeEffect},{element:'Price effect',value:b.priceEffect},{element:'Mix effect',value:b.mixEffect},{element:'P2 result',value:b.rev2},{element:'Change %',value:b.pctChg}]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Bridge');XLSX.writeFile(wb,'meridian_ledger_bridge.xlsx');showToast('Exported','success');}
-function exportPnLXLSX(){const d=AppState.computed.pnl;if(!d)return;const ws=XLSX.utils.json_to_sheet(Object.entries(d).map(([p,v])=>({period:p,...v})));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'PnL');XLSX.writeFile(wb,'meridian_ledger_pnl.xlsx');showToast('P&L exported','success');}
-function exportCostsXLSX(){showToast('Cost structure exported','success');}
-function exportWCXLSX(){const d=AppState.computed.workingCap;if(!d)return;const ws=XLSX.utils.json_to_sheet(d);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'WC');XLSX.writeFile(wb,'meridian_ledger_wc.xlsx');showToast('Exported','success');}
-function exportCFXLSX(){showToast('Cash flow exported','success');}
-function exportForecastXLSX(){const d=AppState.computed.forecast;if(!d)return;const ws=XLSX.utils.json_to_sheet(d.map((v,i)=>({period:i+1,forecast_cr:(v/1e7).toFixed(2)})));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Forecast');XLSX.writeFile(wb,'meridian_ledger_forecast.xlsx');showToast('Forecast exported','success');}
-function exportReport(){showToast('Generating PDF…');try{const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});doc.setFillColor(13,17,23);doc.rect(0,0,210,297,'F');doc.setTextColor(245,165,36);doc.setFontSize(8);doc.text('MERIDIAN LEDGER',20,20);doc.setTextColor(230,232,238);doc.setFontSize(22);doc.text('Financial Analytics Report',20,32);doc.setFontSize(9);doc.setTextColor(155,166,186);doc.text('Source: '+(AppState.source||'—'),20,42);doc.text('Periods: '+AppState.periods.length,20,49);doc.text('Generated: '+new Date().toLocaleDateString(),20,56);doc.setFontSize(6);doc.setTextColor(93,102,121);doc.text('Generated by Meridian Ledger · archishman.com/meridian/ledger',20,285);doc.save('meridian_ledger_report.pdf');showToast('PDF exported','success');}catch(e){showToast('Export error: '+e.message,'error');}}
+// ── L2 P&L Decomposition ──────────────────────────────────────
+function renderL2() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const dateCol = col('date');
+  const periods = AppState.periods;
 
-window.addEventListener('storage',e=>{if(e.key==='meridian_handoff'&&e.newValue){try{const h=JSON.parse(e.newValue);if(h.targetModule==='ledger'&&h.rows?.length){initData(h.rows,h.source||'Meridian Bridge');showToast('Dataset received from Bridge','success');}}catch(err){}}});
-window.addEventListener('DOMContentLoaded',()=>{const h=sessionStorage.getItem('meridian_handoff');if(h){try{const payload=JSON.parse(h);if(payload.rows?.length&&payload.targetModule==='ledger'){initData(payload.rows,payload.source||'Meridian Bridge');}}catch(e){}}});
+  const aggAll = periods.map(p => aggregate(AppState.rows.filter(r => r[dateCol]===p)));
+  const latest = aggAll[aggAll.length-1];
+  const prev = aggAll[aggAll.length-2] || {};
+  const gmPct = latest.revenue ? (latest.grossProfit/latest.revenue)*100 : null;
+  const gmPrev = prev.revenue ? (prev.grossProfit/prev.revenue)*100 : null;
+  const gmDelta = gmPct !== null && gmPrev !== null ? gmPct - gmPrev : null;
+
+  document.getElementById('l2-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Latest Revenue</div><div class="kpi-value">₹${fmt(latest.revenue,1)}Cr</div></div>
+    <div class="kpi-card"><div class="kpi-label">Gross Margin %</div><div class="kpi-value ${gmDelta&&gmDelta<0?'kpi-neg':'kpi-pos'}">${gmPct?gmPct.toFixed(1)+'%':'—'}</div><div class="kpi-sub">${gmDelta?fmtPct(gmDelta)+' vs prior period':''}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Gross Profit</div><div class="kpi-value">₹${fmt(latest.grossProfit,1)}Cr</div></div>
+    ${latest.ebitda!==null?`<div class="kpi-card"><div class="kpi-label">EBITDA</div><div class="kpi-value">₹${fmt(latest.ebitda,1)}Cr</div><div class="kpi-sub">${latest.revenue?(latest.ebitda/latest.revenue*100).toFixed(1)+'% margin':''}</div></div>`:''}
+  `;
+
+  const gmTrend = aggAll.map(a => a.revenue ? (a.grossProfit/a.revenue)*100 : null);
+  makeChart('chart-l2-margin', {
+    type:'line',
+    data:{ labels:periods, datasets:[{
+      label:'Gross Margin %', data:gmTrend,
+      borderColor:'#22d3b8', backgroundColor:'rgba(34,211,184,0.08)',
+      borderWidth:2, pointRadius:2, fill:true, tension:0.3
+    }]},
+    options: baseOptions({ plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{ callback:v=>v+'%', color:'#9ba6ba', font:{family:"'DM Sans'",size:10} }, grid:{color:'rgba(42,49,66,0.6)'} }, x:{ ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}}, grid:{color:'rgba(42,49,66,0.6)'} } } })
+  });
+
+  makeChart('chart-l2-cogs', {
+    type:'bar',
+    data:{ labels:periods, datasets:[
+      { label:'Revenue', data:aggAll.map(a=>a.revenue), backgroundColor:'rgba(245,165,36,0.7)', borderRadius:2 },
+      { label:'COGS', data:aggAll.map(a=>a.cogs), backgroundColor:'rgba(251,113,133,0.7)', borderRadius:2 },
+    ]},
+    options: baseOptions()
+  });
+
+  // Table
+  const last6 = aggAll.slice(-6);
+  const last6p = periods.slice(-6);
+  document.getElementById('l2-table').innerHTML = `<table class="data-table">
+    <thead><tr><th>Period</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th><th>GM%</th>${last6[0].ebitda!==null?'<th>EBITDA</th>':''}</tr></thead>
+    <tbody>${last6.map((a,i)=>`<tr>
+      <td>${last6p[i]}</td>
+      <td class="num-cell">₹${fmt(a.revenue,1)}Cr</td>
+      <td class="num-cell">₹${fmt(a.cogs,1)}Cr</td>
+      <td class="num-cell">₹${fmt(a.grossProfit,1)}Cr</td>
+      <td class="num-cell">${a.revenue?(a.grossProfit/a.revenue*100).toFixed(1)+'%':'—'}</td>
+      ${a.ebitda!==null?`<td class="num-cell">₹${fmt(a.ebitda,1)}Cr</td>`:''}
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── L3 Cost Structure ─────────────────────────────────────────
+function renderL3() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const dateCol = col('date');
+  const periods = AppState.periods;
+  const aggAll = periods.map(p => aggregate(AppState.rows.filter(r => r[dateCol]===p)));
+
+  const cogsRatios = aggAll.map(a => a.revenue ? a.cogs/a.revenue*100 : null);
+  const opexRatios = aggAll.map(a => a.revenue && a.opex ? a.opex/a.revenue*100 : null);
+
+  const latest = aggAll[aggAll.length-1];
+  const prev = aggAll[0];
+  document.getElementById('l3-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">COGS % (latest)</div><div class="kpi-value">${latest.revenue?(latest.cogs/latest.revenue*100).toFixed(1)+'%':'—'}</div><div class="kpi-sub">vs ${prev.revenue?(prev.cogs/prev.revenue*100).toFixed(1)+'%':''} at start</div></div>
+    ${latest.opex?`<div class="kpi-card"><div class="kpi-label">Opex % (latest)</div><div class="kpi-value">${latest.revenue?(latest.opex/latest.revenue*100).toFixed(1)+'%':'—'}</div></div>`:''}
+    <div class="kpi-card"><div class="kpi-label">Gross Margin (latest)</div><div class="kpi-value">${latest.revenue?(latest.grossProfit/latest.revenue*100).toFixed(1)+'%':'—'}</div></div>
+  `;
+
+  const datasets = [
+    { label:'COGS %', data:cogsRatios, backgroundColor:'rgba(251,113,133,0.75)', borderRadius:2 },
+  ];
+  if (opexRatios.some(v=>v!==null)) {
+    datasets.push({ label:'Opex %', data:opexRatios, backgroundColor:'rgba(167,139,250,0.75)', borderRadius:2 });
+  }
+  makeChart('chart-l3-cost', {
+    type:'bar',
+    data:{ labels:periods, datasets },
+    options: baseOptions({ scales:{ y:{ ticks:{ callback:v=>v+'%', color:'#9ba6ba', font:{family:"'DM Sans'",size:10} }, grid:{color:'rgba(42,49,66,0.6)'} }, x:{ ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}}, grid:{color:'rgba(42,49,66,0.6)'} } } })
+  });
+}
+
+// ── L4 Working Capital ────────────────────────────────────────
+function renderL4() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  if (!col('receivables') && !col('payables') && !col('inventory')) {
+    document.getElementById('l4-kpis').innerHTML = '<div class="callout">Map receivables, payables, and inventory columns to enable working capital analysis.</div>';
+    return;
+  }
+  const dateCol = col('date');
+  const periods = AppState.periods;
+  const aggAll = periods.map(p => aggregate(AppState.rows.filter(r => r[dateCol]===p)));
+
+  const dso = aggAll.map(a => a.revenue && a.receivables ? (a.receivables/a.revenue)*30 : null);
+  const dpo = aggAll.map(a => a.cogs && a.payables ? (a.payables/a.cogs)*30 : null);
+  const dio = aggAll.map(a => a.cogs && a.inventory ? (a.inventory/a.cogs)*30 : null);
+  const ccc = dso.map((d,i) => d!==null&&dpo[i]!==null&&dio[i]!==null ? d+dio[i]-dpo[i] : null);
+
+  const latestDso = dso.filter(v=>v!==null).pop();
+  const latestDpo = dpo.filter(v=>v!==null).pop();
+  const latestDio = dio.filter(v=>v!==null).pop();
+  const latestCcc = ccc.filter(v=>v!==null).pop();
+
+  document.getElementById('l4-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">DSO</div><div class="kpi-value">${latestDso?latestDso.toFixed(0)+' days':'—'}</div><div class="kpi-sub">Days sales outstanding</div></div>
+    <div class="kpi-card"><div class="kpi-label">DPO</div><div class="kpi-value">${latestDpo?latestDpo.toFixed(0)+' days':'—'}</div><div class="kpi-sub">Days payables outstanding</div></div>
+    <div class="kpi-card"><div class="kpi-label">DIO</div><div class="kpi-value">${latestDio?latestDio.toFixed(0)+' days':'—'}</div><div class="kpi-sub">Days inventory outstanding</div></div>
+    <div class="kpi-card"><div class="kpi-label">CCC</div><div class="kpi-value ${latestCcc&&latestCcc>60?'kpi-neg':'kpi-pos'}">${latestCcc?latestCcc.toFixed(0)+' days':'—'}</div><div class="kpi-sub">Cash conversion cycle</div></div>
+  `;
+
+  makeChart('chart-l4-ccc', {
+    type:'line',
+    data:{ labels:periods, datasets:[{
+      label:'CCC (days)', data:ccc,
+      borderColor:'#f5a524', backgroundColor:'rgba(245,165,36,0.08)',
+      borderWidth:2, pointRadius:2, fill:true, tension:0.3
+    }]},
+    options: baseOptions({ plugins:{ legend:{display:false} } })
+  });
+
+  makeChart('chart-l4-components', {
+    type:'bar',
+    data:{ labels:periods, datasets:[
+      { label:'DSO', data:dso, backgroundColor:'rgba(34,211,184,0.7)', borderRadius:2 },
+      { label:'DIO', data:dio, backgroundColor:'rgba(96,165,250,0.7)', borderRadius:2 },
+      { label:'DPO', data:dpo.map(v=>v?-v:null), backgroundColor:'rgba(251,113,133,0.7)', borderRadius:2 },
+    ]},
+    options: baseOptions()
+  });
+}
+
+// ── L5 Cash Flow ──────────────────────────────────────────────
+function renderL5() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const periodIdx = parseInt(document.getElementById('l5-period')?.value) || AppState.periods.length-1;
+  const cur = aggregate(rowsByPeriod(periodIdx));
+  const prev = aggregate(rowsByPeriod(Math.max(0, periodIdx-1)));
+
+  const ebitda = cur.ebitda || (cur.grossProfit && cur.opex ? cur.grossProfit - cur.opex : null);
+  if (!ebitda) {
+    document.getElementById('l5-kpis').innerHTML='<div class="callout">Map EBITDA or operating expense column to enable cash flow analysis.</div>';
+    return;
+  }
+  const wcMovement = (cur.receivables&&prev.receivables) ? -(cur.receivables-prev.receivables) : 0;
+  const invMovement = (cur.inventory&&prev.inventory) ? -(cur.inventory-prev.inventory) : 0;
+  const payMovement = (cur.payables&&prev.payables) ? (cur.payables-prev.payables) : 0;
+  const capex = -(ebitda * 0.08);
+  const fcf = ebitda + wcMovement + invMovement + payMovement + capex;
+
+  document.getElementById('l5-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">EBITDA</div><div class="kpi-value">₹${fmt(ebitda,1)}Cr</div></div>
+    <div class="kpi-card"><div class="kpi-label">WC Movement</div><div class="kpi-value ${wcMovement+invMovement+payMovement>=0?'kpi-pos':'kpi-neg'}">₹${fmt(wcMovement+invMovement+payMovement,1)}Cr</div></div>
+    <div class="kpi-card"><div class="kpi-label">Free Cash Flow</div><div class="kpi-value ${fcf>=0?'kpi-pos':'kpi-neg'}">₹${fmt(fcf,1)}Cr</div></div>
+  `;
+
+  const steps = [
+    { label:'EBITDA', v:ebitda },
+    { label:'Δ Receivables', v:wcMovement },
+    { label:'Δ Inventory', v:invMovement },
+    { label:'Δ Payables', v:payMovement },
+    { label:'Capex (est)', v:capex },
+    { label:'Free Cash Flow', v:fcf },
+  ];
+  makeChart('chart-l5-waterfall', {
+    type:'bar',
+    data:{ labels:steps.map(s=>s.label), datasets:[{
+      data:steps.map(s=>Math.abs(s.v)),
+      backgroundColor:steps.map(s=>s.v>=0?'rgba(74,222,128,0.8)':'rgba(251,113,133,0.8)'),
+      borderRadius:4
+    }]},
+    options: baseOptions({ plugins:{ legend:{display:false} } })
+  });
+}
+
+// ── L6 Revenue Forecast ───────────────────────────────────────
+function renderL6() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const dateCol = col('date');
+  const periods = AppState.periods;
+  const horizon = parseInt(document.getElementById('l6-horizon')?.value)||6;
+
+  const aggAll = periods.map(p => aggregate(AppState.rows.filter(r=>r[dateCol]===p)));
+  const revSeries = aggAll.map(a=>a.revenue).filter(v=>v!==null);
+  if (revSeries.length < 4) { document.getElementById('l6-kpis').innerHTML='<div class="callout">Need at least 4 periods for forecasting.</div>'; return; }
+
+  // Simple linear trend + seasonal indices
+  const n = revSeries.length;
+  const xs = revSeries.map((_,i)=>i+1);
+  const meanX = xs.reduce((a,b)=>a+b,0)/n;
+  const meanY = revSeries.reduce((a,b)=>a+b,0)/n;
+  const slope = xs.reduce((a,x,i)=>a+(x-meanX)*(revSeries[i]-meanY),0) / xs.reduce((a,x)=>a+(x-meanX)**2,0);
+  const intercept = meanY - slope*meanX;
+
+  // Seasonal indices (12-month cycle)
+  const cycle = Math.min(12, Math.floor(n/2));
+  const seasonIdx = Array.from({length:cycle}, (_,m) => {
+    const vals = revSeries.filter((_,i)=>i%cycle===m);
+    const trend_vals = vals.map((_,j) => intercept + slope*(m+1+j*cycle));
+    return vals.reduce((a,v,j)=>a+v/trend_vals[j],0)/vals.length;
+  });
+
+  const forecastPeriods = Array.from({length:horizon}, (_,i)=>'F+'+(i+1));
+  const forecastVals = forecastPeriods.map((_,i) => {
+    const x = n + i + 1;
+    const trend = intercept + slope*x;
+    const s = seasonIdx[(n+i)%cycle];
+    return Math.round(trend * s * 10)/10;
+  });
+
+  const growthRate = slope/meanY*100;
+  const nextForecast = forecastVals[0];
+  document.getElementById('l6-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Monthly Trend</div><div class="kpi-value ${slope>=0?'kpi-pos':'kpi-neg'}">${slope>=0?'+':''}${fmtPct(growthRate)}/mo</div></div>
+    <div class="kpi-card"><div class="kpi-label">Next Period Forecast</div><div class="kpi-value">₹${fmt(nextForecast,1)}Cr</div></div>
+    <div class="kpi-card"><div class="kpi-label">${horizon}M Cumulative</div><div class="kpi-value">₹${fmt(forecastVals.reduce((a,b)=>a+b,0),1)}Cr</div></div>
+  `;
+
+  makeChart('chart-l6-forecast', {
+    type:'line',
+    data:{ labels:[...periods,...forecastPeriods], datasets:[
+      { label:'Actual', data:[...revSeries,...Array(horizon).fill(null)], borderColor:'#f5a524', backgroundColor:'rgba(245,165,36,0.08)', borderWidth:2, pointRadius:2, fill:true, tension:0.3 },
+      { label:'Forecast', data:[...Array(n).fill(null), revSeries[n-1], ...forecastVals], borderColor:'#22d3b8', backgroundColor:'rgba(34,211,184,0.06)', borderWidth:2, borderDash:[5,4], pointRadius:3, fill:true, tension:0.3 },
+    ]},
+    options: baseOptions()
+  });
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportXLSX() {
+  if (!AppState.mapped) { showToast('Load and map data first', 'error'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(AppState.rows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Ledger Data');
+  XLSX.writeFile(wb, 'meridian_ledger_export.xlsx');
+  showToast('XLSX exported', 'success');
+}
+
+function exportPDF() {
+  if (!AppState.mapped) { showToast('Load and map data first', 'error'); return; }
+  showToast('Generating PDF…');
+  const el = document.getElementById('panel-analyses');
+  html2canvas(el, {background:'#0d1117', scale:1.2}).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const w = pdf.internal.pageSize.getWidth();
+    const h = (canvas.height * w) / canvas.width;
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('meridian_ledger.pdf');
+    showToast('PDF exported', 'success');
+  });
+}
+
+// ── AppHandoff listener ───────────────────────────────────────
+window.addEventListener('load', () => {
+  const raw = sessionStorage.getItem('meridian_handoff');
+  if (raw) {
+    try {
+      const handoff = JSON.parse(raw);
+      if (handoff.targetModule === 'ledger' && handoff.rows?.length) {
+        AppState.rows = handoff.rows;
+        AppState.columns = handoff.columns || Object.keys(handoff.rows[0]);
+        document.getElementById('ctx-dataset').textContent = 'From Meridian Bridge';
+        document.getElementById('ctx-rows').textContent = handoff.rows.length.toLocaleString();
+        document.getElementById('step1').className = 'step done';
+        document.getElementById('step2').className = 'step active';
+        if (handoff.schema) {
+          AppState.schema = handoff.schema;
+          AppState.mapped = true;
+          processPeriods();
+          showAnalyses();
+        } else {
+          showSchemaWizard();
+        }
+        sessionStorage.removeItem('meridian_handoff');
+        showToast('Data received from Meridian Bridge', 'success');
+      }
+    } catch(e) { /* not a handoff */ }
+  }
+});
 </script>
+
 </body>
 </html>

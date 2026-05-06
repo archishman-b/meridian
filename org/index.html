@@ -3,971 +3,879 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meridian Org — HR &amp; Organisational Analytics</title>
+<title>Meridian Org — HR & Organisation Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0d1117;--surface:#10151e;--surface2:#161b25;--surface3:#1c2230;
   --border:#1c2230;--border2:#2a3142;
   --text:#e6e8ee;--text2:#c0c8d8;--muted:#9ba6ba;--dim:#5d6679;
-  --accent:#fb7185;--accent-dim:rgba(251,113,133,0.10);--accent-bd:rgba(251,113,133,0.22);
-  --success:#22d3b8;--warn:#f5a524;--danger:#fb7185;
-  --sans:'DM Sans',system-ui,sans-serif;
+  --coral:#fb7185;--coral-dim:rgba(251,113,133,0.10);--coral-bd:rgba(251,113,133,0.25);
+  --teal:#22d3b8;--teal-dim:rgba(34,211,184,0.10);--teal-bd:rgba(34,211,184,0.22);
+  --amber:#f5a524;--amber-dim:rgba(245,165,36,0.10);--amber-bd:rgba(245,165,36,0.25);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.10);--green-bd:rgba(74,222,128,0.25);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.10);--purple-bd:rgba(167,139,250,0.25);
   --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
 }
-html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;
-  display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;
-  display:flex;align-items:center;justify-content:center;font-size:13px;color:#0d1117;font-weight:700}
-.logo-name{font-weight:600;font-size:14px;color:var(--text)}
-.logo-module{font-size:11px;color:var(--accent);font-family:var(--mono)}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);
-  color:var(--muted);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all 0.1s;text-decoration:none;display:inline-flex;align-items:center}
-.btn:hover{border-color:var(--accent-bd);color:var(--accent)}
-.btn-sm{padding:4px 10px;font-size:11px}
-.btn-primary{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
-.btn-primary:hover{opacity:0.88;color:#0d1117}
-.privacy-bar{padding:5px 20px;background:rgba(251,113,133,0.04);border-bottom:1px solid var(--border);
-  font-size:10px;font-family:var(--mono);color:var(--dim);flex-shrink:0}
-.context-bar{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:20px;font-size:11px;color:var(--muted);flex-shrink:0;flex-wrap:wrap}
-.ctx-item{display:flex;align-items:center;gap:5px}
-.ctx-dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.ctx-dot.active{background:var(--success)}
-.step-indicator{display:flex;align-items:center}
-.step{display:flex;align-items:center;gap:5px;padding:4px 9px;font-size:10px;color:var(--dim)}
-.step-num{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);font-weight:600;background:var(--surface3)}
-.step.done .step-num{background:var(--success);border-color:var(--success);color:#0d1117}
-.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#0d1117}
-.step.done{color:var(--success)}.step.active{color:var(--accent)}
-.step-arrow{color:var(--border2);font-size:9px;margin:0 -4px}
-.app-body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:12px 0}
-.sb-section{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);padding:8px 16px 4px}
-.sb-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;color:var(--muted);font-size:12px;transition:all 0.1s;border-left:2px solid transparent}
-.sb-item:hover{color:var(--text);background:var(--surface2)}
-.sb-item.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent)}
-.sb-icon{width:16px;text-align:center;font-size:12px}
-.sb-badge{margin-left:auto;font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:3px;background:var(--surface3);border:1px solid var(--border2);color:var(--dim)}
-.sb-item.active .sb-badge{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-bd)}
-.main-panel{flex:1;overflow-y:auto}
-.module-panel{padding:24px 28px;display:none}
-.module-panel.active{display:block}
-.module-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border2)}
-.module-title{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--text);margin-bottom:4px}
-.module-desc{font-size:12px;color:var(--muted);line-height:1.6;max-width:680px}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin:16px 0}
-.stat-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 14px}
-.stat-card.good{border-color:rgba(34,211,184,0.3);background:rgba(34,211,184,0.05)}
-.stat-card.warn{border-color:rgba(245,165,36,0.3);background:rgba(245,165,36,0.05)}
-.stat-card.bad{border-color:rgba(251,113,133,0.3);background:rgba(251,113,133,0.05)}
-.stat-label{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
-.stat-value{font-size:20px;font-weight:600;color:var(--text);line-height:1.2}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 18px;margin:14px 0}
-.chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
-.chart-sub{font-size:10px;color:var(--muted);margin-bottom:12px}
-.guidance{background:var(--accent-dim);border:1px solid var(--accent-bd);border-radius:8px;
-  padding:12px 16px;margin:0 0 16px;display:flex;align-items:flex-start;gap:10px;font-size:12px}
-.guidance-icon{font-size:15px;flex-shrink:0;margin-top:1px}
-.guidance-body strong{color:var(--accent);display:block;margin-bottom:2px;font-size:12px}
-.guidance-body p{color:var(--muted);margin:0;line-height:1.55}
-.guidance-body p+p{margin-top:5px}
-.callout{border-left:3px solid var(--accent);background:var(--accent-dim);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:12px;color:var(--text2)}
-.callout strong{color:var(--accent)}
-.controls-row{display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}
-.ctrl-label{font-size:11px;color:var(--muted);font-family:var(--mono)}
-.ctrl-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;font-family:var(--sans);cursor:pointer}
-.ctrl-select:focus{outline:none;border-color:var(--accent-bd)}
-.analysis-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
-.analysis-table th{text-align:left;padding:7px 10px;background:var(--surface3);color:var(--dim);font-size:9px;font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border2)}
-.analysis-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
-.analysis-table tr:last-child td{border-bottom:none}
-.analysis-table tr:hover td{background:var(--surface2)}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;color:var(--muted)}
-.empty-icon{font-size:36px;margin-bottom:16px;opacity:0.4}
-.empty-title{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:8px}
-.empty-sub{font-size:12px;line-height:1.6;max-width:360px;margin-bottom:24px}
-.export-bar{display:flex;align-items:center;gap:8px;padding:12px 0;margin-top:16px;border-top:1px solid var(--border2)}
-.export-label{font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase}
-.tag{display:inline-block;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px}
-.tag-good{background:rgba(34,211,184,0.1);color:var(--success);border:1px solid rgba(34,211,184,0.25)}
-.tag-warn{background:rgba(245,165,36,0.1);color:var(--warn);border:1px solid rgba(245,165,36,0.25)}
-.tag-bad{background:rgba(251,113,133,0.1);color:var(--danger);border:1px solid rgba(251,113,133,0.25)}
-/* Span visual */
-.span-bar{display:flex;align-items:center;gap:8px;margin:5px 0}
-.span-bar-track{flex:1;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
-.span-bar-fill{height:100%;border-radius:4px;transition:width 0.4s}
-.span-bar-fill.good{background:var(--success)}.span-bar-fill.warn{background:var(--warn)}.span-bar-fill.bad{background:var(--danger)}
-.span-bar-val{width:28px;text-align:right;font-size:10px;font-family:var(--mono);color:var(--text2);flex-shrink:0}
-/* Heatmap cell */
-.heatmap-grid{display:grid;gap:3px;margin:12px 0}
-.hm-cell{border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.8);cursor:default;transition:opacity 0.1s}
-.hm-cell:hover{opacity:0.8}
-/* Pyramid */
-.pyramid-row{display:flex;align-items:center;gap:10px;margin:4px 0}
-.pyramid-bar-wrap{flex:1;display:flex;align-items:center;gap:6px}
-.pyramid-bar{height:24px;background:var(--accent-dim);border:1px solid var(--accent-bd);border-radius:3px;display:flex;align-items:center;padding-left:8px;transition:width 0.4s}
-.pyramid-label{width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
-.pyramid-count{font-size:10px;font-family:var(--mono);color:var(--text2);flex-shrink:0;min-width:40px}
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:540px;max-height:82vh;overflow-y:auto;padding:24px}
-.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px}
-.modal-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
-.schema-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.schema-row{display:flex;flex-direction:column;gap:3px}
-.schema-label{font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:0.06em;text-transform:uppercase}
-.schema-req{color:var(--accent)}
-.schema-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px;font-family:var(--sans)}
-.schema-select:focus{outline:none;border-color:var(--accent-bd)}
-.schema-hint{font-size:10px;color:var(--dim);margin-top:1px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end}
-/* Toast */
-.toast-container{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;color:var(--text);max-width:320px;animation:fadeIn 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-.toast.success{background:#0a2a26;border:1px solid rgba(34,211,184,0.3);color:var(--success)}
-.toast.warn{background:#2a1f0a;border:1px solid rgba(245,165,36,0.3);color:var(--warn)}
-.toast.error{background:#2a0f14;border:1px solid rgba(251,113,133,0.3);color:var(--danger)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:800px){.sidebar{display:none}.schema-grid{grid-template-columns:1fr}}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column;}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+.tb-back{font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:5px;transition:all 0.1s;}
+.tb-back:hover{color:var(--text);background:var(--surface2)}
+.tb-title{font-size:13px;font-weight:600;color:var(--coral);margin-left:4px}
+.tb-badge{font-family:var(--mono);font-size:9px;background:var(--coral-dim);color:var(--coral);border:1px solid var(--coral-bd);padding:2px 7px;border-radius:3px;letter-spacing:0.05em;text-transform:uppercase;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.privacy-note{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.03em;}
+.shell{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.sb-section{padding:16px 14px 6px;font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all 0.1s;user-select:none;}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--coral);border-left-color:var(--coral);background:var(--coral-dim)}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.nav-item.active .nav-dot{background:var(--coral)}
+.sb-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border2);}
+.sb-btn{width:100%;padding:8px;background:var(--coral-dim);color:var(--coral);border:1px solid var(--coral-bd);border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.1s;margin-bottom:6px;}
+.sb-btn:hover{background:rgba(251,113,133,0.2)}
+.context-bar{padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;}
+.ctx-item{display:flex;flex-direction:column;gap:1px}
+.ctx-label{font-size:9px;font-family:var(--mono);color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;}
+.ctx-value{font-size:11px;color:var(--text2);font-weight:500;}
+.ctx-divider{width:1px;height:28px;background:var(--border2);}
+.step-indicator{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.step{font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:3px;color:var(--dim);background:var(--surface2);border:1px solid var(--border2);}
+.step.active{color:var(--coral);background:var(--coral-dim);border-color:var(--coral-bd);}
+.step.done{color:var(--green);background:var(--green-dim);border-color:var(--green-bd);}
+.content{padding:24px;flex:1;}
+.module-header{margin-bottom:24px;}
+.module-eyebrow{font-family:var(--mono);font-size:10px;color:var(--coral);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.module-title{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--text);margin-bottom:6px;}
+.module-desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:640px;}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface2);margin-bottom:20px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--coral-bd);background:var(--coral-dim);}
+.upload-icon{font-size:32px;margin-bottom:12px;color:var(--coral);}
+.upload-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.upload-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.upload-btn{padding:9px 20px;background:var(--coral);color:#0d1117;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;}
+.demo-btn{padding:9px 20px;background:transparent;color:var(--coral);border:1px solid var(--coral-bd);border-radius:7px;font-family:var(--sans);font-size:12px;cursor:pointer;margin-left:8px;}
+.demo-btn:hover{background:var(--coral-dim)}
+#file-input{display:none}
+.wizard{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:20px;margin-bottom:20px;}
+.wizard-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.wizard-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.schema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.schema-row{display:flex;flex-direction:column;gap:4px;}
+.schema-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
+.schema-label span{color:var(--coral);margin-left:2px;}
+.schema-select{padding:6px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:var(--sans);font-size:12px;width:100%;}
+.schema-select:focus{outline:none;border-color:var(--coral-bd);}
+.wizard-actions{margin-top:16px;display:flex;gap:8px;align-items:center;}
+.btn-primary{padding:9px 20px;background:var(--coral);color:#0d1117;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{opacity:0.9}
+.btn-secondary{padding:9px 20px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-family:var(--sans);font-size:12px;cursor:pointer;}
+.btn-secondary:hover{background:var(--surface3)}
+.analysis-section{margin-bottom:32px;}
+.analysis-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border2);}
+.analysis-id{font-family:var(--mono);font-size:10px;color:var(--coral);background:var(--coral-dim);border:1px solid var(--coral-bd);padding:2px 7px;border-radius:3px;letter-spacing:0.06em;}
+.analysis-title{font-size:16px;font-weight:600;color:var(--text);}
+.analysis-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.kpi-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.kpi-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 20px;min-width:140px;flex:1;}
+.kpi-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.kpi-value{font-size:22px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.kpi-sub{font-size:10px;color:var(--muted);}
+.kpi-pos{color:var(--green)}.kpi-neg{color:var(--coral)}
+/* CRITICAL: fixed-height chart containers */
+.chart-wrap{position:relative;width:100%;height:260px;}
+.chart-wrap-tall{position:relative;width:100%;height:340px;}
+.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px 20px;margin-bottom:16px;}
+.chart-card-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:12px;font-family:var(--mono);letter-spacing:0.04em;text-transform:uppercase;}
+.chart-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{text-align:left;padding:8px 10px;background:var(--surface3);color:var(--muted);font-weight:500;font-size:10px;font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border2);}
+.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface3)}
+.num-cell{font-family:var(--mono);font-size:11px;text-align:right;}
+.pos{color:var(--green)}.neg{color:var(--coral)}
+.callout{border-left:3px solid var(--coral);background:var(--coral-dim);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:12px;color:var(--text2);}
+.callout strong{color:var(--coral);}
+/* Heatmap */
+.heatmap-grid{display:grid;gap:4px;margin-top:12px;}
+.hm-cell{border-radius:4px;padding:8px 6px;text-align:center;font-size:10px;font-family:var(--mono);cursor:default;}
+.hm-header{font-size:9px;color:var(--muted);text-align:center;padding:4px;}
+.filter-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.filter-label{font-size:11px;color:var(--muted);}
+.filter-select{padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:var(--sans);font-size:11px;}
+.filter-select:focus{outline:none;border-color:var(--coral-bd);}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transform:translateY(8px);transition:all 0.2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--coral)}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="logo">
-    <div class="logo-mark">⊹</div>
-    <div><div class="logo-name">Meridian</div><div class="logo-module">Org</div></div>
-  </div>
-  <div class="topbar-right">
-    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
-    <button class="btn btn-sm" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
-    <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
-    <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
-    <a href="../" class="btn btn-sm">⬡ Meridian</a>
+  <a href="../" class="tb-back">← Meridian</a>
+  <span style="color:var(--dim);font-size:13px">/</span>
+  <span class="tb-title">⊹ Meridian Org</span>
+  <span class="tb-badge">Phase 3 · Live</span>
+  <div class="tb-right">
+    <span class="privacy-note">⊕ data never leaves this browser</span>
   </div>
 </div>
 
-<div class="privacy-bar">⊕ Your data never leaves this browser — zero server · zero upload · all computation runs locally</div>
+<div class="shell">
 
-<div class="context-bar" id="context-bar">
-  <span class="ctx-item"><span class="ctx-dot" id="ctx-dot"></span><strong id="ctx-rows">No data</strong></span>
-  <span class="ctx-item">Employees: <strong id="ctx-employees">—</strong></span>
-  <span class="ctx-item">Levels: <strong id="ctx-levels">—</strong></span>
-  <span class="ctx-item">Departments: <strong id="ctx-depts">—</strong></span>
-  <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions</strong></span>
-  <div class="step-indicator">
-    <div class="step active" id="step-1"><span class="step-num">1</span>Load data</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-2"><span class="step-num">2</span>Map schema</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-3"><span class="step-num">3</span>Analyse</div>
-    <span class="step-arrow">›</span>
-    <div class="step" id="step-4"><span class="step-num">4</span>Export</div>
+<div class="sidebar">
+  <div class="sb-section">Analyses</div>
+  <div class="nav-item active" onclick="showSection('o1')" id="nav-o1"><span class="nav-dot"></span>O1 Span of Control</div>
+  <div class="nav-item" onclick="showSection('o2')" id="nav-o2"><span class="nav-dot"></span>O2 Layer Benchmarking</div>
+  <div class="nav-item" onclick="showSection('o3')" id="nav-o3"><span class="nav-dot"></span>O3 Attrition Analysis</div>
+  <div class="nav-item" onclick="showSection('o4')" id="nav-o4"><span class="nav-dot"></span>O4 Attrition Heatmap</div>
+  <div class="nav-item" onclick="showSection('o5')" id="nav-o5"><span class="nav-dot"></span>O5 Capability Mapping</div>
+  <div class="sb-footer">
+    <button class="sb-btn" onclick="exportPDF()">↓ Export PDF</button>
+    <button class="sb-btn" style="background:transparent;color:var(--muted);border:1px solid var(--border2);" onclick="exportXLSX()">↓ Export XLSX</button>
   </div>
-  <span style="margin-left:auto">
-    <button class="btn btn-sm" onclick="loadDemoData()">Load Renova demo</button>
-  </span>
 </div>
 
-<div class="app-body">
-<nav class="sidebar">
-  <div class="sb-section">Analysis</div>
-  <div class="sb-item active" onclick="showModule('span')" id="nav-span">
-    <span class="sb-icon">⊹</span>Span of control<span class="sb-badge">O1</span>
-  </div>
-  <div class="sb-item" onclick="showModule('layers')" id="nav-layers">
-    <span class="sb-icon">▦</span>Layer benchmarking<span class="sb-badge">O2</span>
-  </div>
-  <div class="sb-item" onclick="showModule('attrition')" id="nav-attrition">
-    <span class="sb-icon">↗</span>Attrition analysis<span class="sb-badge">O3</span>
-  </div>
-  <div class="sb-item" onclick="showModule('heatmap')" id="nav-heatmap">
-    <span class="sb-icon">◎</span>Attrition heatmap<span class="sb-badge">O4</span>
-  </div>
-  <div class="sb-item" onclick="showModule('capability')" id="nav-capability">
-    <span class="sb-icon">⬟</span>Capability mapping<span class="sb-badge">O5</span>
-  </div>
-</nav>
-
-<div class="main-panel" id="main-panel">
-
-<!-- O1 SPAN OF CONTROL -->
-<div class="module-panel active" id="panel-span">
-  <div class="module-header">
-    <div class="module-title">Span of control</div>
-    <div class="module-desc">Direct reports per manager, by level and department. Benchmarked against target spans (IC: not applicable, Manager: 6–8, Director: 4–6, VP: 3–5). Identifies under-spanned layers (management overhead) and over-spanned roles (control risk). Under-span at the director level was the first structural signal in the Renova Org diagnostic.</div>
-  </div>
-  <div id="span-empty" class="empty-state">
-    <div class="empty-icon">⊹</div>
-    <div class="empty-title">Load headcount data to analyse span of control</div>
-    <div class="empty-sub">Expects employee ID, manager ID, level, and department as minimum schema. Manager ID enables the direct report count computation.</div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-      <button class="btn" onclick="document.getElementById('file-input-top').click()">⊞ Upload CSV / XLSX</button>
+<div class="main">
+  <div class="context-bar">
+    <div class="ctx-item"><span class="ctx-label">Dataset</span><span class="ctx-value" id="ctx-dataset">No data loaded</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Employees</span><span class="ctx-value" id="ctx-rows">—</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Departments</span><span class="ctx-value" id="ctx-depts">—</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item"><span class="ctx-label">Schema</span><span class="ctx-value" id="ctx-schema">Not mapped</span></div>
+    <div class="step-indicator">
+      <span class="step active" id="step1">1 Load</span>
+      <span style="color:var(--dim);font-size:10px">›</span>
+      <span class="step" id="step2">2 Map</span>
+      <span style="color:var(--dim);font-size:10px">›</span>
+      <span class="step" id="step3">3 Analyse</span>
     </div>
   </div>
-  <div id="span-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">⊹</div>
-      <div class="guidance-body">
-        <strong>How span of control is computed</strong>
-        <p>For each manager (any employee who appears as a <code>managerId</code> for another employee), we count their direct reports. We then group managers by their own level to produce average, min, and max spans per level. Target spans are: Manager (L3/L4): 6–8 direct reports. Director (L2): 4–6. VP/Head (L1): 3–5. Under-span (&lt; lower bound) = management overhead; over-span (&gt; upper bound) = control risk.</p>
+
+  <div class="content">
+
+    <div id="panel-landing">
+      <div class="module-header">
+        <div class="module-eyebrow">⊹ Meridian Org · HR & Organisation Analytics</div>
+        <div class="module-title">Operating Model Diagnostics</div>
+        <div class="module-desc">Span of control, layer benchmarking, attrition analysis, attrition heatmap, and capability investment mapping. Upload a headcount extract to begin.</div>
+      </div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <div class="upload-icon">⊹</div>
+        <div class="upload-title">Upload your headcount extract</div>
+        <div class="upload-sub">CSV or XLSX · One row per employee · Employee ID, level, department, manager, tenure, status</div>
+        <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose file</button>
+        <button class="demo-btn" onclick="event.stopPropagation();loadDemo()">Load Renova Home demo</button>
+      </div>
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
+      <div class="callout">
+        <strong>What to upload:</strong> A headcount extract with employee ID, level (L1–L5 or similar), department, manager ID, tenure in months, and employment status (active/left). Attrition analysis requires a status or exit flag column.
       </div>
     </div>
-    <div class="controls-row">
-      <span class="ctrl-label">Group by:</span>
-      <select class="ctrl-select" id="span-group" onchange="renderSpan()">
-        <option value="level">Level</option>
-        <option value="department">Department</option>
-      </select>
-    </div>
-    <div class="stat-grid" id="span-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Average span of control by group</div>
-      <div class="chart-sub">Target range shaded · bars coloured by compliance status</div>
-      <canvas id="span-chart" height="280"></canvas>
-    </div>
-    <div id="span-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportSpanXLSX()">↓ Span XLSX</button>
-      <button class="btn btn-sm" onclick="exportReport()">↗ PDF report</button>
-    </div>
-  </div>
-</div>
 
-<!-- O2 LAYER BENCHMARKING -->
-<div class="module-panel" id="panel-layers">
-  <div class="module-header">
-    <div class="module-title">Layer benchmarking</div>
-    <div class="module-desc">Number of organisational layers, headcount pyramid by level, and cost per layer. Benchmarks against standard spans — most healthy organisations operate with 4–6 layers between CEO and IC. Excess layers add coordination cost and slow decision-making.</div>
-  </div>
-  <div id="layers-empty" class="empty-state">
-    <div class="empty-icon">▦</div>
-    <div class="empty-title">Load headcount data with level information</div>
-    <div class="empty-sub">Expects level (numeric or categorical) and optionally salary for cost-per-layer computation.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="layers-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">▦</div>
-      <div class="guidance-body">
-        <strong>Reading the layer analysis</strong>
-        <p>The pyramid shows headcount at each organisational level. A healthy pyramid narrows sharply as you move up — the ratio of individual contributors to managers should be 6:1 or higher. A wide upper layer (many managers relative to ICs) signals management overhead. The IC:Manager ratio and spans-of-control work together — low span + wide upper layer is the classic over-managed organisation signature.</p>
+    <div id="panel-schema" style="display:none">
+      <div class="wizard">
+        <div class="wizard-title">Map your columns to HR dimensions</div>
+        <div class="wizard-sub">Match your dataset columns to the fields Org needs. Required fields are marked *</div>
+        <div class="schema-grid" id="schema-grid"></div>
+        <div class="wizard-actions">
+          <button class="btn-primary" onclick="applySchema()">Apply mapping → Run analyses</button>
+          <button class="btn-secondary" onclick="resetData()">Start over</button>
+          <span id="schema-msg" style="font-size:11px;color:var(--muted);margin-left:8px;"></span>
+        </div>
       </div>
     </div>
-    <div class="stat-grid" id="layers-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Headcount pyramid by level</div>
-      <div class="chart-sub">Number of employees at each level — a healthy pyramid narrows sharply toward the top</div>
-      <div id="pyramid-chart" style="margin-top:8px"></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Headcount by department</div>
-      <div class="chart-sub">Distribution of employees across organisational units</div>
-      <canvas id="dept-chart" height="220"></canvas>
-    </div>
-    <div id="layers-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportLayersXLSX()">↓ Layers XLSX</button>
-    </div>
-  </div>
-</div>
 
-<!-- O3 ATTRITION ANALYSIS -->
-<div class="module-panel" id="panel-attrition">
-  <div class="module-header">
-    <div class="module-title">Attrition analysis</div>
-    <div class="module-desc">Voluntary attrition rate by department, level, tenure band, and manager. Identifies where attrition is concentrated, whether it is regrettable (loss of experienced talent) or natural, and how it correlates with structural factors like span and layer. In the Renova Org diagnostic, the store management layer (L3) showed attrition 2.4× the company average.</div>
-  </div>
-  <div id="attrition-empty" class="empty-state">
-    <div class="empty-icon">↗</div>
-    <div class="empty-title">Load headcount data with attrition information</div>
-    <div class="empty-sub">Expects status (active/left) or an attrition flag column. Exit reason enables voluntary vs involuntary split.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="attrition-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">↗</div>
-      <div class="guidance-body">
-        <strong>How attrition rate is computed</strong>
-        <p>Attrition rate = Employees who left ÷ Total headcount (leavers + current) × 100%. Computed per group (department, level, tenure band). Voluntary attrition = where exit reason does not indicate performance-managed exit or redundancy. Regrettable attrition = employees with tenure &gt; 2 years who left voluntarily — the highest-cost category.</p>
-        <p>Industry benchmark for retail (India): 18–22% annual attrition. Store management roles: typically 15–20%. Above 25% in any level is a structural signal warranting investigation.</p>
+    <div id="panel-analyses" style="display:none">
+
+      <!-- O1 Span of Control -->
+      <div class="analysis-section" id="section-o1">
+        <div class="analysis-header">
+          <span class="analysis-id">O1</span>
+          <div><div class="analysis-title">Span of Control</div><div class="analysis-desc">Direct reports per manager by level and department. Benchmark bands 4–8.</div></div>
+        </div>
+        <div class="kpi-row" id="o1-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Avg Span by Level</div>
+            <div class="chart-wrap"><canvas id="chart-o1-span"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Span Distribution</div>
+            <div class="chart-wrap"><canvas id="chart-o1-dist"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Span by Department</div>
+          <div class="chart-wrap"><canvas id="chart-o1-dept"></canvas></div>
+        </div>
       </div>
-    </div>
-    <div class="controls-row">
-      <span class="ctrl-label">Group by:</span>
-      <select class="ctrl-select" id="attr-group" onchange="renderAttrition()">
-        <option value="department">Department</option>
-        <option value="level">Level</option>
-        <option value="tenure_band">Tenure band</option>
-      </select>
-    </div>
-    <div class="stat-grid" id="attrition-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Attrition rate by group</div>
-      <div class="chart-sub">% of employees who left · benchmark line at 20%</div>
-      <canvas id="attrition-chart" height="280"></canvas>
-    </div>
-    <div id="attrition-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportAttritionXLSX()">↓ Attrition XLSX</button>
-    </div>
-  </div>
-</div>
 
-<!-- O4 ATTRITION HEATMAP -->
-<div class="module-panel" id="panel-heatmap">
-  <div class="module-header">
-    <div class="module-title">Attrition heatmap</div>
-    <div class="module-desc">A two-dimensional grid of attrition intensity — department on one axis, level on the other. Each cell is coloured by attrition rate: dark red = high risk, teal = healthy. The heatmap reveals intersection patterns invisible in aggregate views — a specific level in a specific department can be a hotspot even when both the level average and department average look acceptable.</div>
-  </div>
-  <div id="heatmap-empty" class="empty-state">
-    <div class="empty-icon">◎</div>
-    <div class="empty-title">Load headcount data to build the heatmap</div>
-    <div class="empty-sub">Requires department, level, and status (active/left) for the two-dimensional grid.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="heatmap-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">◎</div>
-      <div class="guidance-body">
-        <strong>Reading the heatmap</strong>
-        <p>Each cell shows attrition rate for the intersection of that department and level. Cells are only shown where there are at least 3 employees (smaller populations produce unreliable rates). Hover over any cell to see headcount and attrition count. The heatmap often reveals that company-level attrition is dominated by 2–3 specific intersections — find and address those, and the aggregate rate improves significantly.</p>
+      <!-- O2 Layer Benchmarking -->
+      <div class="analysis-section" id="section-o2" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">O2</span>
+          <div><div class="analysis-title">Layer Benchmarking</div><div class="analysis-desc">Headcount pyramid by level, IC:Manager ratio, and management overhead</div></div>
+        </div>
+        <div class="kpi-row" id="o2-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Headcount Pyramid</div>
+            <div class="chart-wrap"><canvas id="chart-o2-pyramid"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">IC vs Manager Split</div>
+            <div class="chart-wrap"><canvas id="chart-o2-split"></canvas></div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="stat-grid" id="heatmap-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Attrition heatmap — department × level</div>
-      <div class="chart-sub">Darker red = higher attrition · teal = healthy · grey = insufficient data (&lt;3 employees)</div>
-      <div id="heatmap-grid" style="overflow-x:auto;margin-top:8px"></div>
-    </div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportHeatmapXLSX()">↓ Heatmap XLSX</button>
-    </div>
-  </div>
-</div>
 
-<!-- O5 CAPABILITY MAPPING -->
-<div class="module-panel" id="panel-capability">
-  <div class="module-header">
-    <div class="module-title">Capability investment mapping</div>
-    <div class="module-desc">Headcount and salary cost distributed across capability categories — revenue-generating, support, and overhead. Identifies whether headcount growth has been concentrated in value-creating or overhead roles, and whether the investment pattern is aligned with the company's strategic priorities.</div>
-  </div>
-  <div id="capability-empty" class="empty-state">
-    <div class="empty-icon">⬟</div>
-    <div class="empty-title">Load headcount data to map capability investment</div>
-    <div class="empty-sub">Department and optionally salary data required. Capability categories are auto-classified from department names and can be overridden.</div>
-    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
-  </div>
-  <div id="capability-content" style="display:none">
-    <div class="guidance">
-      <div class="guidance-icon">⬟</div>
-      <div class="guidance-body">
-        <strong>How capability categories are assigned</strong>
-        <p><strong>Revenue-generating:</strong> Sales, commercial, customer success, store operations, field — roles that directly generate revenue or serve customers. <strong>Support:</strong> HR, finance, IT, legal, compliance, analytics — roles that enable revenue-generating functions. <strong>Overhead:</strong> Executive, strategy, admin, corporate — roles that govern the organisation. A benchmark ratio: 65–70% revenue-generating, 20–25% support, 8–12% overhead. Significant deviation signals investment misalignment.</p>
+      <!-- O3 Attrition Analysis -->
+      <div class="analysis-section" id="section-o3" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">O3</span>
+          <div><div class="analysis-title">Attrition Analysis</div><div class="analysis-desc">Attrition rate by department and level. 20% benchmark line.</div></div>
+        </div>
+        <div class="kpi-row" id="o3-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Attrition by Department</div>
+            <div class="chart-wrap"><canvas id="chart-o3-dept"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Attrition by Level</div>
+            <div class="chart-wrap"><canvas id="chart-o3-level"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Attrition by Tenure Band</div>
+          <div class="chart-wrap"><canvas id="chart-o3-tenure"></canvas></div>
+        </div>
       </div>
-    </div>
-    <div class="stat-grid" id="capability-stats"></div>
-    <div class="chart-card">
-      <div class="chart-title">Headcount by capability category</div>
-      <div class="chart-sub">Revenue-generating · Support · Overhead — current distribution</div>
-      <canvas id="capability-chart" height="260"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Headcount by department</div>
-      <div class="chart-sub">Individual department breakdown with capability category</div>
-      <canvas id="dept-cap-chart" height="220"></canvas>
-    </div>
-    <div id="capability-table"></div>
-    <div class="export-bar">
-      <span class="export-label">Export:</span>
-      <button class="btn btn-sm" onclick="exportCapabilityXLSX()">↓ Capability XLSX</button>
+
+      <!-- O4 Attrition Heatmap -->
+      <div class="analysis-section" id="section-o4" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">O4</span>
+          <div><div class="analysis-title">Attrition Heatmap</div><div class="analysis-desc">Department × Level attrition intensity. Only cells with ≥3 employees shown.</div></div>
+        </div>
+        <div id="o4-heatmap"></div>
+      </div>
+
+      <!-- O5 Capability Mapping -->
+      <div class="analysis-section" id="section-o5" style="display:none">
+        <div class="analysis-header">
+          <span class="analysis-id">O5</span>
+          <div><div class="analysis-title">Capability Investment Mapping</div><div class="analysis-desc">Headcount split: Revenue-generating vs Support vs Overhead</div></div>
+        </div>
+        <div class="kpi-row" id="o5-kpis"></div>
+        <div class="chart-2col">
+          <div class="chart-card">
+            <div class="chart-card-title">Capability Mix</div>
+            <div class="chart-wrap"><canvas id="chart-o5-mix"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Headcount by Capability</div>
+            <div class="chart-wrap"><canvas id="chart-o5-bar"></canvas></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
-
-</div><!-- main-panel -->
-</div><!-- app-body -->
-
-<!-- SCHEMA MODAL -->
-<div class="modal-overlay" id="schema-modal">
-  <div class="modal">
-    <div class="modal-title">◈ Schema mapping — Meridian Org</div>
-    <div class="modal-sub">Map your columns to HR dimensions. Required dimensions marked <span class="schema-req">*</span>.</div>
-    <div class="schema-grid">
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> Employee ID</span>
-        <select class="schema-select" id="schema-employeeId"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Unique employee identifier</span></div>
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> Level</span>
-        <select class="schema-select" id="schema-level"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Seniority level (numeric or L1/L2/…)</span></div>
-      <div class="schema-row"><span class="schema-label"><span class="schema-req">*</span> Department</span>
-        <select class="schema-select" id="schema-department"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Org unit / function / team</span></div>
-      <div class="schema-row"><span class="schema-label">Manager ID</span>
-        <select class="schema-select" id="schema-managerId"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Required for span of control computation</span></div>
-      <div class="schema-row"><span class="schema-label">Tenure (months)</span>
-        <select class="schema-select" id="schema-tenure"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Months employed — used for tenure banding</span></div>
-      <div class="schema-row"><span class="schema-label">Status</span>
-        <select class="schema-select" id="schema-status"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">active / left — required for attrition</span></div>
-      <div class="schema-row"><span class="schema-label">Role / title</span>
-        <select class="schema-select" id="schema-role"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Job title or role name</span></div>
-      <div class="schema-row"><span class="schema-label">Salary</span>
-        <select class="schema-select" id="schema-salary"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Annual salary — enables cost-per-layer</span></div>
-      <div class="schema-row"><span class="schema-label">Location / tier</span>
-        <select class="schema-select" id="schema-location"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">City tier or office location</span></div>
-      <div class="schema-row"><span class="schema-label">Exit reason</span>
-        <select class="schema-select" id="schema-exitReason"><option value="">— not mapped —</option></select>
-        <span class="schema-hint">Voluntary / involuntary classification</span></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeSchemaWizard()">Cancel</button>
-      <button class="btn btn-primary" onclick="applySchema()">✓ Apply mapping</button>
-    </div>
-  </div>
 </div>
 
-<div class="toast-container" id="toast-container"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════════════════════════
-// MERIDIAN ORG — HR & Organisational Analytics
-// Phase 3 · archishman.com/meridian/org
-// ════════════════════════════════════════════════════════════════
+const AppState = { rows:[], schema:{}, mapped:false, columns:[] };
+const charts = {};
 
-const AppState = {
-  rows:[], schema:{}, source:null,
-  activeModule:'span', computed:{}, charts:{},
+const SCHEMA_FIELDS = [
+  { key:'employeeId', label:'Employee ID',   required:true  },
+  { key:'level',      label:'Level / Grade', required:true  },
+  { key:'department', label:'Department',    required:true  },
+  { key:'managerId',  label:'Manager ID',    required:false },
+  { key:'tenure',     label:'Tenure (months)', required:false },
+  { key:'status',     label:'Status (active/left)', required:false },
+  { key:'role',       label:'Role / Job Title', required:false },
+  { key:'location',   label:'Location / City',  required:false },
+  { key:'exitReason', label:'Exit Reason',       required:false },
+];
+const AUTO_MAP = {
+  employeeId:  /emp.?id|employee.?id|staff.?id|person.?id/i,
+  level:       /level|grade|band|seniority|tier/i,
+  department:  /dept|department|function|team|division|bu/i,
+  managerId:   /manager.?id|mgr.?id|reports.?to|supervisor/i,
+  tenure:      /tenure|months.?at|months.?in|duration|length.?of.?service/i,
+  status:      /status|active|attrition|exit|left|churn|employment/i,
+  role:        /role|title|job|position|designation/i,
+  location:    /location|city|office|site|region/i,
+  exitReason:  /exit.?reason|reason.?for.?leaving|termination/i,
 };
 
-function showToast(msg,type='success'){
-  const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;
-  document.getElementById('toast-container').appendChild(el);setTimeout(()=>el.remove(),3500);
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='toast', 3200);
 }
-function destroyChart(id){if(AppState.charts[id]){AppState.charts[id].destroy();delete AppState.charts[id];}}
-function col(key){return AppState.schema[key]||null;}
-function fmtPct(v){return v==null||isNaN(v)?'—':(v>0?'+':'')+v.toFixed(1)+'%';}
+function col(key) { return AppState.schema[key]||null; }
+function getStr(row, key) { const c=col(key); return c ? String(row[c]||'').trim() : ''; }
+function getNum(row, key) { const c=col(key); if(!c)return null; const v=parseFloat(row[c]); return isNaN(v)?null:v; }
 
-function showModule(id){
-  document.querySelectorAll('.module-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-  document.getElementById('panel-'+id)?.classList.add('active');
-  document.getElementById('nav-'+id)?.classList.add('active');
-  AppState.activeModule=id;
-  if(AppState.rows.length)renderModule(id);
+function makeChart(id, config) {
+  if (charts[id]) charts[id].destroy();
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas, config);
 }
-function renderModule(id){
-  const map={span:renderSpan,layers:renderLayers,attrition:renderAttrition,heatmap:renderHeatmap,capability:renderCapability};
-  if(map[id])map[id]();
-}
-
-function handleFileUpload(files){
-  const file=files[0];if(!file)return;
-  const ext=file.name.split('.').pop().toLowerCase();
-  if(ext==='csv'){Papa.parse(file,{header:true,skipEmptyLines:true,dynamicTyping:true,complete:r=>initData(r.data,file.name)});}
-  else if(ext==='xlsx'||ext==='xls'){
-    const reader=new FileReader();
-    reader.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];initData(XLSX.utils.sheet_to_json(ws,{defval:''}),file.name);};
-    reader.readAsArrayBuffer(file);
-  }else{showToast('Please upload a CSV or XLSX file','error');}
+function baseOpts(extra={}) {
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{ labels:{ color:'#9ba6ba', font:{family:"'DM Sans'",size:11}, boxWidth:12 } },
+      tooltip:{ backgroundColor:'#10151e', borderColor:'#2a3142', borderWidth:1, titleColor:'#e6e8ee', bodyColor:'#9ba6ba' }
+    },
+    scales:{
+      x:{ grid:{color:'rgba(42,49,66,0.6)'}, ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}} },
+      y:{ grid:{color:'rgba(42,49,66,0.6)'}, ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}} }
+    }
+  }, extra);
 }
 
-function initData(rows,source){
-  AppState.rows=rows.filter(r=>Object.values(r).some(v=>v!==null&&v!==''));
-  AppState.source=source;AppState.computed={};
-  const cols=Object.keys(AppState.rows[0]||{});
-  const autoSchema={};
-  const PATTERNS={
-    employeeId:/emp.?id|employee.?id|staff.?id|person.?id/i,
-    level:/^level$|^lvl$|grade|band|seniority/i,
-    department:/dept|department|function|team|division|unit/i,
-    managerId:/manager.?id|mgr.?id|reports.?to|supervisor/i,
-    tenure:/tenure|months.?employed|service|longevity/i,
-    status:/status|active|employed|attrition_flag|left/i,
-    role:/role|title|job.?title|position/i,
-    salary:/salary|pay|compensation|ctc|package/i,
-    location:/location|city|tier|office|region/i,
-    exitReason:/exit.?reason|reason.?for.?leaving|attrition.?type|separation/i,
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+function handleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext==='csv') {
+    Papa.parse(file, {header:true, skipEmptyLines:true, complete:r=>initData(r.data, file.name)});
+  } else if (ext==='xlsx'||ext==='xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result,{type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      initData(XLSX.utils.sheet_to_json(ws), file.name);
+    };
+    reader.readAsBinaryString(file);
+  } else { showToast('Please upload a CSV or XLSX file','error'); }
+}
+function initData(rows, name) {
+  if (!rows||!rows.length){showToast('No data found','error');return;}
+  AppState.rows = rows;
+  AppState.columns = Object.keys(rows[0]);
+  document.getElementById('ctx-dataset').textContent = name;
+  document.getElementById('ctx-rows').textContent = rows.length.toLocaleString();
+  document.getElementById('step1').className='step done';
+  document.getElementById('step2').className='step active';
+  showSchemaWizard();
+  showToast('Data loaded — map your columns','success');
+}
+
+// ── Demo data — fixed, no scoping issues ──────────────────────
+function loadDemo() {
+  const DEPTS = ['Store Operations','E-Commerce','Supply Chain','Finance','HR','Technology','Marketing','Real Estate'];
+  const LEVELS = ['L1','L2','L3','L4','L5'];
+  const ROLES = {
+    'Store Operations': ['Store Associate','Floor Manager','Store Manager','Regional Manager','VP Retail'],
+    'E-Commerce':       ['Operations Exec','Team Lead','Manager','Senior Manager','VP E-Comm'],
+    'Supply Chain':     ['Warehouse Exec','Supervisor','SC Manager','Senior Manager','VP Supply'],
+    'Finance':          ['Finance Exec','Senior Exec','Finance Manager','Senior Manager','CFO'],
+    'HR':               ['HR Exec','Senior Exec','HR Manager','Senior Manager','CHRO'],
+    'Technology':       ['Developer','Senior Dev','Tech Lead','Engineering Manager','CTO'],
+    'Marketing':        ['Marketing Exec','Senior Exec','Brand Manager','Senior Manager','CMO'],
+    'Real Estate':      ['Property Exec','Senior Exec','Property Manager','Senior Manager','VP Real Estate'],
   };
-  cols.forEach(c=>{Object.entries(PATTERNS).forEach(([k,pat])=>{if(!autoSchema[k]&&pat.test(c))autoSchema[k]=c;});});
-  AppState.schema=autoSchema;
 
-  const active=AppState.rows.filter(r=>{
-    const sc=col('status');if(!sc)return true;
-    const v=String(r[sc]||'').toLowerCase();return v==='active'||v==='1'||v==='true'||v==='current';
-  });
-
-  const levelCol=col('level'),deptCol=col('department');
-  const levels=levelCol?[...new Set(AppState.rows.map(r=>r[levelCol]).filter(Boolean))].sort():[...new Set(AppState.rows.map((_,i)=>`L${i%5+1}`))].sort();
-  const depts=deptCol?[...new Set(AppState.rows.map(r=>r[deptCol]).filter(Boolean))].sort():[];
-
-  document.getElementById('ctx-dot').classList.add('active');
-  document.getElementById('ctx-rows').textContent=AppState.rows.length.toLocaleString()+' rows';
-  document.getElementById('ctx-employees').textContent=AppState.rows.length.toLocaleString();
-  document.getElementById('ctx-levels').textContent=levels.length||'—';
-  document.getElementById('ctx-depts').textContent=depts.length||'—';
-  document.getElementById('ctx-schema').textContent=Object.keys(autoSchema).length+' dimensions';
-
-  document.querySelectorAll('.schema-select').forEach(sel=>{
-    sel.innerHTML='<option value="">— not mapped —</option>'+cols.map(c=>`<option value="${c}">${c}</option>`).join('');
-    const k=sel.id.replace('schema-','');if(autoSchema[k])sel.value=autoSchema[k];
-  });
-
-  ['span','layers','attrition','heatmap','capability'].forEach(id=>{
-    const empty=document.getElementById(id+'-empty');const content=document.getElementById(id+'-content');
-    if(empty)empty.style.display='none';if(content)content.style.display='';
-  });
-
-  updateStepIndicator();
-  showToast(AppState.rows.length.toLocaleString()+' employees loaded · '+Object.keys(autoSchema).length+' dimensions auto-mapped','success');
-  renderModule(AppState.activeModule);
-}
-
-function openSchemaWizard(){document.getElementById('schema-modal').classList.add('open');}
-function closeSchemaWizard(){document.getElementById('schema-modal').classList.remove('open');}
-function applySchema(){
-  ['employeeId','level','department','managerId','tenure','status','role','salary','location','exitReason'].forEach(k=>{
-    const v=document.getElementById('schema-'+k)?.value;
-    if(v)AppState.schema[k]=v;else delete AppState.schema[k];
-  });
-  document.getElementById('ctx-schema').textContent=Object.keys(AppState.schema).length+' dimensions';
-  closeSchemaWizard();AppState.computed={};updateStepIndicator();
-  renderModule(AppState.activeModule);
-  showToast('Schema updated','success');
-}
-
-function updateStepIndicator(){
-  const hasData=AppState.rows.length>0,hasSchema=Object.keys(AppState.schema).length>=2,hasResults=!!AppState.computed.span||!!AppState.computed.layers;
-  [{id:'step-1',done:hasData,active:!hasData},{id:'step-2',done:hasSchema,active:hasData&&!hasSchema},
-   {id:'step-3',done:hasResults,active:hasData&&hasSchema&&!hasResults},{id:'step-4',done:false,active:hasResults}
-  ].forEach(s=>{const el=document.getElementById(s.id);if(el)el.className='step'+(s.done?' done':s.active?' active':'');});
-}
-
-// ── O1 SPAN OF CONTROL ───────────────────────────────────────────
-function renderSpan(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const empCol=col('employeeId'),mgrCol=col('managerId'),lvlCol=col('level'),deptCol=col('department');
-  if(!empCol||!mgrCol){
-    document.getElementById('span-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Employee ID and Manager ID to compute span of control.</p>';
-    return;
-  }
-
-  // Count direct reports per manager
-  const directReports={};
-  rows.forEach(r=>{
-    const mgr=r[mgrCol];if(mgr&&mgr!==r[empCol]){
-      directReports[mgr]=(directReports[mgr]||0)+1;
-    }
-  });
-
-  // Group managers by level or dept
-  const groupKey=document.getElementById('span-group')?.value||'level';
-  const groupCol=groupKey==='level'?lvlCol:deptCol;
-  const groupSpans={};
-
-  rows.forEach(r=>{
-    const empId=r[empCol];
-    if(directReports[empId]){
-      const g=groupCol?String(r[groupCol]||'Unknown'):'All';
-      if(!groupSpans[g])groupSpans[g]=[];
-      groupSpans[g].push(directReports[empId]);
-    }
-  });
-
-  const spanData=Object.entries(groupSpans).map(([g,spans])=>({
-    group:g,
-    avg:spans.reduce((s,v)=>s+v,0)/spans.length,
-    min:Math.min(...spans),
-    max:Math.max(...spans),
-    managers:spans.length,
-    total:spans.reduce((s,v)=>s+v,0),
-  })).sort((a,b)=>b.avg-a.avg);
-
-  AppState.computed.span=spanData;updateStepIndicator();
-
-  const allManagers=Object.keys(directReports).length;
-  const allSpans=Object.values(directReports);
-  const avgSpan=allSpans.reduce((s,v)=>s+v,0)/allSpans.length;
-  const underSpanned=allSpans.filter(s=>s<4).length;
-  const overSpanned=allSpans.filter(s=>s>8).length;
-
-  document.getElementById('span-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total managers</div><div class="stat-value">${allManagers}</div><div class="stat-sub">${(allManagers/rows.length*100).toFixed(1)}% of headcount</div></div>
-    <div class="stat-card ${avgSpan>=5&&avgSpan<=7?'good':'warn'}"><div class="stat-label">Avg span of control</div><div class="stat-value">${avgSpan.toFixed(1)}</div><div class="stat-sub">Target: 5–7 direct reports</div></div>
-    <div class="stat-card ${underSpanned===0?'good':'warn'}"><div class="stat-label">Under-spanned (&lt;4)</div><div class="stat-value">${underSpanned}</div><div class="stat-sub">${(underSpanned/allManagers*100).toFixed(0)}% of managers · overhead risk</div></div>
-    <div class="stat-card ${overSpanned===0?'good':'warn'}"><div class="stat-label">Over-spanned (&gt;8)</div><div class="stat-value">${overSpanned}</div><div class="stat-sub">${(overSpanned/allManagers*100).toFixed(0)}% of managers · control risk</div></div>`;
-
-  const TARGET_LOW=4,TARGET_HIGH=8;
-  const colors=spanData.map(d=>d.avg<TARGET_LOW?'rgba(251,113,133,0.7)':d.avg>TARGET_HIGH?'rgba(245,165,36,0.7)':'rgba(34,211,184,0.7)');
-
-  destroyChart('span-chart');
-  const ctx=document.getElementById('span-chart').getContext('2d');
-  AppState.charts['span-chart']=new Chart(ctx,{
-    type:'bar',
-    data:{labels:spanData.map(d=>d.group),datasets:[
-      {label:'Avg span',data:spanData.map(d=>d.avg.toFixed(1)),backgroundColor:colors,borderRadius:4},
-      {label:'Target min',data:spanData.map(()=>TARGET_LOW),type:'line',borderColor:'rgba(34,211,184,0.4)',borderDash:[4,3],borderWidth:1,pointRadius:0,fill:false},
-      {label:'Target max',data:spanData.map(()=>TARGET_HIGH),type:'line',borderColor:'rgba(245,165,36,0.4)',borderDash:[4,3],borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(34,211,184,0.05)'},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba'},grid:{color:'#1c2230'},min:0}}}
-  });
-
-  document.getElementById('span-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>${groupKey==='level'?'Level':'Department'}</th><th>Managers</th><th>Avg span</th><th>Min</th><th>Max</th><th>Status</th></tr></thead><tbody>${spanData.map(d=>`<tr>
-    <td>${d.group}</td><td style="font-family:var(--mono)">${d.managers}</td>
-    <td style="font-family:var(--mono);font-weight:600;color:${d.avg<TARGET_LOW?'var(--danger)':d.avg>TARGET_HIGH?'var(--warn)':'var(--success)'}">${d.avg.toFixed(1)}</td>
-    <td style="font-family:var(--mono)">${d.min}</td><td style="font-family:var(--mono)">${d.max}</td>
-    <td><span class="tag ${d.avg<TARGET_LOW?'tag-bad':d.avg>TARGET_HIGH?'tag-warn':'tag-good'}">${d.avg<TARGET_LOW?'Under-spanned':d.avg>TARGET_HIGH?'Over-spanned':'On target'}</span></td>
-  </tr>`).join('')}</tbody></table></div>`;
-}
-
-// ── O2 LAYER BENCHMARKING ────────────────────────────────────────
-function renderLayers(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const lvlCol=col('level'),deptCol=col('department'),salCol=col('salary');
-  if(!lvlCol){document.getElementById('layers-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Level to compute layer benchmarking.</p>';return;}
-
-  const levels=[...new Set(rows.map(r=>r[lvlCol]).filter(Boolean))].sort();
-  const byLevel={};
-  levels.forEach(l=>{
-    const emps=rows.filter(r=>r[lvlCol]==l);
-    const totalSal=salCol?emps.reduce((s,r)=>s+(parseFloat(r[salCol])||0),0):0;
-    byLevel[l]={count:emps.length,totalSal,avgSal:emps.length?totalSal/emps.length:0};
-  });
-
-  const total=rows.length;
-  const numLevels=levels.length;
-  const icLevel=levels[levels.length-1]; // deepest level = IC
-  const icCount=byLevel[icLevel]?.count||0;
-  const mgrCount=total-icCount;
-  const icToMgrRatio=mgrCount>0?(icCount/mgrCount).toFixed(1):0;
-
-  AppState.computed.layers={byLevel,levels};updateStepIndicator();
-
-  document.getElementById('layers-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total headcount</div><div class="stat-value">${total.toLocaleString()}</div><div class="stat-sub">${numLevels} organisational levels</div></div>
-    <div class="stat-card ${numLevels<=5?'good':numLevels<=6?'warn':'bad'}"><div class="stat-label">Number of layers</div><div class="stat-value">${numLevels}</div><div class="stat-sub">Target: 4–5 layers · ${numLevels>5?'Consider flattening':'Healthy'}</div></div>
-    <div class="stat-card ${parseFloat(icToMgrRatio)>=5?'good':parseFloat(icToMgrRatio)>=3?'warn':'bad'}"><div class="stat-label">IC : Manager ratio</div><div class="stat-value">${icToMgrRatio}:1</div><div class="stat-sub">Target: ≥5:1 · ${parseFloat(icToMgrRatio)<5?'Over-managed':'Healthy'}</div></div>
-    <div class="stat-card"><div class="stat-label">IC headcount</div><div class="stat-value">${icCount}</div><div class="stat-sub">${(icCount/total*100).toFixed(0)}% of total (Level ${icLevel})</div></div>`;
-
-  // Pyramid
-  const maxCount=Math.max(...levels.map(l=>byLevel[l].count));
-  document.getElementById('pyramid-chart').innerHTML=levels.map(l=>{
-    const d=byLevel[l];
-    const pct=maxCount>0?d.count/maxCount*100:0;
-    return `<div class="pyramid-row">
-      <div class="pyramid-label">${l}</div>
-      <div class="pyramid-bar-wrap">
-        <div class="pyramid-bar" style="width:${Math.max(pct,4)}%;color:var(--text2);font-size:10px">${d.count}</div>
-      </div>
-      <div class="pyramid-count" style="font-family:var(--mono);font-size:10px">${(d.count/total*100).toFixed(1)}%</div>
-    </div>`;
-  }).join('');
-
-  // Dept breakdown
-  const depts=deptCol?[...new Set(rows.map(r=>r[deptCol]).filter(Boolean))].sort():[];
-  if(depts.length){
-    const deptCounts=depts.map(d=>rows.filter(r=>r[deptCol]==d).length);
-    destroyChart('dept-chart');
-    const ctx=document.getElementById('dept-chart').getContext('2d');
-    AppState.charts['dept-chart']=new Chart(ctx,{type:'bar',
-      data:{labels:depts,datasets:[{data:deptCounts,backgroundColor:'rgba(251,113,133,0.6)',borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        indexAxis:'y',scales:{x:{ticks:{color:'#9ba6ba'},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}}}}});
-  }
-
-  document.getElementById('layers-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>Level</th><th>Headcount</th><th>% of total</th>${salCol?'<th>Avg salary</th>':''}${salCol?'<th>Total payroll</th>':''}</tr></thead><tbody>${levels.map(l=>{const d=byLevel[l];return`<tr><td style="font-family:var(--mono)">${l}</td><td style="font-family:var(--mono)">${d.count}</td><td style="font-family:var(--mono)">${(d.count/total*100).toFixed(1)}%</td>${salCol?`<td style="font-family:var(--mono)">₹${(d.avgSal/1e5).toFixed(1)}L</td><td style="font-family:var(--mono)">₹${(d.totalSal/1e7).toFixed(2)}Cr</td>`:''}</tr>`;}).join('')}</tbody></table></div>`;
-}
-
-// ── O3 ATTRITION ANALYSIS ────────────────────────────────────────
-function renderAttrition(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const statusCol=col('status'),deptCol=col('department'),lvlCol=col('level'),tenureCol=col('tenure');
-  if(!statusCol){document.getElementById('attrition-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Status (active/left) to compute attrition rates.</p>';return;}
-
-  function isLeft(r){const v=String(r[statusCol]||'').toLowerCase();return v==='left'||v==='0'||v==='false'||v==='inactive'||v==='termed'||v==='resigned'||v==='attrition';}
-
-  const total=rows.length,leavers=rows.filter(r=>isLeft(r)).length;
-  const overallAttr=total>0?leavers/total*100:0;
-
-  // Tenure banding
-  function tenureBand(months){if(months<12)return'<1 year';if(months<24)return'1–2 years';if(months<48)return'2–4 years';return'4+ years';}
-
-  const groupKey=document.getElementById('attr-group')?.value||'department';
-  const groupCol=groupKey==='department'?deptCol:groupKey==='level'?lvlCol:null;
-
-  function groupVal(r){
-    if(groupKey==='tenure_band'){const t=tenureCol?parseFloat(r[tenureCol]||0):0;return tenureBand(t);}
-    return groupCol?String(r[groupCol]||'Unknown'):'All';
-  }
-
-  const groups={};
-  rows.forEach(r=>{const g=groupVal(r);if(!groups[g])groups[g]={total:0,left:0};groups[g].total++;if(isLeft(r))groups[g].left++;});
-
-  const groupData=Object.entries(groups).map(([g,d])=>({group:g,...d,rate:d.total>0?d.left/d.total*100:0})).sort((a,b)=>b.rate-a.rate);
-
-  AppState.computed.attrition=groupData;
-
-  document.getElementById('attrition-stats').innerHTML=`
-    <div class="stat-card ${overallAttr<20?'good':overallAttr<30?'warn':'bad'}"><div class="stat-label">Overall attrition</div><div class="stat-value">${overallAttr.toFixed(1)}%</div><div class="stat-sub">Benchmark: 18–22% (India retail)</div></div>
-    <div class="stat-card bad"><div class="stat-label">Total leavers</div><div class="stat-value">${leavers}</div><div class="stat-sub">of ${total} total employees</div></div>
-    <div class="stat-card"><div class="stat-label">Highest attrition</div><div class="stat-value">${groupData[0]?.rate?.toFixed(1)||'—'}%</div><div class="stat-sub">${groupData[0]?.group||'—'}</div></div>
-    <div class="stat-card"><div class="stat-label">Groups above 25%</div><div class="stat-value">${groupData.filter(d=>d.rate>25).length}</div><div class="stat-sub">Require structural investigation</div></div>`;
-
-  const BENCHMARK=20;
-  const barColors=groupData.map(d=>d.rate>30?'rgba(251,113,133,0.8)':d.rate>20?'rgba(245,165,36,0.7)':'rgba(34,211,184,0.6)');
-  destroyChart('attrition-chart');
-  const ctx=document.getElementById('attrition-chart').getContext('2d');
-  AppState.charts['attrition-chart']=new Chart(ctx,{type:'bar',
-    data:{labels:groupData.map(d=>d.group),datasets:[
-      {label:'Attrition rate',data:groupData.map(d=>d.rate.toFixed(1)),backgroundColor:barColors,borderRadius:4},
-      {label:'Benchmark 20%',data:groupData.map(()=>BENCHMARK),type:'line',borderColor:'rgba(96,165,250,0.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',callback:v=>v+'%'},grid:{color:'#1c2230'},min:0}}}});
-
-  document.getElementById('attrition-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>${groupKey==='department'?'Department':groupKey==='level'?'Level':'Tenure band'}</th><th>Total</th><th>Leavers</th><th>Rate</th><th>vs 20% benchmark</th></tr></thead><tbody>${groupData.map(d=>`<tr>
-    <td>${d.group}</td><td style="font-family:var(--mono)">${d.total}</td><td style="font-family:var(--mono)">${d.left}</td>
-    <td style="font-family:var(--mono);font-weight:600;color:${d.rate>30?'var(--danger)':d.rate>20?'var(--warn)':'var(--success)'}">${d.rate.toFixed(1)}%</td>
-    <td><span class="tag ${d.rate>30?'tag-bad':d.rate>20?'tag-warn':'tag-good'}">${d.rate>30?'High risk':d.rate>20?'Above benchmark':'Healthy'}</span></td>
-  </tr>`).join('')}</tbody></table></div>`;
-}
-
-// ── O4 ATTRITION HEATMAP ─────────────────────────────────────────
-function renderHeatmap(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const statusCol=col('status'),deptCol=col('department'),lvlCol=col('level');
-  if(!statusCol||!deptCol||!lvlCol){document.getElementById('heatmap-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Status, Department, and Level to build the attrition heatmap.</p>';return;}
-
-  function isLeft(r){const v=String(r[statusCol]||'').toLowerCase();return v==='left'||v==='0'||v==='false'||v==='inactive'||v==='termed'||v==='resigned';}
-
-  const depts=[...new Set(rows.map(r=>r[deptCol]).filter(Boolean))].sort();
-  const levels=[...new Set(rows.map(r=>r[lvlCol]).filter(Boolean))].sort();
-
-  const matrix={};
-  depts.forEach(d=>{matrix[d]={};levels.forEach(l=>{matrix[d][l]={total:0,left:0};});});
-  rows.forEach(r=>{const d=r[deptCol],l=r[lvlCol];if(d&&l&&matrix[d]&&matrix[d][l]!==undefined){matrix[d][l].total++;if(isLeft(r))matrix[d][l].left++;}});
-
-  const total=rows.length,leavers=rows.filter(r=>isLeft(r)).length;
-  const overallAttr=total>0?leavers/total*100:0;
-  const hotspots=[];
-  depts.forEach(d=>levels.forEach(l=>{const c=matrix[d][l];if(c.total>=3&&c.left/c.total>0.3)hotspots.push({dept:d,level:l,...c,rate:c.left/c.total*100});}));
-  hotspots.sort((a,b)=>b.rate-a.rate);
-
-  document.getElementById('heatmap-stats').innerHTML=`
-    <div class="stat-card ${overallAttr<20?'good':overallAttr<30?'warn':'bad'}"><div class="stat-label">Overall attrition</div><div class="stat-value">${overallAttr.toFixed(1)}%</div></div>
-    <div class="stat-card bad"><div class="stat-label">Hotspots (&gt;30%)</div><div class="stat-value">${hotspots.length}</div><div class="stat-sub">Department × level intersections</div></div>
-    <div class="stat-card"><div class="stat-label">Top hotspot</div><div class="stat-value">${hotspots[0]?.rate?.toFixed(0)||'—'}%</div><div class="stat-sub">${hotspots[0]?hotspots[0].dept+' · '+hotspots[0].level:'None detected'}</div></div>
-    <div class="stat-card"><div class="stat-label">Cells tracked</div><div class="stat-value">${depts.length×levels.length||depts.length*levels.length}</div><div class="stat-sub">Department × level combinations</div></div>`;
-
-  function attrColor(rate,insufficient){
-    if(insufficient)return'rgba(44,54,70,0.5)';
-    if(rate>40)return'rgba(190,40,60,0.85)';
-    if(rate>30)return'rgba(251,113,133,0.75)';
-    if(rate>20)return'rgba(245,165,36,0.65)';
-    if(rate>10)return'rgba(245,165,36,0.35)';
-    return'rgba(34,211,184,0.5)';
-  }
-
-  const cellSize=Math.max(44,Math.min(80,Math.floor(560/Math.max(depts.length,8))));
-  let html=`<div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:3px;font-size:10px;font-family:var(--mono)">`;
-  html+=`<tr><td style="color:var(--dim);font-size:9px;padding:4px 6px"></td>`;
-  levels.forEach(l=>{html+=`<td style="color:var(--muted);padding:4px 6px;text-align:center;font-weight:600">${l}</td>`;});
-  html+=`</tr>`;
-  depts.forEach(d=>{
-    html+=`<tr><td style="color:var(--muted);padding:4px 8px;white-space:nowrap;font-size:10px">${d.length>18?d.slice(0,16)+'…':d}</td>`;
-    levels.forEach(l=>{
-      const c=matrix[d][l];
-      const insuf=c.total<3;
-      const rate=c.total>0?c.left/c.total*100:0;
-      const bg=attrColor(rate,insuf);
-      const label=insuf?'—':(rate.toFixed(0)+'%');
-      html+=`<td title="${d} · ${l}: ${c.left}/${c.total} left (${rate.toFixed(1)}%)" style="background:${bg};width:${cellSize}px;height:${cellSize}px;text-align:center;vertical-align:middle;border-radius:4px;color:rgba(255,255,255,0.85);font-weight:600;cursor:default;min-width:${cellSize}px">${label}</td>`;
-    });
-    html+=`</tr>`;
-  });
-  html+=`</table></div>`;
-
-  document.getElementById('heatmap-grid').innerHTML=html;
-}
-
-// ── O5 CAPABILITY MAPPING ────────────────────────────────────────
-function renderCapability(){
-  const rows=AppState.rows;if(!rows.length)return;
-  const deptCol=col('department'),salCol=col('salary');
-  if(!deptCol){document.getElementById('capability-stats').innerHTML='<p style="color:var(--muted);font-size:12px">Map Department to classify capability categories.</p>';return;}
-
-  const REVENUE_PATTERNS=/sales|commercial|store|retail|field|customer.?success|revenue|growth|business.?dev/i;
-  const SUPPORT_PATTERNS=/hr|human.?res|finance|accounts|it|technology|legal|compliance|analytics|data|operations.?support/i;
-  const OVERHEAD_PATTERNS=/executive|ceo|cxo|strategy|admin|corp|general.?mgmt|board/i;
-
-  function classifyDept(dept){
-    const d=String(dept||'').toLowerCase();
-    if(REVENUE_PATTERNS.test(d))return'Revenue-generating';
-    if(OVERHEAD_PATTERNS.test(d))return'Overhead';
-    if(SUPPORT_PATTERNS.test(d))return'Support';
-    return'Support'; // default
-  }
-
-  const depts=[...new Set(rows.map(r=>r[deptCol]).filter(Boolean))].sort();
-  const deptData=depts.map(d=>{
-    const emps=rows.filter(r=>r[deptCol]==d);
-    const totalSal=salCol?emps.reduce((s,r)=>s+(parseFloat(r[salCol])||0),0):0;
-    return{dept:d,count:emps.length,totalSal,category:classifyDept(d)};
-  });
-
-  const catCounts={};
-  deptData.forEach(d=>{if(!catCounts[d.category])catCounts[d.category]={count:0,totalSal:0};catCounts[d.category].count+=d.count;catCounts[d.category].totalSal+=d.totalSal;});
-  const total=rows.length;
-
-  AppState.computed.capability={deptData,catCounts};
-
-  const revPct=(catCounts['Revenue-generating']?.count||0)/total*100;
-  const supPct=(catCounts['Support']?.count||0)/total*100;
-  const ohPct=(catCounts['Overhead']?.count||0)/total*100;
-
-  document.getElementById('capability-stats').innerHTML=`
-    <div class="stat-card ${revPct>=60?'good':'warn'}"><div class="stat-label">Revenue-generating</div><div class="stat-value">${revPct.toFixed(1)}%</div><div class="stat-sub">${catCounts['Revenue-generating']?.count||0} employees · target ≥60%</div></div>
-    <div class="stat-card ${supPct<=25?'good':'warn'}"><div class="stat-label">Support</div><div class="stat-value">${supPct.toFixed(1)}%</div><div class="stat-sub">${catCounts['Support']?.count||0} employees · target ≤25%</div></div>
-    <div class="stat-card ${ohPct<=12?'good':'warn'}"><div class="stat-label">Overhead</div><div class="stat-value">${ohPct.toFixed(1)}%</div><div class="stat-sub">${catCounts['Overhead']?.count||0} employees · target ≤12%</div></div>
-    <div class="stat-card"><div class="stat-label">Alignment signal</div><div class="stat-value">${revPct>=60&&ohPct<=12?'✓':'!'}</div><div class="stat-sub">${revPct>=60&&ohPct<=12?'Within benchmark range':'Review investment allocation'}</div></div>`;
-
-  const catOrder=['Revenue-generating','Support','Overhead'];
-  const catColors=['rgba(34,211,184,0.7)','rgba(96,165,250,0.6)','rgba(251,113,133,0.6)'];
-
-  destroyChart('capability-chart');
-  const ctx1=document.getElementById('capability-chart').getContext('2d');
-  AppState.charts['capability-chart']=new Chart(ctx1,{type:'doughnut',
-    data:{labels:catOrder,datasets:[{data:catOrder.map(c=>catCounts[c]?.count||0),backgroundColor:catColors,borderColor:catColors.map(c=>c.replace('0.7','1').replace('0.6','1')),borderWidth:1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ba6ba',font:{size:11}}}}}});
-
-  destroyChart('dept-cap-chart');
-  const ctx2=document.getElementById('dept-cap-chart').getContext('2d');
-  const catColorMap={'Revenue-generating':'rgba(34,211,184,0.6)','Support':'rgba(96,165,250,0.5)','Overhead':'rgba(251,113,133,0.6)'};
-  AppState.charts['dept-cap-chart']=new Chart(ctx2,{type:'bar',
-    data:{labels:deptData.map(d=>d.dept.length>14?d.dept.slice(0,13)+'…':d.dept),
-      datasets:[{data:deptData.map(d=>d.count),backgroundColor:deptData.map(d=>catColorMap[d.category]||'rgba(155,166,186,0.4)'),borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'#9ba6ba'},grid:{color:'#1c2230'}},y:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}}}}});
-
-  document.getElementById('capability-table').innerHTML=`<div class="chart-card" style="padding:0;overflow:hidden;margin-top:14px"><table class="analysis-table"><thead><tr><th>Department</th><th>Category</th><th>Headcount</th><th>% of total</th>${salCol?'<th>Avg salary</th>':''}</tr></thead><tbody>${deptData.sort((a,b)=>b.count-a.count).map(d=>`<tr>
-    <td>${d.dept}</td>
-    <td><span class="tag ${d.category==='Revenue-generating'?'tag-good':d.category==='Support'?'':'tag-bad'}" style="${d.category==='Support'?'background:rgba(96,165,250,0.1);color:#60a5fa;border-color:rgba(96,165,250,0.3)':''}">${d.category}</span></td>
-    <td style="font-family:var(--mono)">${d.count}</td>
-    <td style="font-family:var(--mono)">${(d.count/total*100).toFixed(1)}%</td>
-    ${salCol?`<td style="font-family:var(--mono)">₹${d.count>0?(d.totalSal/d.count/1e5).toFixed(1):'—'}L</td>`:''}
-  </tr>`).join('')}</tbody></table></div>`;
-}
-
-// ── DEMO DATA — Renova Home 800-employee headcount ───────────────
-function loadDemoData(){
-  const rows=[];
-  const departments=[
-    {name:'Store Operations',cat:'Revenue-generating',size:220,levels:[3,4,5],attrBase:0.28},
-    {name:'Sales & Commercial',cat:'Revenue-generating',size:95,levels:[2,3,4],attrBase:0.18},
-    {name:'E-Commerce',cat:'Revenue-generating',size:55,levels:[3,4,5],attrBase:0.20},
-    {name:'Supply Chain',cat:'Support',size:80,levels:[2,3,4,5],attrBase:0.15},
-    {name:'Finance',cat:'Support',size:45,levels:[1,2,3,4],attrBase:0.10},
-    {name:'HR & People',cat:'Support',size:30,levels:[2,3,4],attrBase:0.12},
-    {name:'Technology',cat:'Support',size:65,levels:[3,4,5],attrBase:0.22},
-    {name:'Marketing',cat:'Support',size:35,levels:[2,3,4],attrBase:0.16},
-    {name:'Legal & Compliance',cat:'Support',size:15,levels:[1,2,3],attrBase:0.08},
-    {name:'Strategy',cat:'Overhead',size:20,levels:[1,2],attrBase:0.10},
-    {name:'Executive',cat:'Overhead',size:10,levels:[1],attrBase:0.05},
-    {name:'Admin',cat:'Overhead',size:30,levels:[3,4,5],attrBase:0.14},
-  ];
-
-  let empId=1000;
-  const mgrMap={};
-
-  departments.forEach(dept=>{
-    const lvlDist=dept.levels;
-    // For each level, create a few managers first
-    lvlDist.forEach((lvl,li)=>{
-      const countAtLevel=Math.floor(dept.size/(lvlDist.length)*(li===lvlDist.length-1?1.5:0.8));
-      const levelManagers=[];
-
-      // Find parent managers (level above)
-      const parentManagers=li>0?mgrMap[`${dept.name}_L${lvlDist[li-1]}`]||[]:[];
-
-      for(let i=0;i<countAtLevel;i++){
-        const id=`EMP${empId++}`;
-        const tenure=Math.round(Math.random()*72+3); // 3-75 months
-        const isManager=li<lvlDist.length-1;
-        const mgr=parentManagers.length?parentManagers[i%parentManagers.length]:null;
-        const left=Math.random()<(dept.attrBase+(lvl===3&&dept.name==='Store Operations'?0.12:0));
-        const salary=Math.round((6-lvl)*2.5*(0.9+Math.random()*0.2))*1e5;
+  // Headcount distribution — known signals:
+  // - L3 Store Operations has high attrition (signal)
+  // - L4/L5 is under-spanned (directors managing only 2-3 people)
+  const DIST = {
+    'Store Operations': [180,80,40,8,2],
+    'E-Commerce':       [30,18,10,4,1],
+    'Supply Chain':     [60,30,14,4,1],
+    'Finance':          [20,14,8,3,1],
+    'HR':               [12,8,5,2,1],
+    'Technology':       [40,24,12,4,1],
+    'Marketing':        [18,12,6,2,1],
+    'Real Estate':      [20,12,6,2,1],
+  };
+
+  // Attrition rates — Store Ops L3 is high
+  const ATTRITION = {
+    'Store Operations': [0.18,0.20,0.32,0.10,0.05],
+    'E-Commerce':       [0.15,0.12,0.10,0.08,0.05],
+    'Supply Chain':     [0.14,0.12,0.10,0.08,0.04],
+    'Finance':          [0.10,0.08,0.07,0.05,0.03],
+    'HR':               [0.12,0.10,0.08,0.05,0.03],
+    'Technology':       [0.20,0.18,0.14,0.10,0.05],
+    'Marketing':        [0.14,0.12,0.10,0.08,0.04],
+    'Real Estate':      [0.12,0.10,0.08,0.05,0.03],
+  };
+
+  const rows = [];
+  let empId = 1000;
+
+  // Build manager ID map: first employee in each dept/level combination becomes the manager
+  const mgrIds = {};
+
+  DEPTS.forEach(dept => {
+    LEVELS.forEach((lvl, li) => {
+      const count = DIST[dept][li] || 0;
+      const attrRate = ATTRITION[dept][li] || 0.10;
+
+      for (let i = 0; i < count; i++) {
+        const id = 'E' + String(empId++).padStart(4,'0');
+        // Store first person at each dept+level as potential manager
+        const mgrKey = dept + '_' + lvl;
+        if (!mgrIds[mgrKey]) mgrIds[mgrKey] = id;
+
+        // Assign manager from level above
+        let managerId = '';
+        if (li > 0) {
+          const upperKey = dept + '_' + LEVELS[li-1];
+          managerId = mgrIds[upperKey] || '';
+        }
+
+        const attrited = Math.random() < attrRate;
+        const tenure = attrited
+          ? Math.round(6 + Math.random() * 30)
+          : Math.round(12 + Math.random() * 60);
 
         rows.push({
-          emp_id:id, level:`L${lvl}`, department:dept.name,
-          manager_id:mgr||`EMP${900+li}`, // top-level gets a dummy root
-          tenure_months:tenure, status:left?'left':'active',
-          role:lvl===1?'VP/Head':lvl===2?'Director':lvl===3?'Manager':lvl===4?'Senior':' Analyst',
-          salary, location_tier:Math.random()>0.6?'Tier 1':'Tier 2',
-          exit_reason:left?(Math.random()>0.3?'Voluntary Resignation':'Performance'):'',
+          employee_id:  id,
+          level:        lvl,
+          department:   dept,
+          manager_id:   managerId,
+          role:         ROLES[dept][li],
+          tenure_months: tenure,
+          status:       attrited ? 'left' : 'active',
+          exit_reason:  attrited ? (['Better opportunity','Work-life balance','Compensation','Personal reasons'][Math.floor(Math.random()*4)]) : '',
+          location_tier: dept==='Store Operations' && Math.random()<0.6 ? 'Tier 2' : 'Tier 1',
         });
-        levelManagers.push(id);
       }
-      mgrMap[`${dept.name}_L${lvl}`]=levelManagers;
     });
   });
 
-  initData(rows,'Renova Home — 800-employee headcount (demo)');
-  showToast('Renova Home headcount loaded — '+rows.length+' employees · 12 departments','success');
+  AppState.rows = rows;
+  AppState.columns = Object.keys(rows[0]);
+  AppState.schema = {
+    employeeId:'employee_id', level:'level', department:'department',
+    managerId:'manager_id', tenure:'tenure_months', status:'status',
+    role:'role', location:'location_tier', exitReason:'exit_reason',
+  };
+  AppState.mapped = true;
+
+  const active = rows.filter(r=>r.status==='active').length;
+  const depts = [...new Set(rows.map(r=>r.department))];
+  document.getElementById('ctx-dataset').textContent = 'Renova Home · 800 Employees';
+  document.getElementById('ctx-rows').textContent = rows.length.toLocaleString() + ' (' + active + ' active)';
+  document.getElementById('ctx-depts').textContent = depts.length;
+  document.getElementById('ctx-schema').textContent = 'Mapped';
+  document.getElementById('step1').className='step done';
+  document.getElementById('step2').className='step done';
+  document.getElementById('step3').className='step active';
+  showAnalyses();
+  showToast('Renova Home demo loaded — ' + rows.length + ' employees', 'success');
 }
 
-// ── EXPORTS ──────────────────────────────────────────────────────
-function exportSpanXLSX(){const d=AppState.computed.span;if(!d)return;const ws=XLSX.utils.json_to_sheet(d);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'SpanOfControl');XLSX.writeFile(wb,'meridian_org_span.xlsx');showToast('Span exported','success');}
-function exportLayersXLSX(){const d=AppState.computed.layers;if(!d)return;const ws=XLSX.utils.json_to_sheet(Object.entries(d.byLevel).map(([l,v])=>({level:l,...v})));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Layers');XLSX.writeFile(wb,'meridian_org_layers.xlsx');showToast('Layers exported','success');}
-function exportAttritionXLSX(){const d=AppState.computed.attrition;if(!d)return;const ws=XLSX.utils.json_to_sheet(d);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Attrition');XLSX.writeFile(wb,'meridian_org_attrition.xlsx');showToast('Attrition exported','success');}
-function exportHeatmapXLSX(){showToast('Heatmap exported','success');}
-function exportCapabilityXLSX(){const d=AppState.computed.capability;if(!d)return;const ws=XLSX.utils.json_to_sheet(d.deptData);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Capability');XLSX.writeFile(wb,'meridian_org_capability.xlsx');showToast('Capability exported','success');}
+function showSchemaWizard() {
+  document.getElementById('panel-landing').style.display='none';
+  document.getElementById('panel-schema').style.display='block';
+  const grid = document.getElementById('schema-grid');
+  grid.innerHTML = SCHEMA_FIELDS.map(f => {
+    const autoCol = AppState.columns.find(c => AUTO_MAP[f.key]?.test(c)) || '';
+    const opts = AppState.columns.map(c=>`<option value="${c}" ${c===autoCol?'selected':''}>${c}</option>`).join('');
+    return `<div class="schema-row">
+      <span class="schema-label">${f.label}${f.required?'<span>*</span>':''}</span>
+      <select class="schema-select" id="schema-${f.key}">
+        <option value="">— not mapped —</option>${opts}
+      </select>
+    </div>`;
+  }).join('');
+}
 
-function exportReport(){
+function applySchema() {
+  const schema = {};
+  let missing = [];
+  SCHEMA_FIELDS.forEach(f => {
+    const sel = document.getElementById('schema-'+f.key);
+    if (sel&&sel.value) schema[f.key]=sel.value;
+    else if (f.required) missing.push(f.label);
+  });
+  if (missing.length) { document.getElementById('schema-msg').textContent='Required: '+missing.join(', '); return; }
+  AppState.schema = schema;
+  AppState.mapped = true;
+  document.getElementById('panel-schema').style.display='none';
+  document.getElementById('ctx-schema').textContent='Mapped';
+  document.getElementById('step2').className='step done';
+  document.getElementById('step3').className='step active';
+  const depts = [...new Set(AppState.rows.map(r=>getStr(r,'department')).filter(Boolean))];
+  document.getElementById('ctx-depts').textContent = depts.length;
+  showAnalyses();
+  showToast('Schema mapped','success');
+}
+
+function resetData() {
+  AppState.rows=[]; AppState.schema={}; AppState.mapped=false;
+  ['panel-schema','panel-analyses'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('panel-landing').style.display='block';
+  ['ctx-dataset','ctx-rows','ctx-depts'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('ctx-rows').textContent='—';
+  document.getElementById('ctx-schema').textContent='Not mapped';
+  ['step1','step2','step3'].forEach(s=>document.getElementById(s).className='step');
+  document.getElementById('step1').className='step active';
+}
+
+function showSection(id) {
+  document.querySelectorAll('.analysis-section').forEach(s=>s.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const s=document.getElementById('section-'+id);
+  if(s)s.style.display='block';
+  const n=document.getElementById('nav-'+id);
+  if(n)n.classList.add('active');
+}
+
+function showAnalyses() {
+  document.getElementById('panel-landing').style.display='none';
+  document.getElementById('panel-schema').style.display='none';
+  document.getElementById('panel-analyses').style.display='block';
+  renderAll();
+  showSection('o1');
+}
+
+function renderAll() { renderO1(); renderO2(); renderO3(); renderO4(); renderO5(); }
+
+// ── O1 Span of Control ────────────────────────────────────────
+function renderO1() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+
+  // Count direct reports per manager
+  const spanMap = {};
+  rows.forEach(r => {
+    const mgr = getStr(r,'managerId');
+    if (!mgr) return;
+    spanMap[mgr] = (spanMap[mgr]||0) + 1;
+  });
+  const spans = Object.values(spanMap);
+  if (!spans.length) { document.getElementById('o1-kpis').innerHTML='<div class="callout">Map the Manager ID column to enable span of control analysis.</div>'; return; }
+
+  const avgSpan = spans.reduce((a,b)=>a+b,0)/spans.length;
+  const underSpanned = spans.filter(s=>s<4).length;
+  const overSpanned = spans.filter(s=>s>8).length;
+  const optimal = spans.filter(s=>s>=4&&s<=8).length;
+
+  document.getElementById('o1-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Avg Span</div><div class="kpi-value ${avgSpan<4||avgSpan>8?'kpi-neg':'kpi-pos'}">${avgSpan.toFixed(1)}</div><div class="kpi-sub">Target: 4–8</div></div>
+    <div class="kpi-card"><div class="kpi-label">Optimal (4–8)</div><div class="kpi-value kpi-pos">${optimal}</div><div class="kpi-sub">${(optimal/spans.length*100).toFixed(0)}% of managers</div></div>
+    <div class="kpi-card"><div class="kpi-label">Under-spanned (&lt;4)</div><div class="kpi-value ${underSpanned>0?'kpi-neg':'kpi-pos'}">${underSpanned}</div><div class="kpi-sub">Management overhead risk</div></div>
+    <div class="kpi-card"><div class="kpi-label">Over-spanned (&gt;8)</div><div class="kpi-value ${overSpanned>0?'kpi-neg':'kpi-pos'}">${overSpanned}</div><div class="kpi-sub">Control risk</div></div>
+  `;
+
+  // Span by level
+  const levels = [...new Set(rows.map(r=>getStr(r,'level')).filter(Boolean))].sort();
+  const avgSpanByLevel = levels.map(lvl => {
+    const mgrIdsAtLevel = rows.filter(r=>getStr(r,'level')===lvl).map(r=>getStr(r,'employeeId'));
+    const spansAtLevel = mgrIdsAtLevel.map(id=>spanMap[id]).filter(v=>v!==undefined);
+    return spansAtLevel.length ? spansAtLevel.reduce((a,b)=>a+b,0)/spansAtLevel.length : 0;
+  });
+  makeChart('chart-o1-span', {
+    type:'bar',
+    data:{ labels:levels, datasets:[
+      { label:'Avg span', data:avgSpanByLevel, backgroundColor:'rgba(251,113,133,0.75)', borderRadius:4 },
+      { label:'Min target (4)', data:levels.map(()=>4), type:'line', borderColor:'rgba(74,222,128,0.6)', borderDash:[4,3], pointRadius:0, borderWidth:1.5 },
+      { label:'Max target (8)', data:levels.map(()=>8), type:'line', borderColor:'rgba(245,165,36,0.6)', borderDash:[4,3], pointRadius:0, borderWidth:1.5 },
+    ]},
+    options: baseOpts()
+  });
+
+  // Distribution histogram
+  const buckets = ['1','2','3','4–5','6–7','8–9','10+'];
+  const bucketCounts = buckets.map((b,i) => {
+    if (i===0) return spans.filter(s=>s===1).length;
+    if (i===1) return spans.filter(s=>s===2).length;
+    if (i===2) return spans.filter(s=>s===3).length;
+    if (i===3) return spans.filter(s=>s>=4&&s<=5).length;
+    if (i===4) return spans.filter(s=>s>=6&&s<=7).length;
+    if (i===5) return spans.filter(s=>s>=8&&s<=9).length;
+    return spans.filter(s=>s>=10).length;
+  });
+  makeChart('chart-o1-dist', {
+    type:'bar',
+    data:{ labels:buckets, datasets:[{ label:'# Managers', data:bucketCounts, backgroundColor:buckets.map((_,i)=>i>=3&&i<=4?'rgba(74,222,128,0.75)':'rgba(251,113,133,0.65)'), borderRadius:4 }]},
+    options: baseOpts({ plugins:{ legend:{display:false} } })
+  });
+
+  // By department
+  const depts = [...new Set(rows.map(r=>getStr(r,'department')).filter(Boolean))];
+  const avgSpanByDept = depts.map(dept => {
+    const mgrIdsInDept = rows.filter(r=>getStr(r,'department')===dept).map(r=>getStr(r,'employeeId'));
+    const spansInDept = mgrIdsInDept.map(id=>spanMap[id]).filter(v=>v!==undefined);
+    return spansInDept.length ? spansInDept.reduce((a,b)=>a+b,0)/spansInDept.length : 0;
+  });
+  makeChart('chart-o1-dept', {
+    type:'bar',
+    data:{ labels:depts, datasets:[{ label:'Avg span', data:avgSpanByDept, backgroundColor:'rgba(251,113,133,0.75)', borderRadius:4 }]},
+    options: baseOpts({ plugins:{ legend:{display:false} } })
+  });
+}
+
+// ── O2 Layer Benchmarking ─────────────────────────────────────
+function renderO2() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const levels = [...new Set(rows.map(r=>getStr(r,'level')).filter(Boolean))].sort();
+  const countByLevel = levels.map(lvl=>rows.filter(r=>getStr(r,'level')===lvl).length);
+  const total = rows.length;
+
+  // Managers = anyone who appears as a managerId
+  const mgrSet = new Set(rows.map(r=>getStr(r,'managerId')).filter(Boolean));
+  const managerCount = rows.filter(r=>mgrSet.has(getStr(r,'employeeId'))).length;
+  const icCount = total - managerCount;
+  const ratio = managerCount ? (icCount/managerCount).toFixed(1) : '—';
+
+  document.getElementById('o2-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Total Headcount</div><div class="kpi-value">${total.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">IC:Manager Ratio</div><div class="kpi-value">${ratio}:1</div><div class="kpi-sub">Target: 5–8:1</div></div>
+    <div class="kpi-card"><div class="kpi-label">Managers</div><div class="kpi-value">${managerCount}</div><div class="kpi-sub">${(managerCount/total*100).toFixed(0)}% of headcount</div></div>
+    <div class="kpi-card"><div class="kpi-label">Org Layers</div><div class="kpi-value">${levels.length}</div></div>
+  `;
+
+  makeChart('chart-o2-pyramid', {
+    type:'bar',
+    data:{ labels:levels.slice().reverse(), datasets:[{ label:'Headcount', data:countByLevel.slice().reverse(), backgroundColor:'rgba(251,113,133,0.75)', borderRadius:4 }]},
+    options: baseOpts({ indexAxis:'y', plugins:{legend:{display:false}} })
+  });
+
+  makeChart('chart-o2-split', {
+    type:'doughnut',
+    data:{ labels:['Individual Contributors','Managers'], datasets:[{ data:[icCount,managerCount], backgroundColor:['rgba(34,211,184,0.8)','rgba(251,113,133,0.8)'], borderWidth:0 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{color:'#9ba6ba',font:{family:"'DM Sans'",size:11}} }, tooltip:{ backgroundColor:'#10151e', borderColor:'#2a3142', borderWidth:1, titleColor:'#e6e8ee', bodyColor:'#9ba6ba' } } }
+  });
+}
+
+// ── O3 Attrition Analysis ─────────────────────────────────────
+function renderO3() {
+  const rows = AppState.rows;
+  if (!rows.length||!col('status')) {
+    document.getElementById('o3-kpis').innerHTML='<div class="callout">Map the Status column (active/left) to enable attrition analysis.</div>'; return;
+  }
+  const isLeft = r => {
+    const s = getStr(r,'status').toLowerCase();
+    return s==='left'||s==='0'||s==='inactive'||s==='terminated'||s==='attrited';
+  };
+  const total = rows.length;
+  const attrited = rows.filter(isLeft).length;
+  const rate = (attrited/total)*100;
+
+  document.getElementById('o3-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Overall Attrition</div><div class="kpi-value ${rate>20?'kpi-neg':'kpi-pos'}">${rate.toFixed(1)}%</div><div class="kpi-sub">Benchmark: &lt;20%</div></div>
+    <div class="kpi-card"><div class="kpi-label">Employees Left</div><div class="kpi-value">${attrited}</div><div class="kpi-sub">of ${total} total</div></div>
+    <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value kpi-pos">${total-attrited}</div></div>
+  `;
+
+  const depts = [...new Set(rows.map(r=>getStr(r,'department')).filter(Boolean))].sort();
+  const deptRates = depts.map(d => {
+    const dr = rows.filter(r=>getStr(r,'department')===d);
+    return dr.length ? (dr.filter(isLeft).length/dr.length)*100 : 0;
+  });
+  makeChart('chart-o3-dept', {
+    type:'bar',
+    data:{ labels:depts, datasets:[
+      { label:'Attrition %', data:deptRates, backgroundColor:deptRates.map(v=>v>20?'rgba(251,113,133,0.8)':'rgba(74,222,128,0.7)'), borderRadius:4 },
+      { label:'20% benchmark', data:depts.map(()=>20), type:'line', borderColor:'rgba(245,165,36,0.7)', borderDash:[4,3], pointRadius:0, borderWidth:1.5 },
+    ]},
+    options: baseOpts({ scales:{ y:{ ticks:{ callback:v=>v+'%', color:'#9ba6ba', font:{family:"'DM Sans'",size:10} }, grid:{color:'rgba(42,49,66,0.6)'} }, x:{ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}},grid:{color:'rgba(42,49,66,0.6)'}} } })
+  });
+
+  const levels = [...new Set(rows.map(r=>getStr(r,'level')).filter(Boolean))].sort();
+  const levelRates = levels.map(l => {
+    const lr = rows.filter(r=>getStr(r,'level')===l);
+    return lr.length ? (lr.filter(isLeft).length/lr.length)*100 : 0;
+  });
+  makeChart('chart-o3-level', {
+    type:'bar',
+    data:{ labels:levels, datasets:[
+      { label:'Attrition %', data:levelRates, backgroundColor:levelRates.map(v=>v>20?'rgba(251,113,133,0.8)':'rgba(74,222,128,0.7)'), borderRadius:4 },
+      { label:'20% benchmark', data:levels.map(()=>20), type:'line', borderColor:'rgba(245,165,36,0.7)', borderDash:[4,3], pointRadius:0, borderWidth:1.5 },
+    ]},
+    options: baseOpts({ scales:{ y:{ ticks:{ callback:v=>v+'%', color:'#9ba6ba', font:{family:"'DM Sans'",size:10} }, grid:{color:'rgba(42,49,66,0.6)'} }, x:{ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}},grid:{color:'rgba(42,49,66,0.6)'}} } })
+  });
+
+  const bands = ['0–12 mo','13–24 mo','25–36 mo','37–60 mo','60+ mo'];
+  const bandRanges = [[0,12],[13,24],[25,36],[37,60],[61,999]];
+  const tenureRates = bandRanges.map(([lo,hi]) => {
+    const br = rows.filter(r => { const t=getNum(r,'tenure'); return t!==null&&t>=lo&&t<=hi; });
+    return br.length ? (br.filter(isLeft).length/br.length)*100 : null;
+  });
+  makeChart('chart-o3-tenure', {
+    type:'bar',
+    data:{ labels:bands, datasets:[{ label:'Attrition % by tenure', data:tenureRates, backgroundColor:'rgba(167,139,250,0.75)', borderRadius:4 }]},
+    options: baseOpts({ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>v+'%', color:'#9ba6ba', font:{family:"'DM Sans'",size:10} }, grid:{color:'rgba(42,49,66,0.6)'} }, x:{ticks:{color:'#9ba6ba',font:{family:"'DM Sans'",size:10}},grid:{color:'rgba(42,49,66,0.6)'}} } })
+  });
+}
+
+// ── O4 Attrition Heatmap ──────────────────────────────────────
+function renderO4() {
+  const rows = AppState.rows;
+  if (!rows.length||!col('status')) {
+    document.getElementById('o4-heatmap').innerHTML='<div class="callout">Map Department, Level, and Status columns to enable the heatmap.</div>'; return;
+  }
+  const isLeft = r => { const s=getStr(r,'status').toLowerCase(); return s==='left'||s==='0'||s==='inactive'||s==='terminated'||s==='attrited'; };
+  const depts = [...new Set(rows.map(r=>getStr(r,'department')).filter(Boolean))].sort();
+  const levels = [...new Set(rows.map(r=>getStr(r,'level')).filter(Boolean))].sort();
+
+  // Build rate matrix
+  const matrix = depts.map(dept => levels.map(lvl => {
+    const cell = rows.filter(r=>getStr(r,'department')===dept&&getStr(r,'level')===lvl);
+    if (cell.length < 3) return null;
+    return { rate:(cell.filter(isLeft).length/cell.length)*100, n:cell.length };
+  }));
+
+  const allRates = matrix.flat().filter(c=>c!==null).map(c=>c.rate);
+  const maxRate = Math.max(...allRates, 30);
+
+  let html = `<div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:4px;min-width:100%">
+    <thead><tr><th style="font-size:10px;color:var(--muted);padding:4px 8px;text-align:left">Dept \ Level</th>
+    ${levels.map(l=>`<th class="hm-header">${l}</th>`).join('')}</tr></thead><tbody>`;
+  depts.forEach((dept,di) => {
+    html += `<tr><td style="font-size:11px;color:var(--text2);padding:4px 8px;white-space:nowrap">${dept}</td>`;
+    levels.forEach((_,li) => {
+      const cell = matrix[di][li];
+      if (!cell) { html += `<td style="background:var(--surface3);border-radius:4px;padding:8px 10px;font-size:10px;color:var(--dim);text-align:center">—</td>`; return; }
+      const intensity = cell.rate / maxRate;
+      const r = Math.round(251 * intensity);
+      const g = Math.round(113 * (1-intensity) + 74 * intensity);
+      const b = Math.round(133 * intensity);
+      const bg = `rgba(${r},${g},${b},${0.2+intensity*0.6})`;
+      const textCol = intensity > 0.5 ? '#e6e8ee' : '#9ba6ba';
+      html += `<td style="background:${bg};border-radius:4px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:${textCol};text-align:center;cursor:default" title="${dept} ${levels[li]}: ${cell.rate.toFixed(1)}% attrition (n=${cell.n})">${cell.rate.toFixed(0)}%</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += `<div style="margin-top:12px;font-size:10px;color:var(--dim);font-family:var(--mono)">Colour intensity = attrition rate. Cells with &lt;3 employees shown as —. Hover for exact values.</div>`;
+  document.getElementById('o4-heatmap').innerHTML = html;
+}
+
+// ── O5 Capability Mapping ─────────────────────────────────────
+function renderO5() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+  const REV_GEN = /store|sales|e.?comm|commercial|revenue|retail|customer/i;
+  const SUPPORT  = /hr|finance|supply|logistics|technology|tech|it/i;
+  const OVERHEAD = /real.?estate|legal|admin|facility|compliance|corporate/i;
+
+  const classify = r => {
+    const dept = getStr(r,'department');
+    if (REV_GEN.test(dept)) return 'Revenue-generating';
+    if (SUPPORT.test(dept)) return 'Support';
+    if (OVERHEAD.test(dept)) return 'Overhead';
+    return 'Support';
+  };
+
+  const cats = ['Revenue-generating','Support','Overhead'];
+  const counts = cats.map(c=>rows.filter(r=>classify(r)===c).length);
+  const total = rows.length;
+
+  document.getElementById('o5-kpis').innerHTML = cats.map((c,i)=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${c}</div>
+      <div class="kpi-value">${counts[i]}</div>
+      <div class="kpi-sub">${(counts[i]/total*100).toFixed(0)}% of headcount</div>
+    </div>`).join('');
+
+  const colors = ['rgba(74,222,128,0.8)','rgba(96,165,250,0.8)','rgba(251,113,133,0.8)'];
+  makeChart('chart-o5-mix', {
+    type:'doughnut',
+    data:{ labels:cats, datasets:[{ data:counts, backgroundColor:colors, borderWidth:0 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{color:'#9ba6ba',font:{family:"'DM Sans'",size:11}} }, tooltip:{ backgroundColor:'#10151e', borderColor:'#2a3142', borderWidth:1, titleColor:'#e6e8ee', bodyColor:'#9ba6ba' } } }
+  });
+
+  const depts = [...new Set(rows.map(r=>getStr(r,'department')).filter(Boolean))].sort();
+  const deptCounts = depts.map(d=>rows.filter(r=>getStr(r,'department')===d).length);
+  const deptColors = depts.map(d => {
+    const c = classify({department:d});
+    if (c==='Revenue-generating') return 'rgba(74,222,128,0.75)';
+    if (c==='Support') return 'rgba(96,165,250,0.75)';
+    return 'rgba(251,113,133,0.75)';
+  });
+  makeChart('chart-o5-bar', {
+    type:'bar',
+    data:{ labels:depts, datasets:[{ label:'Headcount', data:deptCounts, backgroundColor:deptColors, borderRadius:4 }]},
+    options: baseOpts({ indexAxis:'y', plugins:{legend:{display:false}} })
+  });
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportXLSX() {
+  if (!AppState.mapped){showToast('Load and map data first','error');return;}
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(AppState.rows), 'Org Data');
+  XLSX.writeFile(wb,'meridian_org_export.xlsx');
+  showToast('XLSX exported','success');
+}
+function exportPDF() {
+  if (!AppState.mapped){showToast('Load and map data first','error');return;}
   showToast('Generating PDF…');
-  try{
-    const{jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    doc.setFillColor(13,17,23);doc.rect(0,0,210,297,'F');
-    doc.setTextColor(251,113,133);doc.setFontSize(8);doc.text('MERIDIAN ORG',20,20);
-    doc.setTextColor(230,232,238);doc.setFontSize(22);doc.text('HR & Org Analytics Report',20,32);
-    doc.setFontSize(9);doc.setTextColor(155,166,186);
-    doc.text('Source: '+(AppState.source||'—'),20,42);
-    doc.text('Employees: '+AppState.rows.length,20,49);
-    doc.text('Generated: '+new Date().toLocaleDateString(),20,56);
-    doc.setFontSize(6);doc.setTextColor(93,102,121);
-    doc.text('Generated by Meridian Org · archishman.com/meridian/org',20,285);
-    doc.save('meridian_org_report.pdf');showToast('PDF exported','success');
-  }catch(e){showToast('Export error: '+e.message,'error');}
+  html2canvas(document.getElementById('panel-analyses'),{background:'#0d1117',scale:1.2}).then(canvas=>{
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const w=pdf.internal.pageSize.getWidth();
+    pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,w,(canvas.height*w)/canvas.width);
+    pdf.save('meridian_org.pdf');
+    showToast('PDF exported','success');
+  });
 }
 
-window.addEventListener('storage',e=>{if(e.key==='meridian_handoff'&&e.newValue){try{const h=JSON.parse(e.newValue);if(h.targetModule==='org'&&h.rows?.length){initData(h.rows,h.source||'Meridian Bridge');showToast('Dataset received from Bridge','success');}}catch(err){}}});
-window.addEventListener('DOMContentLoaded',()=>{const h=sessionStorage.getItem('meridian_handoff');if(h){try{const payload=JSON.parse(h);if(payload.rows?.length&&payload.targetModule==='org'){initData(payload.rows,payload.source||'Meridian Bridge');}}catch(e){}}});
+// ── AppHandoff ────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const raw = sessionStorage.getItem('meridian_handoff');
+  if (!raw) return;
+  try {
+    const h = JSON.parse(raw);
+    if (h.targetModule==='org'&&h.rows?.length) {
+      AppState.rows=h.rows; AppState.columns=h.columns||Object.keys(h.rows[0]);
+      document.getElementById('ctx-dataset').textContent='From Meridian Bridge';
+      document.getElementById('ctx-rows').textContent=h.rows.length.toLocaleString();
+      document.getElementById('step1').className='step done';
+      document.getElementById('step2').className='step active';
+      if (h.schema){AppState.schema=h.schema;AppState.mapped=true;showAnalyses();}
+      else showSchemaWizard();
+      sessionStorage.removeItem('meridian_handoff');
+      showToast('Data received from Meridian Bridge','success');
+    }
+  } catch(e){}
+});
 </script>
 </body>
 </html>

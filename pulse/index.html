@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Pulse — Consumer Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#10151e;--surface2:#161b25;--surface3:#1c2230;
+  --border:#1c2230;--border2:#2a3142;
+  --text:#e6e8ee;--text2:#c0c8d8;--muted:#9ba6ba;--dim:#5d6679;
+  --accent:#a78bfa;--accent-dim:rgba(167,139,250,0.10);--accent-bd:rgba(167,139,250,0.25);
+  --teal:#22d3b8;--teal-dim:rgba(34,211,184,0.08);
+  --success:#22c55e;--success-bg:rgba(34,197,94,0.12);
+  --warn:#f5a524;--warn-bg:rgba(245,165,36,0.10);--warn-bd:rgba(245,165,36,0.3);
+  --danger:#ef4444;--danger-bg:rgba(239,68,68,0.12);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;display:flex;flex-direction:column}
+
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;z-index:20;position:sticky;top:0}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;
+  display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:14px;height:14px;fill:#0d1117}
+.logo-name{font-size:14px;font-weight:600;color:var(--text)}
+.logo-module{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:0.06em;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all 0.1s;white-space:nowrap}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
+.btn-primary:hover{opacity:0.9}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+.privacy-bar{background:rgba(167,139,250,0.06);border-bottom:1px solid var(--accent-bd);
+  padding:5px 20px;font-size:10px;font-family:var(--mono);color:var(--accent);
+  letter-spacing:0.03em;flex-shrink:0;display:flex;align-items:center;gap:8px}
+
+.context-bar{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;font-size:11px;flex-shrink:0;flex-wrap:wrap}
+.ctx-item{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.ctx-item strong{color:var(--text2);font-weight:500}
+.ctx-dot{width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0}
+.ctx-dot.empty{background:var(--dim)}
+.ctx-dot.warn{background:var(--warn)}
+
+.app-body{display:flex;flex:1;overflow:hidden}
+
+.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-section{padding:12px 14px 4px;font-size:9px;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--dim)}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;
+  border-left:2px solid transparent;transition:all 0.1s;font-size:12px;color:var(--muted)}
+.sb-item:hover{color:var(--text);background:var(--surface2)}
+.sb-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-dim)}
+.sb-item .sb-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.sb-item .sb-badge{font-size:9px;font-family:var(--mono);margin-left:auto;
+  padding:1px 5px;border-radius:3px;background:var(--surface3);color:var(--dim)}
+.sb-item.active .sb-badge{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-bd)}
+
+.main-panel{flex:1;overflow-y:auto}
+.module-panel{display:none;padding:24px 28px;max-width:1100px}
+.module-panel.active{display:block}
+
+.module-header{margin-bottom:24px}
+.module-eyebrow{font-family:var(--mono);font-size:10px;color:var(--accent);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.module-title{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--text);
+  margin-bottom:6px;line-height:1.2}
+.module-desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:680px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px}
+.stat-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:600;color:var(--text);font-family:var(--mono);line-height:1}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.stat-card.good{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)}
+.stat-card.good .stat-value{color:var(--success)}
+.stat-card.warn{border-color:var(--warn-bd);background:var(--warn-bg)}
+.stat-card.warn .stat-value{color:var(--warn)}
+.stat-card.danger{border-color:rgba(239,68,68,0.3);background:var(--danger-bg)}
+.stat-card.danger .stat-value{color:var(--danger)}
+.stat-card.accent{border-color:var(--accent-bd);background:var(--accent-dim)}
+.stat-card.accent .stat-value{color:var(--accent)}
+
+.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin:16px 0}
+.chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.chart-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
+
+.section-divider{display:flex;align-items:center;gap:10px;margin:24px 0 16px;
+  font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.analysis-table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+.analysis-table th{background:var(--surface3);padding:8px 12px;text-align:left;font-weight:500;
+  font-size:10px;font-family:var(--mono);letter-spacing:0.04em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--border2)}
+.analysis-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+.analysis-table tr:last-child td{border-bottom:none}
+.analysis-table tr:hover td{background:var(--surface3)}
+
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-weight:500}
+.tag-good{background:rgba(34,197,94,0.15);color:var(--success)}
+.tag-warn{background:var(--warn-bg);color:var(--warn)}
+.tag-danger{background:var(--danger-bg);color:var(--danger)}
+.tag-accent{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-bd)}
+.tag-neutral{background:var(--surface3);color:var(--muted)}
+
+.controls-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.controls-row select,.controls-row input[type=text]{border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface2);color:var(--text);font-family:var(--sans);font-size:12px;
+  padding:6px 10px;outline:none}
+.controls-row select:focus{border-color:var(--accent)}
+.ctrl-label{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* RFM grid */
+.rfm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.rfm-cell{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px;text-align:center}
+.rfm-cell.highlight{border-color:var(--accent-bd);background:var(--accent-dim)}
+.rfm-segment-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.rfm-count{font-size:20px;font-weight:600;font-family:var(--mono);color:var(--accent)}
+.rfm-pct{font-size:10px;color:var(--muted);margin-top:2px}
+.rfm-desc{font-size:10px;color:var(--dim);margin-top:4px;line-height:1.4}
+
+/* Churn risk bar */
+.risk-bar-wrap{display:flex;align-items:center;gap:8px}
+.risk-bar-bg{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.risk-bar-fill{height:100%;border-radius:3px;transition:width 0.3s}
+
+/* Cohort heatmap */
+.cohort-table{width:100%;border-collapse:collapse;font-size:11px}
+.cohort-table th{padding:6px 10px;text-align:center;font-size:9px;font-family:var(--mono);
+  color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;border-bottom:1px solid var(--border2)}
+.cohort-table td{padding:6px 10px;text-align:center;font-family:var(--mono);font-size:11px;border:1px solid var(--border)}
+.cohort-label{text-align:left!important;font-family:var(--sans)!important;font-size:11px!important;color:var(--text2)!important}
+
+/* CLTV tiers */
+.cltv-tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.cltv-tier{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px}
+.tier-name{font-size:11px;font-weight:600;margin-bottom:4px}
+.tier-count{font-size:18px;font-weight:600;font-family:var(--mono)}
+.tier-value{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* Schema overlay */
+.schema-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+  opacity:0;pointer-events:none;transition:opacity 0.15s}
+.schema-overlay.open{opacity:1;pointer-events:all}
+.schema-modal{background:var(--surface);border-radius:var(--radius-lg);
+  width:100%;max-width:580px;max-height:85vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,0.4)}
+.schema-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px}
+.schema-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px}
+.schema-field label{font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px}
+.schema-field .sf-sub{font-size:10px;color:var(--dim);margin-bottom:5px}
+.schema-field select{width:100%;border:1px solid var(--border2);border-radius:5px;
+  background:var(--surface2);color:var(--text);font-family:var(--sans);font-size:11px;padding:5px 8px;outline:none}
+.schema-field select:focus{border-color:var(--accent)}
+
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.5}
+.empty-title{font-size:16px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.6;max-width:380px;margin:0 auto 20px}
+
+.callout{border-left:3px solid var(--accent);background:var(--accent-dim);
+  border-radius:0 6px 6px 0;padding:12px 16px;margin:12px 0;font-size:12px;color:var(--text2);line-height:1.6}
+.callout strong{color:var(--accent)}
+.callout.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+.callout.warn strong{color:var(--warn)}
+
+.export-bar{display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--border);margin-top:24px}
+.export-bar .export-label{font-size:11px;color:var(--muted);margin-right:4px}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);
+  border:1px solid var(--border2);border-radius:8px;padding:10px 16px;
+  font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  opacity:0;transform:translateY(8px);transition:all 0.2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left:3px solid var(--success)}
+.toast.warn{border-left:3px solid var(--warn)}
+.toast.error{border-left:3px solid var(--danger)}
+
+/* Propensity score gauge */
+.gauge-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gauge-label{font-size:11px;color:var(--text2);min-width:140px}
+.gauge-bar{flex:1;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:4px}
+.gauge-val{font-family:var(--mono);font-size:11px;color:var(--accent);min-width:36px;text-align:right}
+
+/* Segment migration */
+.migration-matrix{overflow-x:auto}
+.migration-matrix table{border-collapse:collapse;font-size:11px;font-family:var(--mono)}
+.migration-matrix th,.migration-matrix td{padding:7px 12px;border:1px solid var(--border2);text-align:center}
+.migration-matrix th{background:var(--surface3);color:var(--muted);font-size:9px;letter-spacing:0.04em;text-transform:uppercase}
+.migration-matrix .diag{background:rgba(167,139,250,0.15);color:var(--accent);font-weight:600}
+.migration-matrix .high-exit{background:rgba(239,68,68,0.15);color:var(--danger)}
+.migration-matrix .row-label{text-align:left;font-family:var(--sans);color:var(--text2);font-size:11px;white-space:nowrap}
+
+@media(max-width:800px){.sidebar{display:none}.schema-grid{grid-template-columns:1fr}.rfm-grid{grid-template-columns:1fr 1fr}.cltv-tiers{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 5h2v5H7zm0 6h2v2H7z"/></svg>
+    </div>
+    <div>
+      <div class="logo-name">Meridian</div>
+      <div class="logo-module">Pulse</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <button class="btn btn-sm" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
+    <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
+    <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
+    <a href="../" class="btn btn-sm">⬡ Meridian</a>
+  </div>
+</div>
+
+<div class="privacy-bar">⊕ Your data never leaves this browser — all ML runs locally · zero server · zero upload</div>
+
+<div class="context-bar" id="context-bar">
+  <span class="ctx-item"><span class="ctx-dot empty" id="ctx-dot"></span><strong id="ctx-rows">No data</strong></span>
+  <span class="ctx-item">Customers: <strong id="ctx-customers">—</strong></span>
+  <span class="ctx-item">Period: <strong id="ctx-period">—</strong></span>
+  <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions</strong></span>
+  <span style="margin-left:auto">
+    <button class="btn btn-sm" onclick="loadDemoData()">Load Renova demo</button>
+  </span>
+</div>
+
+<div class="app-body">
+
+<nav class="sidebar">
+  <div class="sb-section">Segmentation</div>
+  <div class="sb-item active" onclick="showModule('rfm')" id="nav-rfm">
+    <span class="sb-icon">⬟</span>RFM segments
+    <span class="sb-badge">P1</span>
+  </div>
+  <div class="sb-item" onclick="showModule('cltv')" id="nav-cltv">
+    <span class="sb-icon">◎</span>CLTV model
+    <span class="sb-badge">P2</span>
+  </div>
+  <div class="sb-item" onclick="showModule('cohort')" id="nav-cohort">
+    <span class="sb-icon">⊞</span>Cohort retention
+    <span class="sb-badge">P3</span>
+  </div>
+  <div class="sb-section">Predictive</div>
+  <div class="sb-item" onclick="showModule('churn')" id="nav-churn">
+    <span class="sb-icon">⚠</span>Churn prediction
+    <span class="sb-badge">P4</span>
+  </div>
+  <div class="sb-item" onclick="showModule('propensity')" id="nav-propensity">
+    <span class="sb-icon">↗</span>Propensity scoring
+    <span class="sb-badge">P5</span>
+  </div>
+  <div class="sb-section">Intelligence</div>
+  <div class="sb-item" onclick="showModule('migration')" id="nav-migration">
+    <span class="sb-icon">⟳</span>Segment migration
+    <span class="sb-badge">P6</span>
+  </div>
+  <div class="sb-item" onclick="showModule('acquisition')" id="nav-acquisition">
+    <span class="sb-icon">⊕</span>Acq vs retention
+    <span class="sb-badge">P7</span>
+  </div>
+</nav>
+
+<div class="main-panel" id="main-panel">
+
+<!-- P1 — RFM SEGMENTATION -->
+<div class="module-panel active" id="panel-rfm">
+  <div class="module-header">
+    <div class="module-eyebrow">P1 — RFM Segmentation</div>
+    <div class="module-title">Who are your most valuable customers?</div>
+    <div class="module-desc">Segments every customer by Recency (days since last purchase), Frequency (number of purchases), and Monetary value. The foundational consumer analytics framework — used at Mahindra to segment 2M+ customers across the AFS portfolio.</div>
+  </div>
+  <div id="rfm-empty" class="empty-state">
+    <div class="empty-icon">⬟</div>
+    <div class="empty-title">Load customer transaction data</div>
+    <div class="empty-sub">Requires customer ID, transaction date, and transaction value. Load the Renova demo to explore immediately.</div>
+    <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
+  </div>
+  <div id="rfm-content" style="display:none">
+    <div class="stat-grid" id="rfm-stats"></div>
+    <div class="rfm-grid" id="rfm-segment-grid"></div>
+    <div class="chart-card">
+      <div class="chart-title">RFM segment distribution</div>
+      <div class="chart-sub">Customer count and revenue share by segment</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="position:relative;height:260px"><canvas id="rfm-count-chart"></canvas></div>
+        <div style="position:relative;height:260px"><canvas id="rfm-revenue-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="section-divider">Segment detail</div>
+    <div id="rfm-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportRFMXLSX()">↓ RFM scores XLSX</button>
+      <button class="btn btn-sm" onclick="exportReport()">↗ PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- P2 — CLTV MODEL -->
+<div class="module-panel" id="panel-cltv">
+  <div class="module-header">
+    <div class="module-eyebrow">P2 — Customer Lifetime Value</div>
+    <div class="module-title">What is each customer worth over their lifetime?</div>
+    <div class="module-desc">Estimates CLTV using a recency-frequency-monetary model calibrated to your transaction data. Segments customers into four lifetime value tiers and identifies the top-value cohort driving disproportionate revenue.</div>
+  </div>
+  <div id="cltv-empty" class="empty-state">
+    <div class="empty-icon">◎</div>
+    <div class="empty-title">Load data to compute CLTV</div>
+    <div class="empty-sub">Requires customer ID, transaction date, and transaction value dimensions.</div>
+  </div>
+  <div id="cltv-content" style="display:none">
+    <div class="controls-row">
+      <span class="ctrl-label">Forecast horizon:</span>
+      <select id="cltv-horizon" onchange="renderCLTV()">
+        <option value="12">12 months</option>
+        <option value="24" selected>24 months</option>
+        <option value="36">36 months</option>
+      </select>
+      <span class="ctrl-label">Discount rate (annual):</span>
+      <select id="cltv-discount" onchange="renderCLTV()">
+        <option value="0.10">10%</option>
+        <option value="0.12" selected>12%</option>
+        <option value="0.15">15%</option>
+        <option value="0.18">18%</option>
+      </select>
+    </div>
+    <div class="stat-grid" id="cltv-stats"></div>
+    <div class="cltv-tiers" id="cltv-tiers"></div>
+    <div class="chart-card">
+      <div class="chart-title">CLTV distribution</div>
+      <div class="chart-sub">Customer count by CLTV tier — and the 80/20 concentration check</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="position:relative;height:260px"><canvas id="cltv-dist-chart"></canvas></div>
+        <div style="position:relative;height:260px"><canvas id="cltv-pareto-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Pareto principle in practice:</strong> In most consumer businesses, 20% of customers generate 60–80% of lifetime value. The CLTV Pareto chart above shows your actual concentration. The intervention priority is retaining the top tier — one churned Tier 1 customer costs more to replace than acquiring 10 Tier 4 customers.
+    </div>
+    <div id="cltv-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportCLTVXLSX()">↓ CLTV scores XLSX</button>
+    </div>
+  </div>
+</div>
+
+<!-- P3 — COHORT RETENTION -->
+<div class="module-panel" id="panel-cohort">
+  <div class="module-header">
+    <div class="module-eyebrow">P3 — Cohort Retention Analysis</div>
+    <div class="module-title">Are customers coming back?</div>
+    <div class="module-desc">Tracks what proportion of each acquisition cohort returns in subsequent periods. The single most revealing metric for product-market fit and loyalty programme effectiveness — cohort retention curves that flatten early signal a healthy retained base.</div>
+  </div>
+  <div id="cohort-empty" class="empty-state">
+    <div class="empty-icon">⊞</div>
+    <div class="empty-title">Load data to build cohort table</div>
+    <div class="empty-sub">Requires customer ID and transaction date. Groups customers by acquisition month and tracks period-by-period retention.</div>
+  </div>
+  <div id="cohort-content" style="display:none">
+    <div class="controls-row">
+      <span class="ctrl-label">Cohort by:</span>
+      <select id="cohort-grain" onchange="renderCohort()">
+        <option value="month">Month</option>
+        <option value="quarter">Quarter</option>
+      </select>
+      <span class="ctrl-label">Periods to show:</span>
+      <select id="cohort-periods" onchange="renderCohort()">
+        <option value="6">6</option>
+        <option value="9" selected>9</option>
+        <option value="12">12</option>
+      </select>
+    </div>
+    <div class="stat-grid" id="cohort-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Retention curves by cohort</div>
+      <div class="chart-sub">% of customers from each acquisition cohort still active at period N</div>
+      <div style="position:relative;height:300px"><canvas id="cohort-line-chart"></canvas></div>
+    </div>
+    <div class="section-divider">Cohort heatmap</div>
+    <div class="chart-card">
+      <div class="chart-title">Retention heatmap</div>
+      <div class="chart-sub">Darker = higher retention. Red diagonal = 100% (period 0). Read across each row to see how that cohort retained.</div>
+      <div class="migration-matrix" id="cohort-heatmap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- P4 — CHURN PREDICTION -->
+<div class="module-panel" id="panel-churn">
+  <div class="module-header">
+    <div class="module-eyebrow">P4 — Churn Prediction</div>
+    <div class="module-title">Which customers are about to leave?</div>
+    <div class="module-desc">Scores every customer on churn risk using a logistic regression model trained on recency, frequency, monetary value, and trend signals. Segments customers into High / Medium / Low risk tiers with actionable retention recommendations.</div>
+  </div>
+  <div id="churn-empty" class="empty-state">
+    <div class="empty-icon">⚠</div>
+    <div class="empty-title">Load data to run churn prediction</div>
+    <div class="empty-sub">Churn model requires customer ID, transaction date, and transaction value. The model trains and scores entirely in your browser.</div>
+  </div>
+  <div id="churn-content" style="display:none">
+    <div class="stat-grid" id="churn-stats"></div>
+    <div class="callout warn">
+      <strong>Model approach:</strong> Logistic regression on RFM signals — recency percentile, frequency percentile, monetary percentile, and recency trend (improving or declining). Trained on the loaded dataset using gradient descent. No server, no external model — your data, your browser.
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Churn risk distribution</div>
+      <div class="chart-sub">Customer count by churn risk score bucket</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="position:relative;height:260px"><canvas id="churn-dist-chart"></canvas></div>
+        <div style="position:relative;height:260px"><canvas id="churn-feature-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="controls-row">
+      <span class="ctrl-label">Show:</span>
+      <select id="churn-filter" onchange="renderChurnTable()">
+        <option value="high">High risk only</option>
+        <option value="all">All customers</option>
+        <option value="medium">Medium risk</option>
+      </select>
+      <span class="ctrl-label">Sort by:</span>
+      <select id="churn-sort" onchange="renderChurnTable()">
+        <option value="risk_desc">Highest risk first</option>
+        <option value="value_desc">Highest value first</option>
+      </select>
+    </div>
+    <div id="churn-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportChurnXLSX()">↓ High-risk list XLSX</button>
+    </div>
+  </div>
+</div>
+
+<!-- P5 — PROPENSITY SCORING -->
+<div class="module-panel" id="panel-propensity">
+  <div class="module-header">
+    <div class="module-eyebrow">P5 — Propensity Scoring</div>
+    <div class="module-title">Who is most likely to buy next?</div>
+    <div class="module-desc">Scores customers on their propensity to purchase in the next period — combining purchase recency trend, category affinity, spend trajectory, and seasonal patterns. Powers next-best-action and targeted outreach prioritisation.</div>
+  </div>
+  <div id="propensity-empty" class="empty-state">
+    <div class="empty-icon">↗</div>
+    <div class="empty-title">Load data to run propensity scoring</div>
+    <div class="empty-sub">Works on the same transaction data as RFM. The more purchase history, the more precise the propensity signal.</div>
+  </div>
+  <div id="propensity-content" style="display:none">
+    <div class="stat-grid" id="propensity-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Propensity score distribution</div>
+      <div class="chart-sub">Customers ranked by likelihood to purchase — top decile is your highest-priority outreach list</div>
+      <div style="position:relative;height:260px"><canvas id="propensity-chart"></canvas></div>
+    </div>
+    <div class="section-divider">Top propensity drivers</div>
+    <div id="propensity-drivers"></div>
+    <div class="controls-row" style="margin-top:16px">
+      <span class="ctrl-label">Show top:</span>
+      <select id="prop-n" onchange="renderPropensityTable()">
+        <option value="20">20</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+    <div id="propensity-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportPropensityXLSX()">↓ Propensity list XLSX</button>
+    </div>
+  </div>
+</div>
+
+<!-- P6 — SEGMENT MIGRATION -->
+<div class="module-panel" id="panel-migration">
+  <div class="module-header">
+    <div class="module-eyebrow">P6 — Segment Migration Matrix</div>
+    <div class="module-title">How are customers moving between segments?</div>
+    <div class="module-desc">Tracks how customers have migrated between RFM segments over time — from Champions to At Risk, from Promising to Loyal. The migration matrix reveals whether the customer base is upgrading or degrading, and where the largest movement flows are.</div>
+  </div>
+  <div id="migration-empty" class="empty-state">
+    <div class="empty-icon">⟳</div>
+    <div class="empty-title">Load data to build the migration matrix</div>
+    <div class="empty-sub">Compares RFM segment assignments across two periods to show movement patterns.</div>
+  </div>
+  <div id="migration-content" style="display:none">
+    <div class="stat-grid" id="migration-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Segment migration flow</div>
+      <div class="chart-sub">Net movement between RFM segments (period 1 → period 2). Green = upgrading, Red = degrading.</div>
+      <div style="position:relative;height:300px"><canvas id="migration-chart"></canvas></div>
+    </div>
+    <div class="section-divider">Migration matrix</div>
+    <div class="chart-card" style="padding:16px">
+      <div class="chart-title" style="margin-bottom:12px">Segment transition counts</div>
+      <div class="migration-matrix" id="migration-matrix"></div>
+    </div>
+  </div>
+</div>
+
+<!-- P7 — ACQUISITION VS RETENTION -->
+<div class="module-panel" id="panel-acquisition">
+  <div class="module-header">
+    <div class="module-eyebrow">P7 — Acquisition vs Retention Mix</div>
+    <div class="module-title">Where is growth coming from?</div>
+    <div class="module-desc">Decomposes revenue growth into acquisition (new customers), retention (existing repeat buyers), and reactivation (lapsed customers returning). Answers the strategic question: are we growing by winning new customers, or by deepening existing relationships?</div>
+  </div>
+  <div id="acquisition-empty" class="empty-state">
+    <div class="empty-icon">⊕</div>
+    <div class="empty-title">Load data to analyse growth mix</div>
+    <div class="empty-sub">Requires customer ID and transaction date to classify customers as new, retained, or reactivated in each period.</div>
+  </div>
+  <div id="acquisition-content" style="display:none">
+    <div class="stat-grid" id="acq-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue by customer type — period by period</div>
+      <div class="chart-sub">Stacked: New customers · Retained customers · Reactivated customers</div>
+      <div style="position:relative;height:300px"><canvas id="acq-trend-chart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Growth decomposition</div>
+      <div class="chart-sub">Where did revenue growth come from? Acquisition, retention expansion, reactivation, or churn drag?</div>
+      <div style="position:relative;height:260px"><canvas id="acq-bridge-chart"></canvas></div>
+    </div>
+    <div id="acq-table"></div>
+  </div>
+</div>
+
+</div><!-- main-panel -->
+</div><!-- app-body -->
+
+<!-- Schema overlay -->
+<div class="schema-overlay" id="schema-overlay">
+  <div class="schema-modal">
+    <div class="schema-header">
+      <span style="font-size:18px;color:var(--accent)">◈</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">Consumer schema mapper</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Map your columns to customer analytics dimensions.</div>
+      </div>
+      <button onclick="closeSchemaWizard()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;margin-left:8px">✕</button>
+    </div>
+    <div id="schema-grid" class="schema-grid"></div>
+    <div style="padding:0 20px 18px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeSchemaWizard()">Skip</button>
+      <button class="btn btn-primary" onclick="applySchema()">Apply mapping</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// RENOVA HOME DEMO DATA — 200 customers, 18 months
+// ═══════════════════════════════════════
+const RENOVA_CUSTOMER_CSV = `customer_id,first_purchase_date,last_purchase_date,total_transactions,total_revenue,avg_order_value,category_affinity,channel,tier,city_tier
+RC001,2023-01-15,2024-10-20,18,48200,2678,Paint,Store,Loyalty Gold,T1
+RC002,2023-02-03,2024-11-05,24,92400,3850,Flooring,Online,Loyalty Platinum,T1
+RC003,2023-01-28,2024-09-14,12,28600,2383,Bathroom,Store,Loyalty Silver,T2
+RC004,2023-03-10,2024-10-30,21,71800,3419,Kitchen,Store,Loyalty Gold,T1
+RC005,2023-02-20,2024-06-18,8,14200,1775,Tiles,Online,Loyalty Silver,T2
+RC006,2023-04-05,2024-11-12,28,108000,3857,Flooring,Store,Loyalty Platinum,T1
+RC007,2023-03-22,2024-08-09,10,22400,2240,Paint,Online,Loyalty Silver,T2
+RC008,2023-01-08,2024-11-28,31,134200,4329,Kitchen,Store,Loyalty Platinum,T1
+RC009,2023-05-14,2024-07-22,7,11800,1686,Decor,Online,Member,T2
+RC010,2023-02-28,2024-10-15,16,44600,2788,Bathroom,Store,Loyalty Gold,T1
+RC011,2023-06-01,2024-04-30,5,8200,1640,Lighting,Online,Member,T3
+RC012,2023-03-18,2024-11-20,22,68400,3109,Flooring,Store,Loyalty Gold,T1
+RC013,2023-04-22,2024-09-08,14,38800,2771,Paint,Store,Loyalty Silver,T2
+RC014,2023-01-30,2024-11-18,26,98600,3792,Kitchen,Store,Loyalty Platinum,T1
+RC015,2023-05-08,2024-08-15,9,18200,2022,Tiles,Online,Loyalty Silver,T2
+RC016,2023-06-14,2024-03-20,4,6400,1600,Decor,Online,Member,T3
+RC017,2023-02-12,2024-10-28,19,54200,2853,Bathroom,Store,Loyalty Gold,T1
+RC018,2023-07-01,2024-09-30,11,26800,2436,Flooring,Online,Loyalty Silver,T2
+RC019,2023-03-05,2024-11-10,23,82600,3591,Kitchen,Store,Loyalty Platinum,T1
+RC020,2023-08-20,2024-05-14,6,9800,1633,Paint,Online,Member,T3
+RC021,2023-01-20,2024-10-05,17,46800,2753,Tiles,Store,Loyalty Gold,T2
+RC022,2023-04-10,2024-11-22,25,94200,3768,Flooring,Store,Loyalty Platinum,T1
+RC023,2023-05-28,2024-07-18,8,16600,2075,Bathroom,Online,Loyalty Silver,T2
+RC024,2023-02-16,2024-10-22,20,62400,3120,Kitchen,Store,Loyalty Gold,T1
+RC025,2023-09-04,2024-04-10,5,7600,1520,Decor,Online,Member,T3
+RC026,2023-03-28,2024-11-08,24,88000,3667,Paint,Store,Loyalty Platinum,T1
+RC027,2023-06-22,2024-08-28,10,23600,2360,Lighting,Online,Loyalty Silver,T2
+RC028,2023-01-12,2024-11-30,29,118400,4083,Flooring,Store,Loyalty Platinum,T1
+RC029,2023-07-15,2024-06-20,7,13200,1886,Tiles,Online,Member,T2
+RC030,2023-04-02,2024-10-18,18,52800,2933,Kitchen,Store,Loyalty Gold,T1
+RC031,2023-10-08,2024-03-15,4,5800,1450,Decor,Online,Member,T3
+RC032,2023-02-24,2024-09-28,15,41200,2747,Bathroom,Store,Loyalty Silver,T2
+RC033,2023-05-16,2024-11-15,21,74600,3552,Flooring,Store,Loyalty Gold,T1
+RC034,2023-03-12,2024-10-08,17,49800,2929,Paint,Store,Loyalty Gold,T2
+RC035,2023-08-30,2024-05-22,6,10200,1700,Lighting,Online,Member,T3
+RC036,2023-01-25,2024-11-25,27,104600,3874,Kitchen,Store,Loyalty Platinum,T1
+RC037,2023-06-08,2024-08-18,11,27800,2527,Tiles,Online,Loyalty Silver,T2
+RC038,2023-04-18,2024-10-12,19,56400,2968,Flooring,Store,Loyalty Gold,T1
+RC039,2023-09-20,2024-04-28,5,7200,1440,Decor,Online,Member,T3
+RC040,2023-02-08,2024-11-02,22,78200,3555,Bathroom,Store,Loyalty Gold,T1
+RC041,2023-07-28,2024-07-10,9,19800,2200,Paint,Online,Loyalty Silver,T2
+RC042,2023-03-15,2024-10-25,20,64800,3240,Kitchen,Store,Loyalty Gold,T1
+RC043,2023-05-04,2024-09-18,13,34400,2646,Flooring,Store,Loyalty Silver,T2
+RC044,2023-11-12,2024-02-20,3,4200,1400,Tiles,Online,Member,T3
+RC045,2023-01-18,2024-11-14,25,92000,3680,Paint,Store,Loyalty Platinum,T1
+RC046,2023-06-28,2024-08-05,10,24200,2420,Bathroom,Online,Loyalty Silver,T2
+RC047,2023-04-08,2024-10-20,18,54000,3000,Kitchen,Store,Loyalty Gold,T1
+RC048,2023-08-14,2024-06-08,7,12800,1829,Lighting,Online,Member,T2
+RC049,2023-03-24,2024-11-18,23,84400,3670,Flooring,Store,Loyalty Platinum,T1
+RC050,2023-10-25,2024-04-05,5,8600,1720,Decor,Online,Member,T3
+RC051,2023-02-14,2024-10-28,19,56200,2958,Paint,Store,Loyalty Gold,T2
+RC052,2023-07-08,2024-09-15,12,30800,2567,Tiles,Store,Loyalty Silver,T2
+RC053,2023-05-22,2024-11-05,22,80200,3645,Kitchen,Store,Loyalty Gold,T1
+RC054,2023-04-28,2024-08-22,11,26400,2400,Flooring,Online,Loyalty Silver,T2
+RC055,2023-09-10,2024-03-28,4,6000,1500,Decor,Online,Member,T3
+RC056,2023-01-22,2024-11-22,28,112800,4029,Bathroom,Store,Loyalty Platinum,T1
+RC057,2023-06-15,2024-07-28,9,20400,2267,Paint,Online,Loyalty Silver,T2
+RC058,2023-03-08,2024-10-14,20,66000,3300,Kitchen,Store,Loyalty Gold,T1
+RC059,2023-08-05,2024-05-18,7,13600,1943,Lighting,Online,Member,T2
+RC060,2023-04-14,2024-11-08,21,72800,3467,Flooring,Store,Loyalty Gold,T1
+RC061,2023-11-28,2024-01-15,2,2800,1400,Tiles,Online,Member,T3
+RC062,2023-02-20,2024-09-22,16,44000,2750,Bathroom,Store,Loyalty Silver,T2
+RC063,2023-07-22,2024-08-12,11,28200,2564,Paint,Online,Loyalty Silver,T2
+RC064,2023-05-10,2024-11-12,23,86600,3765,Kitchen,Store,Loyalty Platinum,T1
+RC065,2023-09-28,2024-04-20,5,8000,1600,Decor,Online,Member,T3
+RC066,2023-03-20,2024-10-30,19,58800,3095,Flooring,Store,Loyalty Gold,T1
+RC067,2023-06-02,2024-08-28,10,22800,2280,Tiles,Online,Loyalty Silver,T2
+RC068,2023-01-28,2024-11-28,26,100200,3854,Kitchen,Store,Loyalty Platinum,T1
+RC069,2023-08-18,2024-06-15,7,14400,2057,Paint,Online,Member,T2
+RC070,2023-04-25,2024-10-08,18,52000,2889,Bathroom,Store,Loyalty Gold,T2
+RC071,2023-10-12,2024-03-08,4,5600,1400,Lighting,Online,Member,T3
+RC072,2023-02-28,2024-11-05,21,72200,3438,Flooring,Store,Loyalty Gold,T1
+RC073,2023-07-05,2024-09-05,11,27600,2509,Paint,Online,Loyalty Silver,T2
+RC074,2023-05-18,2024-10-22,20,64400,3220,Kitchen,Store,Loyalty Gold,T1
+RC075,2023-09-15,2024-05-08,6,9400,1567,Decor,Online,Member,T3
+RC076,2023-03-02,2024-11-15,24,90400,3767,Tiles,Store,Loyalty Platinum,T1
+RC077,2023-06-20,2024-08-18,10,24800,2480,Flooring,Online,Loyalty Silver,T2
+RC078,2023-01-15,2024-11-10,28,116000,4143,Kitchen,Store,Loyalty Platinum,T1
+RC079,2023-08-28,2024-07-02,8,16200,2025,Paint,Online,Loyalty Silver,T2
+RC080,2023-04-05,2024-10-18,19,57600,3032,Bathroom,Store,Loyalty Gold,T1
+RC081,2023-11-05,2024-02-08,3,3800,1267,Decor,Online,Member,T3
+RC082,2023-02-18,2024-10-05,18,52800,2933,Flooring,Store,Loyalty Gold,T2
+RC083,2023-07-12,2024-09-22,11,28800,2618,Tiles,Online,Loyalty Silver,T2
+RC084,2023-05-26,2024-11-20,22,80800,3673,Kitchen,Store,Loyalty Gold,T1
+RC085,2023-10-02,2024-04-12,5,7800,1560,Lighting,Online,Member,T3
+RC086,2023-03-14,2024-10-28,20,62000,3100,Paint,Store,Loyalty Gold,T1
+RC087,2023-06-28,2024-08-08,10,23200,2320,Bathroom,Online,Loyalty Silver,T2
+RC088,2023-04-20,2024-11-05,21,74200,3533,Flooring,Store,Loyalty Gold,T1
+RC089,2023-09-08,2024-05-28,6,10600,1767,Decor,Online,Member,T3
+RC090,2023-01-20,2024-11-25,27,108200,4007,Kitchen,Store,Loyalty Platinum,T1
+RC091,2023-08-08,2024-07-18,9,20000,2222,Tiles,Online,Loyalty Silver,T2
+RC092,2023-05-02,2024-10-15,19,58200,3063,Paint,Store,Loyalty Gold,T2
+RC093,2023-07-18,2024-09-10,11,27200,2473,Flooring,Online,Loyalty Silver,T2
+RC094,2023-03-28,2024-11-08,22,78800,3582,Bathroom,Store,Loyalty Gold,T1
+RC095,2023-10-20,2024-03-22,4,5400,1350,Decor,Online,Member,T3
+RC096,2023-02-05,2024-10-22,20,64000,3200,Kitchen,Store,Loyalty Gold,T1
+RC097,2023-06-10,2024-08-25,10,24000,2400,Tiles,Online,Loyalty Silver,T2
+RC098,2023-04-16,2024-11-18,22,80400,3655,Flooring,Store,Loyalty Gold,T1
+RC099,2023-08-25,2024-06-25,7,13000,1857,Paint,Online,Member,T2
+RC100,2023-01-05,2024-11-30,30,128000,4267,Kitchen,Store,Loyalty Platinum,T1`;
+
+// ═══════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════
+const AppState = {
+  rows: [],
+  customers: [],
+  schema: {},
+  source: null,
+  activeModule: 'rfm',
+  charts: {},
+  computed: {},
+};
+
+const CONSUMER_DIMENSIONS = [
+  {key:'customerId',      label:'Customer ID',           sub:'Unique customer identifier',      match:/customer.*id|cust.*id|user.*id|client.*id/i},
+  {key:'firstPurchase',   label:'First purchase date',   sub:'Date of first transaction',       match:/first.*purchase|first.*date|acquisition|onboard|join/i},
+  {key:'lastPurchase',    label:'Last purchase date',    sub:'Date of most recent transaction', match:/last.*purchase|last.*date|recent.*date|latest/i},
+  {key:'totalTransactions',label:'Total transactions',  sub:'Number of purchases',              match:/total.*trans|num.*orders|purchase.*count|freq|orders/i},
+  {key:'totalRevenue',    label:'Total revenue / LTV',   sub:'Total spend to date',             match:/total.*rev|total.*spend|ltv|lifetime.*value|total.*value/i},
+  {key:'avgOrderValue',   label:'Avg order value',       sub:'Average spend per transaction',   match:/avg.*order|aov|avg.*value|avg.*spend/i},
+  {key:'categoryAffinity',label:'Category affinity',    sub:'Primary product category',        match:/category|affinity|segment|product.*type/i},
+  {key:'channel',         label:'Acquisition channel',   sub:'How customer was acquired',       match:/channel|source|medium|acquisition/i},
+  {key:'tier',            label:'Loyalty tier',          sub:'Loyalty programme tier',          match:/tier|loyalty|level|grade/i},
+  {key:'cityTier',        label:'City / geography tier', sub:'Geographic tier classification',  match:/city.*tier|geo.*tier|location.*tier|tier.*city/i},
+];
+
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+const NOW = new Date('2024-12-01');
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 3200);
+}
+
+function fmtK(n) {
+  if (n == null || isNaN(n)) return '—';
+  if (Math.abs(n) >= 1e7) return '₹'+(n/1e7).toFixed(1)+'Cr';
+  if (Math.abs(n) >= 1e5) return '₹'+(n/1e5).toFixed(1)+'L';
+  if (Math.abs(n) >= 1000) return '₹'+(n/1000).toFixed(1)+'K';
+  return '₹'+n.toFixed(0);
+}
+function fmtN(n) { return n == null ? '—' : Number(n).toLocaleString(); }
+function fmtPct(n) { return n == null || isNaN(n) ? '—' : n.toFixed(1)+'%'; }
+function avg(arr) { return arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0; }
+function sum(arr) { return arr.reduce((s,v)=>s+v,0); }
+function median(arr) { if (!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+function percentileRank(val, arr) { return arr.filter(v=>v<=val).length/arr.length; }
+function daysSince(dateStr) {
+  if (!dateStr) return 999;
+  const d = new Date(dateStr);
+  return isNaN(d) ? 999 : Math.round((NOW - d) / 86400000);
+}
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function destroyChart(id) { if (AppState.charts[id]) { AppState.charts[id].destroy(); delete AppState.charts[id]; } }
+function col(key) { return AppState.schema[key] || null; }
+function getVal(row, key) { const c=col(key); if (!c) return null; const v=row[c]; return v!=null&&v!==''?+v:null; }
+function getStr(row, key) { const c=col(key); if (!c) return null; return row[c]!=null?String(row[c]):null; }
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function showModule(id) {
+  document.querySelectorAll('.module-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('panel-'+id)?.classList.add('active');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  AppState.activeModule = id;
+  if (AppState.customers.length) renderModule(id);
+}
+
+function renderModule(id) {
+  switch(id) {
+    case 'rfm':         renderRFM();        break;
+    case 'cltv':        renderCLTV();       break;
+    case 'cohort':      renderCohort();     break;
+    case 'churn':       renderChurn();      break;
+    case 'propensity':  renderPropensity(); break;
+    case 'migration':   renderMigration();  break;
+    case 'acquisition': renderAcquisition();break;
+  }
+}
+
+// ═══════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════
+function handleFileUpload(files) {
+  const file = files[0]; if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  showToast('Loading '+file.name+'…');
+  if (ext==='csv'||ext==='tsv') {
+    Papa.parse(file, { header:true, skipEmptyLines:true, dynamicTyping:true,
+      complete: res => initData(res.data, file.name),
+      error: e => showToast('Parse error: '+e.message,'error') });
+  } else if (ext==='xlsx'||ext==='xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result,{type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      initData(XLSX.utils.sheet_to_json(ws,{defval:null}), file.name);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function loadDemoData() {
+  Papa.parse(RENOVA_CUSTOMER_CSV, { header:true, skipEmptyLines:true, dynamicTyping:true,
+    complete: res => {
+      initData(res.data, 'Renova Home — Loyalty Customer Base (Demo)');
+      showToast('100 Renova customers loaded', 'success');
+    }
+  });
+}
+
+function initData(rows, source) {
+  AppState.rows = rows;
+  AppState.source = source;
+  // Auto-map schema
+  const cols = Object.keys(rows[0]||{});
+  const schema = {};
+  CONSUMER_DIMENSIONS.forEach(d => { const f=cols.find(c=>d.match.test(c)); if (f) schema[d.key]=f; });
+  AppState.schema = schema;
+  // Build customer objects
+  AppState.customers = buildCustomers(rows);
+  AppState.computed = {};
+  updateContextBar();
+  showEmptyStates(false);
+  renderModule(AppState.activeModule);
+  showToast(rows.length.toLocaleString()+' customers loaded · '+Object.keys(schema).length+' dimensions auto-mapped','success');
+}
+
+function buildCustomers(rows) {
+  return rows.map((r,i) => {
+    const id       = getStr(r,'customerId') || String(i);
+    const firstD   = col('firstPurchase') ? r[col('firstPurchase')] : null;
+    const lastD    = col('lastPurchase')  ? r[col('lastPurchase')]  : null;
+    const freq     = getVal(r,'totalTransactions') || 1;
+    const monetary = getVal(r,'totalRevenue') || getVal(r,'avgOrderValue')*freq || 0;
+    const aov      = getVal(r,'avgOrderValue') || (freq>0?monetary/freq:0);
+    const recency  = daysSince(lastD);
+    const tenure   = firstD ? daysSince(firstD) : 365;
+    const category = getStr(r,'categoryAffinity') || '—';
+    const channel  = getStr(r,'channel') || '—';
+    const tier     = getStr(r,'tier') || '—';
+    const city     = getStr(r,'cityTier') || '—';
+    return { id, recency, freq, monetary, aov, tenure, category, channel, tier, city, _raw: r };
+  });
+}
+
+function updateContextBar() {
+  const c = AppState.customers;
+  const dot = document.getElementById('ctx-dot');
+  dot.className = 'ctx-dot'+(c.length?'':' empty');
+  document.getElementById('ctx-rows').textContent  = c.length ? c.length.toLocaleString()+' customers' : 'No data';
+  document.getElementById('ctx-customers').textContent = c.length ? fmtN(c.length) : '—';
+  const revenues = c.map(x=>x.monetary).filter(v=>v>0);
+  document.getElementById('ctx-period').textContent = revenues.length ? 'Total LTV: '+fmtK(sum(revenues)) : '—';
+  document.getElementById('ctx-schema').textContent = Object.keys(AppState.schema).length+' dimensions';
+}
+
+function showEmptyStates(show) {
+  ['rfm','cltv','cohort','churn','propensity','migration','acquisition'].forEach(id => {
+    const e = document.getElementById(id+'-empty');
+    const c = document.getElementById(id+'-content');
+    if (e) e.style.display = show?'':'none';
+    if (c) c.style.display = show?'none':'';
+  });
+}
+
+window.addEventListener('load', () => {
+  try {
+    const raw = sessionStorage.getItem('meridian_handoff');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.targetModule==='pulse'&&p.rows?.length) {
+        initData(p.rows, p.source||'Meridian Bridge');
+        showToast('Dataset received from Meridian Bridge','success');
+      }
+    }
+  } catch(e) {}
+});
+
+// ═══════════════════════════════════════
+// SCHEMA WIZARD
+// ═══════════════════════════════════════
+function openSchemaWizard() {
+  const rows = AppState.rows;
+  if (!rows.length) { showToast('Load data first','warn'); return; }
+  const cols = Object.keys(rows[0]);
+  const grid = document.getElementById('schema-grid');
+  grid.innerHTML = CONSUMER_DIMENSIONS.map(d => {
+    const m = AppState.schema[d.key];
+    return `<div class="schema-field">
+      <label>${d.label}${m?' <span style="color:var(--success)">✓</span>':''}</label>
+      <div class="sf-sub">${d.sub}</div>
+      <select data-dim="${d.key}">
+        <option value="">— skip —</option>
+        ${cols.map(c=>`<option value="${c}"${c===m?' selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('schema-overlay').classList.add('open');
+}
+function closeSchemaWizard() { document.getElementById('schema-overlay').classList.remove('open'); }
+function applySchema() {
+  const map={};
+  document.querySelectorAll('#schema-grid select[data-dim]').forEach(s=>{ if(s.value) map[s.dataset.dim]=s.value; });
+  AppState.schema=map;
+  AppState.customers=buildCustomers(AppState.rows);
+  AppState.computed={};
+  closeSchemaWizard();
+  updateContextBar();
+  showToast(Object.keys(map).length+' dimensions mapped','success');
+  renderModule(AppState.activeModule);
+}
+
+// ═══════════════════════════════════════
+// RFM ENGINE
+// ═══════════════════════════════════════
+function computeRFM() {
+  if (AppState.computed.rfm) return AppState.computed.rfm;
+  const custs = AppState.customers;
+  const recencies  = custs.map(c=>c.recency);
+  const freqs      = custs.map(c=>c.freq);
+  const monetaries = custs.map(c=>c.monetary);
+
+  const rfm = custs.map(c => {
+    // Score 1-5 (1=best recency=lowest days, 1=worst freq/monetary)
+    const rScore = 6 - Math.ceil(percentileRank(c.recency, recencies) * 5);
+    const fScore = Math.ceil(percentileRank(c.freq, freqs) * 5);
+    const mScore = Math.ceil(percentileRank(c.monetary, monetaries) * 5);
+    const rfmStr = `${rScore}${fScore}${mScore}`;
+    const segment = classifyRFM(rScore, fScore, mScore);
+    return { ...c, rScore, fScore, mScore, rfmStr, segment };
+  });
+
+  AppState.computed.rfm = rfm;
+  return rfm;
+}
+
+function classifyRFM(r, f, m) {
+  const avg3 = (r+f+m)/3;
+  if (r>=4 && f>=4 && m>=4) return 'Champions';
+  if (r>=3 && f>=3 && m>=4) return 'Loyal Customers';
+  if (r>=4 && f<=2)          return 'Recent Customers';
+  if (r>=3 && f>=3 && m>=3) return 'Potential Loyalists';
+  if (r>=4 && f>=2 && m>=2) return 'Promising';
+  if (r>=2 && f>=2 && avg3>=3) return 'Needs Attention';
+  if (r<=2 && f>=4 && m>=4)   return 'At Risk';
+  if (r<=2 && f>=3 && m>=3)   return 'Cannot Lose Them';
+  if (r<=2 && f<=2 && m>=2)   return 'Hibernating';
+  return 'Lost';
+}
+
+const RFM_SEGMENT_COLORS = {
+  'Champions':         '#a78bfa',
+  'Loyal Customers':   '#22d3b8',
+  'Recent Customers':  '#60a5fa',
+  'Potential Loyalists':'#4ade80',
+  'Promising':         '#34d399',
+  'Needs Attention':   '#f5a524',
+  'At Risk':           '#fb7185',
+  'Cannot Lose Them':  '#ef4444',
+  'Hibernating':       '#9ba6ba',
+  'Lost':              '#5d6679',
+};
+
+function renderRFM() {
+  const rfm = computeRFM();
+  const total = rfm.length;
+  const totalRev = sum(rfm.map(c=>c.monetary));
+
+  // Group by segment
+  const segments = {};
+  rfm.forEach(c => {
+    if (!segments[c.segment]) segments[c.segment]={count:0,revenue:0,customers:[]};
+    segments[c.segment].count++;
+    segments[c.segment].revenue += c.monetary;
+    segments[c.segment].customers.push(c);
+  });
+
+  const champions = segments['Champions']?.count||0;
+  const atRisk    = segments['At Risk']?.count||0;
+  const cannotLose= segments['Cannot Lose Them']?.count||0;
+
+  document.getElementById('rfm-stats').innerHTML = `
+    <div class="stat-card accent"><div class="stat-label">Total customers</div><div class="stat-value">${fmtN(total)}</div></div>
+    <div class="stat-card good"><div class="stat-label">Champions</div><div class="stat-value">${champions}</div><div class="stat-sub">${fmtPct(champions/total*100)} of base</div></div>
+    <div class="stat-card danger"><div class="stat-label">At Risk</div><div class="stat-value">${atRisk+cannotLose}</div><div class="stat-sub">high-value churn risk</div></div>
+    <div class="stat-card"><div class="stat-label">Avg CLTV</div><div class="stat-value">${fmtK(totalRev/total)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total LTV base</div><div class="stat-value">${fmtK(totalRev)}</div></div>`;
+
+  // Segment grid
+  const SEG_ORDER = ['Champions','Loyal Customers','Potential Loyalists','Recent Customers','Promising','Needs Attention','At Risk','Cannot Lose Them','Hibernating','Lost'];
+  const SEG_DESC  = {
+    'Champions':'Buy often, spent most, bought recently. Reward and retain.',
+    'Loyal Customers':'Consistent buyers, high monetary. Upsell opportunities.',
+    'Potential Loyalists':'Recent with above-average frequency. Nurture to loyalty.',
+    'Recent Customers':'Bought recently, low frequency. Engage early.',
+    'Promising':'Recent with moderate spend. Build the habit.',
+    'Needs Attention':'Average RFM, declining recency. Re-engage now.',
+    'At Risk':'Once high-value, recency declining sharply. Intervene.',
+    'Cannot Lose Them':'Historically highest value, very low recency. Critical.',
+    'Hibernating':'Low recency, some purchase history. Win-back campaign.',
+    'Lost':'Very low recency, infrequent, low value. Accept or reactivate.',
+  };
+
+  document.getElementById('rfm-segment-grid').innerHTML = SEG_ORDER.map(seg => {
+    const s = segments[seg]||{count:0,revenue:0};
+    const highlight = ['Champions','At Risk','Cannot Lose Them'].includes(seg);
+    return `<div class="rfm-cell${highlight?' highlight':''}">
+      <div class="rfm-segment-name" style="color:${RFM_SEGMENT_COLORS[seg]||'var(--text)'}">${seg}</div>
+      <div class="rfm-count">${s.count}</div>
+      <div class="rfm-pct">${fmtPct(s.count/total*100)} · ${fmtK(s.revenue)}</div>
+      <div class="rfm-desc">${SEG_DESC[seg]||''}</div>
+    </div>`;
+  }).join('');
+
+  // Charts
+  const segEntries = SEG_ORDER.filter(s=>segments[s]?.count);
+  destroyChart('rfm-count-chart');
+  const c1 = document.getElementById('rfm-count-chart').getContext('2d');
+  AppState.charts['rfm-count-chart'] = new Chart(c1,{
+    type:'doughnut',
+    data:{
+      labels:segEntries,
+      datasets:[{data:segEntries.map(s=>segments[s].count),
+        backgroundColor:segEntries.map(s=>RFM_SEGMENT_COLORS[s]||'#5d6679'),
+        borderWidth:1,borderColor:'#0d1117'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#9ba6ba',font:{size:10},boxWidth:12}}}}
+  });
+
+  destroyChart('rfm-revenue-chart');
+  const c2 = document.getElementById('rfm-revenue-chart').getContext('2d');
+  AppState.charts['rfm-revenue-chart'] = new Chart(c2,{
+    type:'doughnut',
+    data:{
+      labels:segEntries,
+      datasets:[{data:segEntries.map(s=>segments[s].revenue.toFixed(0)),
+        backgroundColor:segEntries.map(s=>RFM_SEGMENT_COLORS[s]||'#5d6679'),
+        borderWidth:1,borderColor:'#0d1117'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmtK(+ctx.raw)} (${fmtPct(+ctx.raw/totalRev*100)})`}}}}
+  });
+
+  AppState.computed.segments = segments;
+  renderRFMTable(rfm);
+}
+
+function renderRFMTable(rfm) {
+  const sorted = [...rfm].sort((a,b)=>b.monetary-a.monetary).slice(0,50);
+  document.getElementById('rfm-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table class="analysis-table">
+        <thead><tr>
+          <th>Customer</th><th>Segment</th><th>R</th><th>F</th><th>M</th>
+          <th>Recency (days)</th><th>Transactions</th><th>Total LTV</th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map(c=>`<tr>
+            <td style="font-family:var(--mono);font-size:11px">${escHtml(c.id)}</td>
+            <td><span class="tag" style="background:${RFM_SEGMENT_COLORS[c.segment]||'#5d6679'}22;color:${RFM_SEGMENT_COLORS[c.segment]||'#9ba6ba'};border:1px solid ${RFM_SEGMENT_COLORS[c.segment]||'#2a3142'}55">${c.segment}</span></td>
+            <td style="font-family:var(--mono);color:${c.rScore>=4?'var(--success)':c.rScore<=2?'var(--danger)':'var(--text2)'}">${c.rScore}</td>
+            <td style="font-family:var(--mono);color:${c.fScore>=4?'var(--success)':c.fScore<=2?'var(--warn)':'var(--text2)'}">${c.fScore}</td>
+            <td style="font-family:var(--mono);color:${c.mScore>=4?'var(--success)':c.mScore<=2?'var(--warn)':'var(--text2)'}">${c.mScore}</td>
+            <td>${fmtN(c.recency)}</td>
+            <td>${fmtN(c.freq)}</td>
+            <td>${fmtK(c.monetary)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// CLTV MODEL
+// Discounted future value using purchase rate & avg order value
+// ═══════════════════════════════════════
+function computeCLTV(horizonMonths=24, discountRate=0.12) {
+  if (AppState.computed[`cltv_${horizonMonths}_${discountRate}`])
+    return AppState.computed[`cltv_${horizonMonths}_${discountRate}`];
+
+  const custs = AppState.customers;
+  const monthly_dr = Math.pow(1+discountRate, 1/12) - 1;
+
+  const cltv = custs.map(c => {
+    // Purchase rate: transactions per active month
+    const activeMonths = Math.max(1, c.tenure / 30);
+    const purchaseRate = c.freq / activeMonths; // purchases per month
+    // Expected purchases in horizon
+    const expectedPurchases = purchaseRate * horizonMonths;
+    // Discounted value
+    let dcf = 0;
+    for (let t = 1; t <= horizonMonths; t++) {
+      const expected_in_t = purchaseRate;
+      dcf += (expected_in_t * c.aov) / Math.pow(1 + monthly_dr, t);
+    }
+    // Churn adjustment: customers with declining recency get a discount
+    const churnAdj = c.recency > 180 ? 0.5 : c.recency > 90 ? 0.75 : 1.0;
+    const cltvVal = Math.max(0, dcf * churnAdj);
+    const tier = cltvVal > 80000 ? 'Tier 1 — Elite'
+               : cltvVal > 40000 ? 'Tier 2 — High'
+               : cltvVal > 15000 ? 'Tier 3 — Medium'
+               : 'Tier 4 — Base';
+    return { ...c, cltv: cltvVal, tier };
+  });
+
+  AppState.computed[`cltv_${horizonMonths}_${discountRate}`] = cltv;
+  return cltv;
+}
+
+function renderCLTV() {
+  const horizon  = parseInt(document.getElementById('cltv-horizon')?.value||24);
+  const discount = parseFloat(document.getElementById('cltv-discount')?.value||0.12);
+  const data = computeCLTV(horizon, discount);
+  const total = data.length;
+  const totalCLTV = sum(data.map(c=>c.cltv));
+  const avgCLTV   = totalCLTV / total;
+
+  const tiers = {};
+  data.forEach(c => {
+    if (!tiers[c.tier]) tiers[c.tier] = {count:0, cltv:0, color:''};
+    tiers[c.tier].count++;
+    tiers[c.tier].cltv += c.cltv;
+  });
+  const tierColors = {'Tier 1 — Elite':'#a78bfa','Tier 2 — High':'#22d3b8','Tier 3 — Medium':'#f5a524','Tier 4 — Base':'#9ba6ba'};
+  Object.keys(tiers).forEach(t => tiers[t].color = tierColors[t]||'#5d6679');
+
+  document.getElementById('cltv-stats').innerHTML = `
+    <div class="stat-card accent"><div class="stat-label">Total CLTV (${horizon}m)</div><div class="stat-value">${fmtK(totalCLTV)}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg CLTV per customer</div><div class="stat-value">${fmtK(avgCLTV)}</div></div>
+    <div class="stat-card good"><div class="stat-label">Tier 1 share of CLTV</div>
+      <div class="stat-value">${fmtPct((tiers['Tier 1 — Elite']?.cltv||0)/totalCLTV*100)}</div>
+      <div class="stat-sub">${tiers['Tier 1 — Elite']?.count||0} customers</div></div>
+    <div class="stat-card"><div class="stat-label">Horizon</div><div class="stat-value">${horizon}m</div><div class="stat-sub">discount rate: ${(discount*100).toFixed(0)}%</div></div>`;
+
+  const tierOrder = ['Tier 1 — Elite','Tier 2 — High','Tier 3 — Medium','Tier 4 — Base'];
+  document.getElementById('cltv-tiers').innerHTML = tierOrder.map(t => {
+    const d = tiers[t]||{count:0,cltv:0};
+    return `<div class="cltv-tier" style="border-color:${tierColors[t]||'var(--border2)'}44">
+      <div class="tier-name" style="color:${tierColors[t]||'var(--text)'}">${t}</div>
+      <div class="tier-count" style="color:${tierColors[t]||'var(--text)'}">${d.count}</div>
+      <div class="tier-value">CLTV: ${fmtK(d.cltv)}</div>
+      <div class="tier-value" style="color:var(--dim);font-size:10px">${fmtPct(d.cltv/totalCLTV*100)} of total</div>
+    </div>`;
+  }).join('');
+
+  // Distribution chart
+  destroyChart('cltv-dist-chart');
+  const ctx1 = document.getElementById('cltv-dist-chart').getContext('2d');
+  AppState.charts['cltv-dist-chart'] = new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels:tierOrder,
+      datasets:[{label:'Customers',data:tierOrder.map(t=>tiers[t]?.count||0),
+        backgroundColor:tierOrder.map(t=>tierColors[t]||'#5d6679'),borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}}}
+  });
+
+  // Pareto chart
+  const sorted = [...data].sort((a,b)=>b.cltv-a.cltv);
+  const cumRev = [];
+  let running = 0;
+  sorted.forEach(c => { running += c.cltv; cumRev.push(running/totalCLTV*100); });
+  const step = Math.ceil(total/20);
+  const pLabels = [], pData = [];
+  for (let i=0;i<total;i+=step) { pLabels.push(fmtPct((i/total)*100)); pData.push(cumRev[i]?.toFixed(1)||0); }
+
+  destroyChart('cltv-pareto-chart');
+  const ctx2 = document.getElementById('cltv-pareto-chart').getContext('2d');
+  AppState.charts['cltv-pareto-chart'] = new Chart(ctx2,{
+    type:'line',
+    data:{labels:pLabels,datasets:[{
+      label:'Cumulative CLTV %',data:pData,borderColor:'#a78bfa',fill:true,
+      backgroundColor:'rgba(167,139,250,0.1)',tension:0.4,pointRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{title:{display:true,text:'% of customers (sorted by CLTV)',color:'#9ba6ba',font:{size:10}},
+           ticks:{color:'#9ba6ba',font:{size:9}},grid:{color:'#1c2230'}},
+        y:{title:{display:true,text:'Cumulative CLTV %',color:'#9ba6ba',font:{size:10}},
+           ticks:{color:'#9ba6ba',font:{size:10},callback:v=>v+'%'},grid:{color:'#1c2230'}}}}
+  });
+
+  // Table: top 30
+  const top30 = sorted.slice(0,30);
+  document.getElementById('cltv-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr>
+          <th>Customer</th><th>CLTV (${horizon}m)</th><th>Tier</th>
+          <th>Purchase freq/mo</th><th>Avg order</th><th>Recency</th>
+        </tr></thead>
+        <tbody>
+          ${top30.map(c=>`<tr>
+            <td style="font-family:var(--mono);font-size:11px">${escHtml(c.id)}</td>
+            <td style="color:${tierColors[c.tier]||'var(--text2)'}"><strong>${fmtK(c.cltv)}</strong></td>
+            <td><span class="tag" style="background:${tierColors[c.tier]}22;color:${tierColors[c.tier]};border:1px solid ${tierColors[c.tier]}44">${c.tier}</span></td>
+            <td style="font-family:var(--mono)">${(c.freq/Math.max(1,c.tenure/30)).toFixed(2)}</td>
+            <td>${fmtK(c.aov)}</td>
+            <td>${fmtN(c.recency)} days</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  AppState.computed.cltvData = data;
+}
+
+// ═══════════════════════════════════════
+// COHORT RETENTION
+// ═══════════════════════════════════════
+function renderCohort() {
+  const custs = AppState.customers;
+  const grain   = document.getElementById('cohort-grain')?.value||'month';
+  const periods = parseInt(document.getElementById('cohort-periods')?.value||9);
+
+  // Group customers by first-purchase period
+  const getCohortKey = (c) => {
+    const tenure = c.tenure;
+    if (grain==='quarter') {
+      const q = Math.floor((12 - tenure/30) / 3) + 1;
+      return `Q${Math.max(1,Math.min(4,q))} 2024`;
+    }
+    // Map by month based on tenure
+    const monthsAgo = Math.round(tenure/30);
+    const d = new Date(NOW);
+    d.setMonth(d.getMonth() - monthsAgo);
+    return d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'});
+  };
+
+  const cohorts = {};
+  custs.forEach(c => {
+    const key = getCohortKey(c);
+    if (!cohorts[key]) cohorts[key] = [];
+    cohorts[key].push(c);
+  });
+
+  const cohortKeys = Object.keys(cohorts).sort();
+  const maxP = Math.min(periods, cohortKeys.length);
+
+  // Build retention matrix: for each cohort, what % retained at period P?
+  // Proxy: customers with tenure >= P months and recency <= P*30+30 days
+  const matrix = cohortKeys.slice(0,8).map(key => {
+    const customers = cohorts[key];
+    const n = customers.length;
+    const retention = [100]; // period 0
+    for (let p=1; p<=maxP; p++) {
+      const retained = customers.filter(c => {
+        const expectedFreq = c.freq / Math.max(1, c.tenure/30);
+        return c.recency < p*30 + 60 && expectedFreq > 0.3;
+      }).length;
+      retention.push(Math.round(retained/n*100));
+    }
+    return { key, n, retention };
+  });
+
+  // Stats
+  const avgPeriod1 = avg(matrix.map(m=>m.retention[1]||0));
+  const avgPeriod3 = avg(matrix.map(m=>m.retention[3]||0));
+  const avgPeriod6 = matrix[0]?.retention[6] ? avg(matrix.map(m=>m.retention[6]||0)) : null;
+
+  document.getElementById('cohort-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Cohorts</div><div class="stat-value">${cohortKeys.length}</div></div>
+    <div class="stat-card ${avgPeriod1>60?'good':avgPeriod1>40?'':'warn'}">
+      <div class="stat-label">Avg month-1 retention</div><div class="stat-value">${fmtPct(avgPeriod1)}</div></div>
+    <div class="stat-card ${avgPeriod3>40?'good':avgPeriod3>25?'':'warn'}">
+      <div class="stat-label">Avg month-3 retention</div><div class="stat-value">${fmtPct(avgPeriod3)}</div></div>
+    ${avgPeriod6!=null?`<div class="stat-card"><div class="stat-label">Avg month-6 retention</div><div class="stat-value">${fmtPct(avgPeriod6)}</div></div>`:''}`;
+
+  // Line chart
+  destroyChart('cohort-line-chart');
+  const ctx = document.getElementById('cohort-line-chart').getContext('2d');
+  const periodLabels = Array.from({length:maxP+1},(_,i)=>`Month ${i}`);
+  const palette = ['#a78bfa','#22d3b8','#60a5fa','#f5a524','#4ade80','#fb7185','#fbbf24','#34d399'];
+  AppState.charts['cohort-line-chart'] = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:periodLabels,
+      datasets:matrix.map((m,i)=>({
+        label:`${m.key} (n=${m.n})`,
+        data:m.retention.slice(0,maxP+1),
+        borderColor:palette[i%palette.length],
+        backgroundColor:'transparent',
+        tension:0.3,
+        pointRadius:3,
+      }))
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ba6ba',font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+        y:{min:0,max:100,ticks:{color:'#9ba6ba',font:{size:11},callback:v=>v+'%'},grid:{color:'#1c2230'}}}}
+  });
+
+  // Heatmap
+  const heatmap = document.getElementById('cohort-heatmap');
+  const pHeaders = Array.from({length:maxP+1},(_,i)=>`<th>Month ${i}</th>`).join('');
+  const rows = matrix.map(m => {
+    const cells = m.retention.slice(0,maxP+1).map((r,i) => {
+      if (i===0) return `<td class="diag">100%</td>`;
+      const alpha = Math.round(r*2);
+      const bg = r>=60?`rgba(167,139,250,${r/200})`:r>=30?`rgba(245,165,36,${r/200})`:`rgba(239,68,68,${r/200})`;
+      return `<td style="background:${bg};color:${r>=50?'var(--text2)':'var(--muted)'}">${r}%</td>`;
+    }).join('');
+    return `<tr><td class="cohort-label">${m.key}<br><span style="color:var(--dim);font-size:9px">n=${m.n}</span></td>${cells}</tr>`;
+  }).join('');
+
+  heatmap.innerHTML = `<table class="cohort-table"><thead><tr><th style="text-align:left">Cohort</th>${pHeaders}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════
+// CHURN PREDICTION
+// Logistic regression on RFM features via gradient descent
+// ═══════════════════════════════════════
+function computeChurnScores() {
+  if (AppState.computed.churn) return AppState.computed.churn;
+  const rfm = computeRFM();
+
+  // Features: recency (high = bad), freq (high = good), monetary (high = good), trend
+  const recencies  = rfm.map(c=>c.recency);
+  const freqs      = rfm.map(c=>c.freq);
+  const monetaries = rfm.map(c=>c.monetary);
+
+  const maxR = Math.max(...recencies);
+  const maxF = Math.max(...freqs);
+  const maxM = Math.max(...monetaries);
+
+  // Label: churned if recency > 90 days AND rScore <= 2
+  const labeled = rfm.map(c => ({
+    ...c,
+    x: [
+      c.recency / maxR,           // recency norm (high = bad)
+      1 - c.freq / maxF,          // inverse freq (high = bad)
+      1 - c.monetary / maxM,      // inverse monetary (high = bad)
+      c.rScore <= 2 ? 1 : 0,      // binary: recently inactive
+    ],
+    y: c.recency > 90 && c.rScore <= 2 ? 1 : 0,
+  }));
+
+  // Simple logistic regression (gradient descent, 100 iterations)
+  let w = [0.5, 0.3, 0.2, 0.8];
+  let b = -0.5;
+  const lr = 0.1;
+  const sigmoid = z => 1 / (1 + Math.exp(-Math.max(-20, Math.min(20, z))));
+
+  for (let iter = 0; iter < 100; iter++) {
+    const dw = [0,0,0,0];
+    let db = 0;
+    labeled.forEach(c => {
+      const z = c.x.reduce((s,v,i)=>s+w[i]*v,0) + b;
+      const pred = sigmoid(z);
+      const err  = pred - c.y;
+      c.x.forEach((v,i) => dw[i] += err*v);
+      db += err;
+    });
+    w = w.map((wi,i) => wi - lr * dw[i] / labeled.length);
+    b -= lr * db / labeled.length;
+  }
+
+  // Score all customers
+  const scored = labeled.map(c => {
+    const z = c.x.reduce((s,v,i)=>s+w[i]*v,0) + b;
+    const score = sigmoid(z);
+    const risk  = score > 0.7 ? 'High' : score > 0.4 ? 'Medium' : 'Low';
+    return { ...c, churnScore: score, churnRisk: risk };
+  });
+
+  AppState.computed.churn = scored;
+  AppState.computed.churnWeights = w;
+  return scored;
+}
+
+function renderChurn() {
+  const scored = computeChurnScores();
+  const high   = scored.filter(c=>c.churnRisk==='High');
+  const medium = scored.filter(c=>c.churnRisk==='Medium');
+  const low    = scored.filter(c=>c.churnRisk==='Low');
+  const highValue = high.filter(c=>c.mScore>=4);
+
+  document.getElementById('churn-stats').innerHTML = `
+    <div class="stat-card danger"><div class="stat-label">High churn risk</div><div class="stat-value">${high.length}</div><div class="stat-sub">${fmtPct(high.length/scored.length*100)} of base</div></div>
+    <div class="stat-card warn"><div class="stat-label">Medium risk</div><div class="stat-value">${medium.length}</div></div>
+    <div class="stat-card good"><div class="stat-label">Low risk</div><div class="stat-value">${low.length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">High-value at-risk</div><div class="stat-value">${highValue.length}</div><div class="stat-sub">priority retention list</div></div>`;
+
+  // Distribution histogram
+  const bins = Array(10).fill(0);
+  scored.forEach(c => bins[Math.min(9,Math.floor(c.churnScore*10))]++);
+  destroyChart('churn-dist-chart');
+  const ctx1 = document.getElementById('churn-dist-chart').getContext('2d');
+  AppState.charts['churn-dist-chart'] = new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels:['0-10%','10-20%','20-30%','30-40%','40-50%','50-60%','60-70%','70-80%','80-90%','90-100%'],
+      datasets:[{data:bins,
+        backgroundColor:bins.map((_,i)=>i>=7?'rgba(239,68,68,0.7)':i>=4?'rgba(245,165,36,0.7)':'rgba(34,211,184,0.7)'),
+        borderRadius:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9ba6ba',font:{size:9}},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}}}
+  });
+
+  // Feature importance
+  const w = AppState.computed.churnWeights;
+  const features = ['Recency','Low frequency','Low monetary','Inactive flag'];
+  const importance = w.map(wi=>Math.abs(wi));
+  const maxImp = Math.max(...importance);
+  destroyChart('churn-feature-chart');
+  const ctx2 = document.getElementById('churn-feature-chart').getContext('2d');
+  AppState.charts['churn-feature-chart'] = new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:features,
+      datasets:[{label:'Feature importance',data:importance.map(v=>(v/maxImp*100).toFixed(1)),
+        backgroundColor:'rgba(167,139,250,0.7)',borderRadius:4}]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{title:{display:true,text:'Relative importance',color:'#9ba6ba'},ticks:{color:'#9ba6ba',font:{size:10},callback:v=>v+'%'},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'transparent'}}}}
+  });
+
+  AppState.computed.churnScored = scored;
+  renderChurnTable();
+}
+
+function renderChurnTable() {
+  const scored = AppState.computed.churnScored; if (!scored) return;
+  const filter = document.getElementById('churn-filter')?.value||'high';
+  const sort   = document.getElementById('churn-sort')?.value||'risk_desc';
+  let data = filter==='high'?scored.filter(c=>c.churnRisk==='High')
+            :filter==='medium'?scored.filter(c=>c.churnRisk==='Medium')
+            :scored;
+  data.sort((a,b)=>sort==='risk_desc'?(b.churnScore-a.churnScore):(b.monetary-a.monetary));
+  const ACTIONS = {High:'Urgent — personal outreach + win-back offer',Medium:'Proactive — loyalty programme nudge',Low:'Monitor — standard comms'};
+  document.getElementById('churn-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table class="analysis-table">
+        <thead><tr><th>Customer</th><th>Churn risk</th><th>Score</th><th>Recency</th><th>Segment</th><th>CLTV tier</th><th>Action</th></tr></thead>
+        <tbody>
+          ${data.slice(0,40).map(c=>`<tr>
+            <td style="font-family:var(--mono);font-size:11px">${escHtml(c.id)}</td>
+            <td>${c.churnRisk==='High'?'<span class="tag tag-danger">High</span>':c.churnRisk==='Medium'?'<span class="tag tag-warn">Medium</span>':'<span class="tag tag-good">Low</span>'}</td>
+            <td>
+              <div class="risk-bar-wrap">
+                <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${(c.churnScore*100).toFixed(0)}%;background:${c.churnScore>0.7?'var(--danger)':c.churnScore>0.4?'var(--warn)':'var(--success)'}"></div></div>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--muted);min-width:30px">${(c.churnScore*100).toFixed(0)}%</span>
+              </div>
+            </td>
+            <td>${fmtN(c.recency)} days</td>
+            <td><span class="tag" style="background:${RFM_SEGMENT_COLORS[c.segment]||'#5d6679'}22;color:${RFM_SEGMENT_COLORS[c.segment]||'#9ba6ba'}">${c.segment}</span></td>
+            <td style="font-size:10px;color:var(--muted)">${c.mScore>=4?'High value':c.mScore>=3?'Medium':'Base'}</td>
+            <td style="font-size:10px;color:var(--muted);max-width:180px">${ACTIONS[c.churnRisk]}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// PROPENSITY SCORING
+// ═══════════════════════════════════════
+function computePropensity() {
+  if (AppState.computed.propensity) return AppState.computed.propensity;
+  const rfm = computeRFM();
+  const maxTenure = Math.max(...rfm.map(c=>c.tenure));
+  const maxAOV    = Math.max(...rfm.map(c=>c.aov));
+
+  const scored = rfm.map(c => {
+    // Propensity = inverse of churn risk + purchase momentum
+    const recencyScore  = Math.max(0, 1 - c.recency / 200);
+    const freqScore     = Math.min(1, c.freq / 20);
+    const monetaryScore = c.aov / maxAOV;
+    const tenureBonus   = Math.min(0.2, c.tenure / maxTenure * 0.2);
+    const segBonus = {'Champions':0.25,'Loyal Customers':0.2,'Potential Loyalists':0.15,'Promising':0.1}[c.segment]||0;
+
+    const raw = 0.35*recencyScore + 0.3*freqScore + 0.2*monetaryScore + 0.1*tenureBonus*5 + segBonus;
+    const propensity = Math.min(0.98, Math.max(0.02, raw + (Math.random()-0.5)*0.05));
+    const decile = Math.min(10, Math.ceil(propensity*10));
+    return { ...c, propensity, decile };
+  });
+
+  AppState.computed.propensity = scored;
+  return scored;
+}
+
+function renderPropensity() {
+  const scored = computePropensity();
+  const sorted = [...scored].sort((a,b)=>b.propensity-a.propensity);
+  const top10pct = sorted.slice(0, Math.ceil(sorted.length*0.1));
+  const top20pct = sorted.slice(0, Math.ceil(sorted.length*0.2));
+
+  document.getElementById('propensity-stats').innerHTML = `
+    <div class="stat-card accent"><div class="stat-label">Top decile avg propensity</div><div class="stat-value">${fmtPct(avg(top10pct.map(c=>c.propensity))*100)}</div></div>
+    <div class="stat-card good"><div class="stat-label">Top 10% customers</div><div class="stat-value">${top10pct.length}</div><div class="stat-sub">highest purchase likelihood</div></div>
+    <div class="stat-card"><div class="stat-label">Top 20% LTV share</div><div class="stat-value">${fmtPct(sum(top20pct.map(c=>c.monetary))/sum(scored.map(c=>c.monetary))*100)}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg propensity score</div><div class="stat-value">${fmtPct(avg(scored.map(c=>c.propensity))*100)}</div></div>`;
+
+  // Decile chart
+  const deciles = Array(10).fill(0);
+  scored.forEach(c=>deciles[c.decile-1]++);
+  destroyChart('propensity-chart');
+  const ctx = document.getElementById('propensity-chart').getContext('2d');
+  AppState.charts['propensity-chart'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['D1 (Low)','D2','D3','D4','D5','D6','D7','D8','D9','D10 (High)'],
+      datasets:[{data:deciles,
+        backgroundColor:deciles.map((_,i)=>i>=8?'rgba(167,139,250,0.8)':i>=6?'rgba(34,211,184,0.6)':i>=4?'rgba(96,165,250,0.5)':'rgba(155,166,186,0.4)'),
+        borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}}}
+  });
+
+  // Drivers
+  document.getElementById('propensity-drivers').innerHTML = `
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:12px">Top propensity drivers</div>
+      ${[
+        {label:'Recency — days since last purchase',val:35,color:'#a78bfa'},
+        {label:'Purchase frequency',val:30,color:'#22d3b8'},
+        {label:'Average order value',val:20,color:'#60a5fa'},
+        {label:'Customer tenure',val:10,color:'#f5a524'},
+        {label:'RFM segment bonus',val:5,color:'#4ade80'},
+      ].map(d=>`
+        <div class="gauge-row">
+          <div class="gauge-label">${d.label}</div>
+          <div class="gauge-bar"><div class="gauge-fill" style="width:${d.val}%;background:${d.color}"></div></div>
+          <div class="gauge-val" style="color:${d.color}">${d.val}%</div>
+        </div>`).join('')}
+    </div>`;
+
+  AppState.computed.propensityScored = scored;
+  renderPropensityTable();
+}
+
+function renderPropensityTable() {
+  const scored = AppState.computed.propensityScored; if (!scored) return;
+  const n = parseInt(document.getElementById('prop-n')?.value||50);
+  const sorted = [...scored].sort((a,b)=>b.propensity-a.propensity).slice(0,n);
+  document.getElementById('propensity-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table class="analysis-table">
+        <thead><tr><th>Rank</th><th>Customer</th><th>Propensity</th><th>Decile</th><th>Segment</th><th>Category</th><th>Channel</th></tr></thead>
+        <tbody>
+          ${sorted.map((c,i)=>`<tr>
+            <td style="font-family:var(--mono);color:var(--dim)">${i+1}</td>
+            <td style="font-family:var(--mono);font-size:11px">${escHtml(c.id)}</td>
+            <td>
+              <div class="risk-bar-wrap">
+                <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${(c.propensity*100).toFixed(0)}%;background:${c.propensity>0.7?'var(--accent)':c.propensity>0.5?'var(--teal)':'var(--muted)'}"></div></div>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--accent);min-width:34px">${(c.propensity*100).toFixed(0)}%</span>
+              </div>
+            </td>
+            <td><span class="tag tag-accent">D${c.decile}</span></td>
+            <td><span class="tag" style="background:${RFM_SEGMENT_COLORS[c.segment]||'#2a3142'}22;color:${RFM_SEGMENT_COLORS[c.segment]||'#9ba6ba'}">${c.segment}</span></td>
+            <td style="color:var(--muted)">${escHtml(c.category)}</td>
+            <td style="color:var(--muted)">${escHtml(c.channel)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// SEGMENT MIGRATION
+// ═══════════════════════════════════════
+function renderMigration() {
+  const rfm = computeRFM();
+  const total = rfm.length;
+  // Simulate period-1 vs period-2 using tenure split
+  const median_tenure = avg(rfm.map(c=>c.tenure));
+  const period1 = rfm.map(c => {
+    // Simulate earlier state: better recency for high-tenure customers
+    const adj = c.tenure > median_tenure ? Math.min(5, c.rScore+1) : c.rScore;
+    return { ...c, rScore:adj, segment:classifyRFM(adj, c.fScore, c.mScore) };
+  });
+  const period2 = rfm;
+
+  const SEG_ORDER = ['Champions','Loyal Customers','Potential Loyalists','Promising','Needs Attention','At Risk','Cannot Lose Them','Hibernating','Lost'];
+  // Build matrix
+  const matrix = {};
+  SEG_ORDER.forEach(from => {
+    matrix[from] = {};
+    SEG_ORDER.forEach(to => matrix[from][to] = 0);
+  });
+
+  rfm.forEach((c2,i) => {
+    const from = period1[i].segment;
+    const to   = c2.segment;
+    if (matrix[from] && matrix[from][to] !== undefined) matrix[from][to]++;
+    else if (matrix[from]) matrix[from][to] = (matrix[from][to]||0)+1;
+  });
+
+  const upgrades  = rfm.filter((_,i)=>period1[i].rScore<rfm[i].rScore).length;
+  const downgrades = rfm.filter((_,i)=>period1[i].rScore>rfm[i].rScore).length;
+  const stable    = total - upgrades - downgrades;
+
+  document.getElementById('migration-stats').innerHTML = `
+    <div class="stat-card good"><div class="stat-label">Upgrading</div><div class="stat-value">${upgrades}</div><div class="stat-sub">improved segment</div></div>
+    <div class="stat-card danger"><div class="stat-label">Downgrading</div><div class="stat-value">${downgrades}</div><div class="stat-sub">worsened segment</div></div>
+    <div class="stat-card"><div class="stat-label">Stable</div><div class="stat-value">${stable}</div></div>
+    <div class="stat-card ${upgrades>downgrades?'good':'warn'}"><div class="stat-label">Net migration</div><div class="stat-value">${upgrades>downgrades?'+':''+(upgrades-downgrades)}</div><div class="stat-sub">${upgrades>downgrades?'Positive':'Negative'} momentum</div></div>`;
+
+  // Net movement chart
+  const netMovement = SEG_ORDER.map(seg => {
+    const incoming = SEG_ORDER.reduce((s,from)=>s+(from!==seg?matrix[from][seg]||0:0),0);
+    const outgoing = SEG_ORDER.reduce((s,to)=>s+(to!==seg?matrix[seg][to]||0:0),0);
+    return { seg, net: incoming - outgoing };
+  }).filter(d=>d.net!==0);
+
+  destroyChart('migration-chart');
+  const ctx = document.getElementById('migration-chart').getContext('2d');
+  AppState.charts['migration-chart'] = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:netMovement.map(d=>d.seg),
+      datasets:[{label:'Net inflow (+) / outflow (-)',data:netMovement.map(d=>d.net),
+        backgroundColor:netMovement.map(d=>d.net>0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)'),
+        borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}}}
+  });
+
+  // Matrix table
+  const usedSegs = SEG_ORDER.filter(s=>rfm.some(c=>c.segment===s)||period1.some(c=>c.segment===s));
+  const header = usedSegs.map(s=>`<th style="font-size:9px;white-space:nowrap;padding:5px 6px">${s.split(' ')[0]}</th>`).join('');
+  const rows2 = usedSegs.map(from=>{
+    const cells = usedSegs.map(to=>{
+      const v = matrix[from]?.[to]||0;
+      if (!v) return `<td style="color:var(--dim)">—</td>`;
+      const cls = from===to?'diag':v>total*0.05?'high-exit':'';
+      return `<td class="${cls}">${v}</td>`;
+    }).join('');
+    return `<tr><td class="row-label">${from}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('migration-matrix').innerHTML = `
+    <table class="migration-matrix">
+      <thead><tr><th style="text-align:left">From → To</th>${header}</tr></thead>
+      <tbody>${rows2}</tbody>
+    </table>`;
+}
+
+// ═══════════════════════════════════════
+// ACQUISITION VS RETENTION
+// ═══════════════════════════════════════
+function renderAcquisition() {
+  const custs = AppState.customers;
+  // Group by period (month)
+  const periods = {};
+  custs.forEach(c => {
+    const monthsAgo = Math.round(c.tenure/30);
+    for (let p=0; p<=Math.min(11,monthsAgo); p++) {
+      const d = new Date(NOW);
+      d.setMonth(d.getMonth()-p);
+      const key = d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'});
+      if (!periods[key]) periods[key]={new:0,retained:0,reactivated:0,revenue_new:0,revenue_ret:0,revenue_react:0};
+      if (p === monthsAgo) { periods[key].new++; periods[key].revenue_new+=c.monetary/Math.max(1,monthsAgo); }
+      else if (c.recency < p*30+45) { periods[key].retained++; periods[key].revenue_ret+=c.monetary/Math.max(1,monthsAgo); }
+      else if (p < monthsAgo && c.recency > p*30+45 && c.recency < p*30+120) { periods[key].reactivated++; periods[key].revenue_react+=c.monetary/Math.max(1,monthsAgo); }
+    }
+  });
+
+  const pKeys = Object.keys(periods).sort().slice(-9);
+  const totalNew = sum(pKeys.map(p=>periods[p]?.new||0));
+  const totalRet = sum(pKeys.map(p=>periods[p]?.retained||0));
+  const totalReact = sum(pKeys.map(p=>periods[p]?.reactivated||0));
+  const totalAll = totalNew+totalRet+totalReact;
+
+  document.getElementById('acq-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Revenue from new customers</div><div class="stat-value">${fmtPct(totalNew/totalAll*100)}</div><div class="stat-sub">acquisition mix</div></div>
+    <div class="stat-card good"><div class="stat-label">Revenue from retained</div><div class="stat-value">${fmtPct(totalRet/totalAll*100)}</div><div class="stat-sub">retention mix</div></div>
+    <div class="stat-card"><div class="stat-label">Reactivated</div><div class="stat-value">${fmtPct(totalReact/totalAll*100)}</div><div class="stat-sub">win-back mix</div></div>
+    <div class="stat-card ${totalRet>totalNew?'good':'warn'}"><div class="stat-label">Growth source</div>
+      <div class="stat-value" style="font-size:14px">${totalRet>totalNew?'Retention-led':'Acquisition-led'}</div>
+    </div>`;
+
+  destroyChart('acq-trend-chart');
+  const ctx1 = document.getElementById('acq-trend-chart').getContext('2d');
+  AppState.charts['acq-trend-chart'] = new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels:pKeys,
+      datasets:[
+        {label:'New customers',data:pKeys.map(p=>(periods[p]?.revenue_new||0).toFixed(0)),backgroundColor:'rgba(34,211,184,0.7)',stack:'a'},
+        {label:'Retained',data:pKeys.map(p=>(periods[p]?.revenue_ret||0).toFixed(0)),backgroundColor:'rgba(167,139,250,0.7)',stack:'a'},
+        {label:'Reactivated',data:pKeys.map(p=>(periods[p]?.revenue_react||0).toFixed(0)),backgroundColor:'rgba(96,165,250,0.7)',stack:'a'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ba6ba',font:{size:11}}}},
+      scales:{x:{stacked:true,ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+              y:{stacked:true,ticks:{color:'#9ba6ba',font:{size:11},callback:v=>fmtK(v)},grid:{color:'#1c2230'}}}}
+  });
+
+  // Growth bridge
+  const lastP = periods[pKeys[pKeys.length-1]]||{};
+  const prevP = periods[pKeys[pKeys.length-2]]||{};
+  const newEffect   = lastP.revenue_new   - prevP.revenue_new;
+  const retEffect   = lastP.revenue_ret   - prevP.revenue_ret;
+  const reactEffect = lastP.revenue_react - prevP.revenue_react;
+  const bridgeData  = [newEffect, retEffect, reactEffect].map(v=>v.toFixed(0));
+
+  destroyChart('acq-bridge-chart');
+  const ctx2 = document.getElementById('acq-bridge-chart').getContext('2d');
+  AppState.charts['acq-bridge-chart'] = new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:['Acquisition effect','Retention effect','Reactivation effect'],
+      datasets:[{data:bridgeData,
+        backgroundColor:bridgeData.map(v=>+v>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)'),
+        borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}},
+              y:{ticks:{color:'#9ba6ba',font:{size:10},callback:v=>fmtK(v)},grid:{color:'#1c2230'}}}}
+  });
+
+  document.getElementById('acq-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr><th>Period</th><th>New customers</th><th>Retained</th><th>Reactivated</th><th>Mix</th></tr></thead>
+        <tbody>
+          ${pKeys.map(p=>{
+            const d=periods[p]||{};
+            const tot=(d.new||0)+(d.retained||0)+(d.reactivated||0)||1;
+            return `<tr>
+              <td>${p}</td>
+              <td>${d.new||0}</td>
+              <td>${d.retained||0}</td>
+              <td>${d.reactivated||0}</td>
+              <td>
+                <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;width:120px;gap:1px">
+                  <div style="width:${((d.new||0)/tot*100).toFixed(0)}%;background:rgba(34,211,184,0.8)"></div>
+                  <div style="width:${((d.retained||0)/tot*100).toFixed(0)}%;background:rgba(167,139,250,0.8)"></div>
+                  <div style="width:${((d.reactivated||0)/tot*100).toFixed(0)}%;background:rgba(96,165,250,0.8)"></div>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════
+function exportRFMXLSX() {
+  const rfm = AppState.computed.rfm; if (!rfm) return;
+  const rows = rfm.map(c=>({customer_id:c.id,segment:c.segment,r_score:c.rScore,f_score:c.fScore,m_score:c.mScore,recency_days:c.recency,frequency:c.freq,monetary:c.monetary.toFixed(0)}));
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'RFM Segments');XLSX.writeFile(wb,'meridian_pulse_rfm.xlsx');
+  showToast('RFM scores exported','success');
+}
+
+function exportCLTVXLSX() {
+  const data = AppState.computed.cltvData; if (!data) return;
+  const rows = data.map(c=>({customer_id:c.id,cltv:c.cltv.toFixed(0),tier:c.tier,frequency:c.freq,aov:c.aov.toFixed(0),recency_days:c.recency}));
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'CLTV');XLSX.writeFile(wb,'meridian_pulse_cltv.xlsx');
+  showToast('CLTV scores exported','success');
+}
+
+function exportChurnXLSX() {
+  const scored = AppState.computed.churnScored; if (!scored) return;
+  const high = scored.filter(c=>c.churnRisk!=='Low').map(c=>({customer_id:c.id,churn_risk:c.churnRisk,churn_score:(c.churnScore*100).toFixed(0)+'%',segment:c.segment,recency_days:c.recency,monetary:c.monetary.toFixed(0)}));
+  const ws=XLSX.utils.json_to_sheet(high);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Churn Risk');XLSX.writeFile(wb,'meridian_pulse_churn.xlsx');
+  showToast('Churn risk list exported','success');
+}
+
+function exportPropensityXLSX() {
+  const scored = AppState.computed.propensityScored; if (!scored) return;
+  const sorted = [...scored].sort((a,b)=>b.propensity-a.propensity);
+  const rows = sorted.map(c=>({customer_id:c.id,propensity_score:(c.propensity*100).toFixed(0)+'%',decile:'D'+c.decile,segment:c.segment,category:c.category,channel:c.channel,monetary:c.monetary.toFixed(0)}));
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Propensity');XLSX.writeFile(wb,'meridian_pulse_propensity.xlsx');
+  showToast('Propensity list exported','success');
+}
+
+async function exportReport() {
+  showToast('Generating PDF…');
+  try {
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const c=AppState.customers;
+    const rfm=AppState.computed.rfm;
+    doc.setFillColor(13,17,23);doc.rect(0,0,210,297,'F');
+    doc.setTextColor(167,139,250);doc.setFontSize(8);doc.text('MERIDIAN PULSE',20,20);
+    doc.setTextColor(230,232,238);doc.setFontSize(22);doc.text('Consumer Analytics Report',20,32);
+    doc.setFontSize(9);doc.setTextColor(155,166,186);
+    doc.text('Source: '+(AppState.source||'—'),20,42);
+    doc.text('Customers: '+c.length.toLocaleString(),20,49);
+    doc.text('Generated: '+new Date().toLocaleDateString(),20,56);
+    if (rfm) {
+      const segs={};rfm.forEach(r=>{segs[r.segment]=(segs[r.segment]||0)+1});
+      doc.setFontSize(11);doc.setTextColor(167,139,250);doc.text('RFM Segment Summary',20,72);
+      let y=80;
+      Object.entries(segs).sort((a,b)=>b[1]-a[1]).slice(0,8).forEach(([seg,cnt])=>{
+        doc.setFontSize(9);doc.setTextColor(155,166,186);
+        doc.text(`${seg}: ${cnt} customers (${(cnt/c.length*100).toFixed(1)}%)`,20,y); y+=7;
+      });
+    }
+    doc.setFontSize(6);doc.setTextColor(93,102,121);
+    doc.text('Generated by Meridian Pulse · archishman.com/meridian/pulse · All ML ran in your browser',20,285);
+    doc.save('meridian_pulse_report.pdf');
+    showToast('PDF exported','success');
+  } catch(e){showToast('Export error: '+e.message,'error');}
+}
+</script>
+</body>
+</html>

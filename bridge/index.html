@@ -1818,7 +1818,7 @@ function renderTableList() {
         ${isResult?`<span class="result-badge">result</span>`:''}
         ${isDemo?`<span class="demo-tag">demo</span>`:''}
       </div>
-      ${isResult?`<button class="del-btn" onclick="event.stopPropagation();deleteTable('${n}')" title="Delete">✕</button>`:''}
+      <button class="del-btn" onclick="event.stopPropagation();deleteTable('${n}')" title="Remove dataset">✕</button>
     </div>`;
   };
 

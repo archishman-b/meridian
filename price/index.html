@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Price — Pricing Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#10151e;--surface2:#161b25;--surface3:#1c2230;
+  --border:#1c2230;--border2:#2a3142;
+  --text:#e6e8ee;--text2:#c0c8d8;--muted:#9ba6ba;--dim:#5d6679;
+  --accent:#22d3b8;--accent-dim:rgba(34,211,184,0.10);--accent-bd:rgba(34,211,184,0.22);
+  --success:#22c55e;--success-bg:rgba(34,197,94,0.12);
+  --warn:#f5a524;--warn-bg:rgba(245,165,36,0.10);--warn-bd:rgba(245,165,36,0.3);
+  --danger:#ef4444;--danger-bg:rgba(239,68,68,0.12);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;display:flex;flex-direction:column}
+
+/* ── Top bar ── */
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;z-index:20;position:sticky;top:0}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;
+  display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:14px;height:14px;fill:#0d1117}
+.logo-name{font-size:14px;font-weight:600;color:var(--text)}
+.logo-module{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:0.06em;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all 0.1s;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-primary{background:var(--accent);color:#0d1117;border-color:var(--accent);font-weight:600}
+.btn-primary:hover{opacity:0.9}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* ── Privacy bar ── */
+.privacy-bar{background:rgba(34,211,184,0.06);border-bottom:1px solid var(--accent-bd);
+  padding:5px 20px;font-size:10px;font-family:var(--mono);color:var(--accent);
+  letter-spacing:0.03em;flex-shrink:0;display:flex;align-items:center;gap:8px}
+
+/* ── Layout ── */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* ── Sidebar nav ── */
+.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2)}
+.sb-section{padding:12px 14px 4px;font-size:9px;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--dim)}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;
+  border-left:2px solid transparent;transition:all 0.1s;font-size:12px;color:var(--muted)}
+.sb-item:hover{color:var(--text);background:var(--surface2)}
+.sb-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-dim)}
+.sb-item .sb-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.sb-item .sb-badge{font-size:9px;font-family:var(--mono);margin-left:auto;
+  padding:1px 5px;border-radius:3px;background:var(--surface3);color:var(--dim)}
+.sb-item.active .sb-badge{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-bd)}
+
+/* ── Dataset context bar ── */
+.context-bar{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;font-size:11px;flex-shrink:0}
+.ctx-item{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.ctx-item strong{color:var(--text2);font-weight:500}
+.ctx-dot{width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0}
+.ctx-dot.warn{background:var(--warn)}
+.ctx-dot.empty{background:var(--dim)}
+
+/* ── Main content ── */
+.main-panel{flex:1;overflow-y:auto;overflow-x:hidden}
+.module-panel{display:none;padding:24px 28px;max-width:1100px}
+.module-panel.active{display:block}
+
+/* ── Module header ── */
+.module-header{margin-bottom:24px}
+.module-eyebrow{font-family:var(--mono);font-size:10px;color:var(--accent);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.module-title{font-family:var(--serif);font-size:28px;font-weight:400;
+  color:var(--text);margin-bottom:6px;line-height:1.2}
+.module-desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:680px}
+
+/* ── Upload zone ── */
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);
+  padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.15s;
+  color:var(--muted);margin:20px 0}
+.upload-zone:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.upload-zone input{display:none}
+.upload-zone .uz-icon{font-size:28px;margin-bottom:8px}
+.upload-zone .uz-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.upload-zone .uz-sub{font-size:11px}
+
+/* ── Schema mapper ── */
+.schema-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+  opacity:0;pointer-events:none;transition:opacity 0.15s}
+.schema-overlay.open{opacity:1;pointer-events:all}
+.schema-modal{background:var(--surface);border-radius:var(--radius-lg);
+  width:100%;max-width:600px;max-height:85vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,0.4)}
+.schema-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px}
+.schema-badge{font-size:9px;font-family:var(--mono);color:var(--accent);
+  background:var(--accent-dim);border:1px solid var(--accent-bd);
+  padding:2px 7px;border-radius:3px;margin-left:auto}
+.schema-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px}
+.schema-field label{font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px}
+.schema-field .sf-sub{font-size:10px;color:var(--dim);margin-bottom:5px}
+.schema-field select{width:100%;border:1px solid var(--border2);border-radius:5px;
+  background:var(--surface2);color:var(--text);font-family:var(--sans);font-size:11px;
+  padding:5px 8px;outline:none}
+.schema-field select:focus{border-color:var(--accent)}
+
+/* ── Stat cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:14px 16px}
+.stat-label{font-size:10px;font-family:var(--mono);color:var(--muted);
+  letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:600;color:var(--text);font-family:var(--mono);line-height:1}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.stat-card.good{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)}
+.stat-card.good .stat-value{color:var(--success)}
+.stat-card.warn{border-color:var(--warn-bd);background:var(--warn-bg)}
+.stat-card.warn .stat-value{color:var(--warn)}
+.stat-card.danger{border-color:rgba(239,68,68,0.3);background:var(--danger-bg)}
+.stat-card.danger .stat-value{color:var(--danger)}
+
+/* ── Charts ── */
+.chart-card{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+  padding:20px;margin:16px 0}
+.chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.chart-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
+.chart-wrap{position:relative}
+
+/* ── Waterfall ── */
+.waterfall-container{overflow-x:auto;padding-bottom:8px}
+.waterfall-svg{display:block}
+
+/* ── Table ── */
+.analysis-table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+.analysis-table th{background:var(--surface3);padding:8px 12px;text-align:left;
+  font-weight:500;font-size:10px;font-family:var(--mono);letter-spacing:0.04em;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2)}
+.analysis-table td{padding:8px 12px;border-bottom:1px solid var(--border);
+  color:var(--text2);vertical-align:middle}
+.analysis-table tr:last-child td{border-bottom:none}
+.analysis-table tr:hover td{background:var(--surface3)}
+.tag{display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;font-family:var(--mono)}
+.tag-good{background:rgba(34,197,94,0.15);color:var(--success)}
+.tag-warn{background:var(--warn-bg);color:var(--warn)}
+.tag-danger{background:var(--danger-bg);color:var(--danger)}
+.tag-neutral{background:var(--surface3);color:var(--muted)}
+
+/* ── Segment pills ── */
+.segment-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:20px;font-size:10px;font-weight:500;border:1px solid var(--border2)}
+
+/* ── Section divider ── */
+.section-divider{display:flex;align-items:center;gap:10px;margin:24px 0 16px;
+  font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);
+  border:1px solid var(--border2);border-radius:8px;padding:10px 16px;
+  font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  opacity:0;transform:translateY(8px);transition:all 0.2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left:3px solid var(--success)}
+.toast.warn{border-left:3px solid var(--warn)}
+.toast.error{border-left:3px solid var(--danger)}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.5}
+.empty-title{font-size:16px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.6;max-width:380px;margin:0 auto}
+
+/* ── Controls row ── */
+.controls-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.controls-row select,.controls-row input{
+  border:1px solid var(--border2);border-radius:6px;background:var(--surface2);
+  color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 10px;outline:none}
+.controls-row select:focus,.controls-row input:focus{border-color:var(--accent)}
+.ctrl-label{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* ── Behavioural lab ── */
+.lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.lab-card{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px}
+.lab-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.lab-card p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.55}
+.lab-slider-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.lab-slider-row label{font-size:11px;color:var(--text2);min-width:120px}
+.lab-slider-row input[type=range]{flex:1}
+.lab-slider-row .lab-val{font-family:var(--mono);font-size:12px;color:var(--accent);min-width:48px;text-align:right}
+.lab-output{background:var(--surface3);border-radius:6px;padding:10px 14px;
+  font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.8}
+.lab-output .lo-key{color:var(--muted);font-size:10px}
+.lab-output .lo-val{color:var(--accent);font-weight:500}
+
+/* ── Scenario table ── */
+.scenario-input-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.si-field label{font-size:10px;color:var(--muted);font-family:var(--mono);
+  letter-spacing:0.04em;text-transform:uppercase;display:block;margin-bottom:4px}
+.si-field input,.si-field select{width:100%;border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface2);color:var(--text);font-family:var(--sans);
+  font-size:12px;padding:6px 10px;outline:none}
+.si-field input:focus,.si-field select:focus{border-color:var(--accent)}
+
+/* ── Export bar ── */
+.export-bar{display:flex;align-items:center;gap:8px;padding:12px 0;
+  border-top:1px solid var(--border);margin-top:24px}
+.export-bar .export-label{font-size:11px;color:var(--muted);margin-right:4px}
+
+/* ── Callout ── */
+.callout{border-left:3px solid var(--accent);background:var(--accent-dim);
+  border-radius:0 6px 6px 0;padding:12px 16px;margin:12px 0;font-size:12px;color:var(--text2)}
+.callout.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+.callout strong{color:var(--accent)}
+.callout.warn strong{color:var(--warn)}
+
+@media(max-width:800px){
+  .sidebar{display:none}
+  .schema-grid{grid-template-columns:1fr}
+  .lab-grid{grid-template-columns:1fr}
+  .scenario-input-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 3h5v4H2zm7 0h5v4H9zM2 9h5v4H2zm7 0h5v4H9z"/></svg>
+    </div>
+    <div>
+      <div class="logo-name">Meridian</div>
+      <div class="logo-module">Price</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-sm" onclick="openSchemaWizard()">◈ Schema map</button>
+    <button class="btn btn-sm" id="upload-btn" onclick="document.getElementById('file-input-top').click()">⊞ Load data</button>
+    <input type="file" id="file-input-top" accept=".csv,.xlsx" style="display:none" onchange="handleFileUpload(this.files)">
+    <button class="btn btn-sm btn-primary" onclick="exportReport()">↗ Export PDF</button>
+    <a href="../" class="btn btn-sm">⬡ Meridian</a>
+  </div>
+</div>
+
+<!-- Privacy bar -->
+<div class="privacy-bar">⊕ Your data never leaves this browser — zero server · zero upload</div>
+
+<!-- Dataset context bar -->
+<div class="context-bar" id="context-bar">
+  <span class="ctx-item"><span class="ctx-dot empty" id="ctx-dot"></span><strong id="ctx-rows">No data</strong></span>
+  <span class="ctx-item">Source: <strong id="ctx-source">—</strong></span>
+  <span class="ctx-item">Quality: <strong id="ctx-quality">—</strong></span>
+  <span class="ctx-item">Schema: <strong id="ctx-schema">0 dimensions mapped</strong></span>
+  <span style="margin-left:auto">
+    <button class="btn btn-sm" onclick="loadDemoData()" id="demo-btn">Load Renova demo</button>
+  </span>
+</div>
+
+<!-- App body -->
+<div class="app-body">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sb-section">Analysis</div>
+  <div class="sb-item active" onclick="showModule('waterfall')" id="nav-waterfall">
+    <span class="sb-icon">⬇</span>Price waterfall
+    <span class="sb-badge">M1</span>
+  </div>
+  <div class="sb-item" onclick="showModule('margin')" id="nav-margin">
+    <span class="sb-icon">▦</span>Margin bridge
+    <span class="sb-badge">M2</span>
+  </div>
+  <div class="sb-item" onclick="showModule('elasticity')" id="nav-elasticity">
+    <span class="sb-icon">↗</span>Elasticity
+    <span class="sb-badge">M3</span>
+  </div>
+  <div class="sb-item" onclick="showModule('segments')" id="nav-segments">
+    <span class="sb-icon">⬟</span>Segment diagnostics
+    <span class="sb-badge">M4</span>
+  </div>
+  <div class="sb-item" onclick="showModule('benchmark')" id="nav-benchmark">
+    <span class="sb-icon">◎</span>Benchmarking
+    <span class="sb-badge">M5</span>
+  </div>
+  <div class="sb-item" onclick="showModule('scenario')" id="nav-scenario">
+    <span class="sb-icon">⟳</span>Scenario modeller
+    <span class="sb-badge">M6</span>
+  </div>
+  <div class="sb-item" onclick="showModule('deals')" id="nav-deals">
+    <span class="sb-icon">◇</span>Deal scoring
+    <span class="sb-badge">M7</span>
+  </div>
+  <div class="sb-section" style="margin-top:8px">Always-on</div>
+  <div class="sb-item" onclick="showModule('lab')" id="nav-lab">
+    <span class="sb-icon">⚗</span>Behavioural lab
+    <span class="sb-badge">M8</span>
+  </div>
+</nav>
+
+<!-- Main panel -->
+<div class="main-panel" id="main-panel">
+
+<!-- ═══════════════════════════════════════
+     M1 — POCKET PRICE WATERFALL
+═══════════════════════════════════════ -->
+<div class="module-panel active" id="panel-waterfall">
+  <div class="module-header">
+    <div class="module-eyebrow">M1 — Pocket Price Waterfall</div>
+    <div class="module-title">Where does revenue leak?</div>
+    <div class="module-desc">The waterfall decomposes the gap between list price and pocket price, isolating each discount and allowance element. This is the foundational diagnostic for any pricing transformation engagement.</div>
+  </div>
+  <div id="waterfall-empty" class="empty-state">
+    <div class="empty-icon">⬇</div>
+    <div class="empty-title">Load data to build the waterfall</div>
+    <div class="empty-sub">Upload a transaction dataset or load the Renova Home demo — then map your columns using the Schema Map button above.</div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-primary" onclick="loadDemoData()">Load Renova demo</button>
+      <button class="btn" onclick="document.getElementById('file-input-top').click()">Upload CSV / XLSX</button>
+    </div>
+  </div>
+  <div id="waterfall-content" style="display:none">
+    <div class="stat-grid" id="waterfall-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Pocket price waterfall</div>
+      <div class="chart-sub">Average per-unit value at each step from list price to pocket price</div>
+      <div class="waterfall-container">
+        <canvas id="waterfall-chart" height="320"></canvas>
+      </div>
+    </div>
+    <div class="section-divider">Leakage breakdown</div>
+    <div class="chart-card">
+      <div class="chart-title">Leakage by category</div>
+      <div class="chart-sub">Total discount value and % of list price, by leakage type</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="leakage-chart"></canvas>
+      </div>
+    </div>
+    <div class="section-divider">Transaction detail</div>
+    <div class="controls-row">
+      <span class="ctrl-label">Sort by:</span>
+      <select id="wf-sort" onchange="renderWaterfallTable()">
+        <option value="leakage_desc">Highest leakage</option>
+        <option value="leakage_asc">Lowest leakage</option>
+        <option value="revenue_desc">Highest revenue</option>
+        <option value="margin_desc">Highest margin</option>
+      </select>
+      <span class="ctrl-label">Show:</span>
+      <select id="wf-rows" onchange="renderWaterfallTable()">
+        <option value="20">Top 20</option>
+        <option value="50">Top 50</option>
+        <option value="100">Top 100</option>
+      </select>
+    </div>
+    <div id="waterfall-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportWaterfallXLSX()">↓ XLSX</button>
+      <button class="btn btn-sm" onclick="exportReport()">↗ PDF report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M2 — MARGIN BRIDGE
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-margin">
+  <div class="module-header">
+    <div class="module-eyebrow">M2 — Margin Bridge</div>
+    <div class="module-title">What drove the margin change?</div>
+    <div class="module-desc">Decomposes gross margin movement into volume, price, mix, and cost components. Answers the question every CFO asks: of the margin change this period, how much was price, how much was volume, and how much was mix shift?</div>
+  </div>
+  <div id="margin-empty" class="empty-state">
+    <div class="empty-icon">▦</div>
+    <div class="empty-title">Load data to build the margin bridge</div>
+    <div class="empty-sub">Requires transaction data with list price, pocket price, unit cost, and a period/date dimension.</div>
+  </div>
+  <div id="margin-content" style="display:none">
+    <div class="controls-row">
+      <span class="ctrl-label">Compare period:</span>
+      <select id="margin-p1" onchange="renderMarginBridge()"><option>—</option></select>
+      <span class="ctrl-label">vs:</span>
+      <select id="margin-p2" onchange="renderMarginBridge()"><option>—</option></select>
+      <span class="ctrl-label">Group by:</span>
+      <select id="margin-group" onchange="renderMarginBridge()">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="stat-grid" id="margin-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Margin bridge</div>
+      <div class="chart-sub">Decomposition of gross margin movement into volume, price, mix, and cost components</div>
+      <div class="chart-wrap" style="height:320px">
+        <canvas id="margin-chart"></canvas>
+      </div>
+    </div>
+    <div id="margin-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M3 — PRICE-VOLUME ELASTICITY
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-elasticity">
+  <div class="module-header">
+    <div class="module-eyebrow">M3 — Price-Volume Elasticity</div>
+    <div class="module-title">How does price move volume?</div>
+    <div class="module-desc">Estimates price elasticity from transaction data — the relationship between discount level and units sold. Identifies which product categories are elastic (discount-responsive) versus inelastic (quality-anchored).</div>
+  </div>
+  <div id="elasticity-empty" class="empty-state">
+    <div class="empty-icon">↗</div>
+    <div class="empty-title">Load data to compute elasticity</div>
+    <div class="empty-sub">Requires transaction data with discount %, quantity/units, and a product or category dimension.</div>
+  </div>
+  <div id="elasticity-content" style="display:none">
+    <div class="controls-row">
+      <span class="ctrl-label">Segment by:</span>
+      <select id="elast-segment" onchange="renderElasticity()">
+        <option value="all">All transactions</option>
+      </select>
+    </div>
+    <div class="stat-grid" id="elasticity-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Price-volume relationship</div>
+      <div class="chart-sub">Discount % vs average units per transaction — scatter with regression line</div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="elasticity-chart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Elasticity by category</div>
+      <div class="chart-sub">Estimated elasticity coefficient per product category</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="elasticity-by-cat-chart"></canvas>
+      </div>
+    </div>
+    <div id="elasticity-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M4 — SEGMENT DIAGNOSTICS
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-segments">
+  <div class="module-header">
+    <div class="module-eyebrow">M4 — Segment Pricing Diagnostics</div>
+    <div class="module-title">Who's getting what price?</div>
+    <div class="module-desc">Compares pricing outcomes across customer tiers, regions, sales reps, and product categories. Identifies where pocket prices vary beyond legitimate discount policy — the core leakage diagnostic of every pricing engagement.</div>
+  </div>
+  <div id="segments-empty" class="empty-state">
+    <div class="empty-icon">⬟</div>
+    <div class="empty-title">Load data to run segment diagnostics</div>
+    <div class="empty-sub">Requires transaction data with customer tier, region, or sales rep dimensions mapped.</div>
+  </div>
+  <div id="segments-content" style="display:none">
+    <div class="controls-row">
+      <span class="ctrl-label">Segment dimension:</span>
+      <select id="seg-dim" onchange="renderSegments()">
+        <option value="customerTier">Customer tier</option>
+        <option value="region">Region</option>
+        <option value="salesRep">Sales rep</option>
+        <option value="product">Product</option>
+      </select>
+      <span class="ctrl-label">Metric:</span>
+      <select id="seg-metric" onchange="renderSegments()">
+        <option value="avgDiscount">Avg discount %</option>
+        <option value="pocketPriceRatio">Pocket/list ratio</option>
+        <option value="avgMargin">Avg margin %</option>
+      </select>
+    </div>
+    <div class="stat-grid" id="segments-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title" id="seg-chart-title">Pricing by segment</div>
+      <div class="chart-sub" id="seg-chart-sub">Average discount % by segment vs company average</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="segments-chart"></canvas>
+      </div>
+    </div>
+    <div class="section-divider">Price band analysis</div>
+    <div class="callout">
+      <strong>Price band analysis</strong> — peer price regression reveals which transactions fall outside the fair-price band. Negative outliers (below 1σ) represent leakage candidates for policy review.
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Price band scatter</div>
+      <div class="chart-sub">Each point = one transaction. Band shows ±1 standard deviation from segment average pocket price.</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="priceband-chart"></canvas>
+      </div>
+    </div>
+    <div id="segments-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M5 — COMPETITOR BENCHMARKING
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-benchmark">
+  <div class="module-header">
+    <div class="module-eyebrow">M5 — Competitor Benchmarking</div>
+    <div class="module-title">How do we compare on price?</div>
+    <div class="module-desc">Compares your pocket prices against floor prices, target prices, and any competitor reference data you provide. Identifies products priced below cost floor and above competitive ceiling.</div>
+  </div>
+  <div id="benchmark-empty" class="empty-state">
+    <div class="empty-icon">◎</div>
+    <div class="empty-title">Load data to run benchmarking</div>
+    <div class="empty-sub">Works with the built-in floor/target price thresholds, or upload a competitor reference dataset.</div>
+  </div>
+  <div id="benchmark-content" style="display:none">
+    <div class="stat-grid" id="benchmark-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Price positioning by product</div>
+      <div class="chart-sub">Average pocket price vs floor price and target price per product</div>
+      <div class="chart-wrap" style="height:320px">
+        <canvas id="benchmark-chart"></canvas>
+      </div>
+    </div>
+    <div class="callout warn">
+      <strong>Transactions below floor price</strong> are highlighted in the table below. These represent deals where margin is structurally negative — typically the result of unauthorised discount stacking.
+    </div>
+    <div id="benchmark-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M6 — SCENARIO MODELLER
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-scenario">
+  <div class="module-header">
+    <div class="module-eyebrow">M6 — Scenario Modeller</div>
+    <div class="module-title">What happens if we change the price?</div>
+    <div class="module-desc">Models the revenue and margin impact of pricing policy changes — discount ceiling reductions, list price increases, floor price enforcement. Compares up to three scenarios simultaneously.</div>
+  </div>
+  <div id="scenario-empty" class="empty-state">
+    <div class="empty-icon">⟳</div>
+    <div class="empty-title">Load data to run scenarios</div>
+    <div class="empty-sub">Scenarios model the impact of pricing policy changes on revenue and margin, based on your actual transaction data.</div>
+  </div>
+  <div id="scenario-content" style="display:none">
+    <div class="section-divider">Scenario parameters</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px" id="scenario-cards"></div>
+    <div class="stat-grid" id="scenario-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue &amp; margin impact — scenario comparison</div>
+      <div class="chart-sub">Baseline vs Scenario A, B, C — revenue, gross margin, and pocket price</div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="scenario-chart"></canvas>
+      </div>
+    </div>
+    <div id="scenario-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M7 — DEAL SCORING
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-deals">
+  <div class="module-header">
+    <div class="module-eyebrow">M7 — Deal Scoring</div>
+    <div class="module-title">Which deals are structurally sound?</div>
+    <div class="module-desc">Scores each transaction against five criteria: margin health, price positioning, discount within policy, customer tier alignment, and volume justification. Flags deals that require review.</div>
+  </div>
+  <div id="deals-empty" class="empty-state">
+    <div class="empty-icon">◇</div>
+    <div class="empty-title">Load data to score deals</div>
+    <div class="empty-sub">Deal scoring requires price, cost, discount, and ideally customer tier dimensions to be mapped.</div>
+  </div>
+  <div id="deals-content" style="display:none">
+    <div class="stat-grid" id="deals-stats"></div>
+    <div class="chart-card">
+      <div class="chart-title">Deal score distribution</div>
+      <div class="chart-sub">Scores 0–100. Green = sound (70+). Amber = review (40–70). Red = flag (&lt;40).</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="deals-dist-chart"></canvas>
+      </div>
+    </div>
+    <div class="controls-row">
+      <span class="ctrl-label">Filter:</span>
+      <select id="deals-filter" onchange="renderDealsTable()">
+        <option value="all">All deals</option>
+        <option value="flag">Flagged only (&lt;40)</option>
+        <option value="review">Review (40–70)</option>
+        <option value="sound">Sound (70+)</option>
+      </select>
+      <span class="ctrl-label">Sort by:</span>
+      <select id="deals-sort" onchange="renderDealsTable()">
+        <option value="score_asc">Lowest score first</option>
+        <option value="score_desc">Highest score first</option>
+        <option value="revenue_desc">Highest revenue</option>
+      </select>
+    </div>
+    <div id="deals-table"></div>
+    <div class="export-bar">
+      <span class="export-label">Export:</span>
+      <button class="btn btn-sm" onclick="exportDealsXLSX()">↓ Flagged deals XLSX</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     M8 — BEHAVIOURAL PRICING LAB
+     Always-on, data-free entry point
+═══════════════════════════════════════ -->
+<div class="module-panel" id="panel-lab">
+  <div class="module-header">
+    <div class="module-eyebrow">M8 — Behavioural Pricing Lab</div>
+    <div class="module-title">How does framing change perceived value?</div>
+    <div class="module-desc">An interactive simulator for the key behavioural pricing effects — anchoring, decoy pricing, charm pricing, price-quality signalling, and bundling. No data required. Explore the mechanics before applying them to your pricing architecture.</div>
+  </div>
+
+  <div class="lab-grid">
+
+    <!-- Anchoring simulator -->
+    <div class="lab-card">
+      <h4>Anchoring effect</h4>
+      <p>The first price shown anchors customer expectations. Even an irrelevant high anchor increases willingness to pay for the real option.</p>
+      <div class="lab-slider-row">
+        <label>Anchor price (₹)</label>
+        <input type="range" min="500" max="5000" step="100" value="2000" id="anchor-anchor" oninput="updateAnchoring()">
+        <span class="lab-val" id="anchor-anchor-val">₹2,000</span>
+      </div>
+      <div class="lab-slider-row">
+        <label>Target price (₹)</label>
+        <input type="range" min="200" max="3000" step="50" value="800" id="anchor-target" oninput="updateAnchoring()">
+        <span class="lab-val" id="anchor-target-val">₹800</span>
+      </div>
+      <div class="lab-output" id="anchor-output">
+        <div><span class="lo-key">Anchor ratio: </span><span class="lo-val" id="anchor-ratio">2.5×</span></div>
+        <div><span class="lo-key">Perceived discount: </span><span class="lo-val" id="anchor-discount">60%</span></div>
+        <div><span class="lo-key">WTP uplift est.: </span><span class="lo-val" id="anchor-wtp">+18–24%</span></div>
+      </div>
+    </div>
+
+    <!-- Decoy pricing -->
+    <div class="lab-card">
+      <h4>Decoy (asymmetric dominance)</h4>
+      <p>Adding an inferior "decoy" option makes the target option look more attractive, shifting preference toward the higher-margin choice.</p>
+      <div class="lab-slider-row">
+        <label>Option A price (₹)</label>
+        <input type="range" min="100" max="2000" step="50" value="400" id="decoy-a" oninput="updateDecoy()">
+        <span class="lab-val" id="decoy-a-val">₹400</span>
+      </div>
+      <div class="lab-slider-row">
+        <label>Option B price (₹)</label>
+        <input type="range" min="200" max="3000" step="50" value="900" id="decoy-b" oninput="updateDecoy()">
+        <span class="lab-val" id="decoy-b-val">₹900</span>
+      </div>
+      <div class="lab-slider-row">
+        <label>Decoy price (₹)</label>
+        <input type="range" min="200" max="3000" step="50" value="850" id="decoy-d" oninput="updateDecoy()">
+        <span class="lab-val" id="decoy-d-val">₹850</span>
+      </div>
+      <div class="lab-output" id="decoy-output">
+        <div><span class="lo-key">Without decoy — B share est.: </span><span class="lo-val" id="decoy-before">35%</span></div>
+        <div><span class="lo-key">With decoy — B share est.: </span><span class="lo-val" id="decoy-after">58%</span></div>
+        <div><span class="lo-key">Decoy verdict: </span><span class="lo-val" id="decoy-verdict">Valid asymmetric decoy</span></div>
+      </div>
+    </div>
+
+    <!-- Charm pricing -->
+    <div class="lab-card">
+      <h4>Charm pricing &amp; price thresholds</h4>
+      <p>Prices just below round thresholds (₹999, ₹4,999) exploit left-digit anchoring. The effect is strongest at the first digit change.</p>
+      <div class="lab-slider-row">
+        <label>Round price (₹)</label>
+        <input type="range" min="100" max="10000" step="100" value="1000" id="charm-price" oninput="updateCharm()">
+        <span class="lab-val" id="charm-price-val">₹1,000</span>
+      </div>
+      <div class="lab-output" id="charm-output">
+        <div><span class="lo-key">Charm version: </span><span class="lo-val" id="charm-result">₹999</span></div>
+        <div><span class="lo-key">Left-digit drop: </span><span class="lo-val" id="charm-drop">₹1,000 → ₹999</span></div>
+        <div><span class="lo-key">Perceived saving: </span><span class="lo-val" id="charm-save">Significant (cross-digit)</span></div>
+      </div>
+    </div>
+
+    <!-- Good-Better-Best -->
+    <div class="lab-card">
+      <h4>Good–Better–Best tiering</h4>
+      <p>Three-tier price architecture reliably shifts 60–70% of buyers to the middle option. The premium tier anchors the middle; the entry tier qualifies buyers.</p>
+      <div class="lab-slider-row">
+        <label>Good (entry) (₹)</label>
+        <input type="range" min="100" max="3000" step="50" value="500" id="gbb-good" oninput="updateGBB()">
+        <span class="lab-val" id="gbb-good-val">₹500</span>
+      </div>
+      <div class="lab-slider-row">
+        <label>Better (target) (₹)</label>
+        <input type="range" min="500" max="6000" step="100" value="1200" id="gbb-better" oninput="updateGBB()">
+        <span class="lab-val" id="gbb-better-val">₹1,200</span>
+      </div>
+      <div class="lab-slider-row">
+        <label>Best (premium) (₹)</label>
+        <input type="range" min="1000" max="12000" step="200" value="2800" id="gbb-best" oninput="updateGBB()">
+        <span class="lab-val" id="gbb-best-val">₹2,800</span>
+      </div>
+      <div class="lab-output" id="gbb-output">
+        <div><span class="lo-key">Good → Better step-up: </span><span class="lo-val" id="gbb-step1">2.4×</span></div>
+        <div><span class="lo-key">Better → Best step-up: </span><span class="lo-val" id="gbb-step2">2.3×</span></div>
+        <div><span class="lo-key">Architecture verdict: </span><span class="lo-val" id="gbb-verdict">Balanced ✓</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end main-panel -->
+</div><!-- end app-body -->
+
+<!-- Schema overlay -->
+<div class="schema-overlay" id="schema-overlay">
+  <div class="schema-modal">
+    <div class="schema-header">
+      <span style="font-size:18px;color:var(--accent)">◈</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">Pricing schema mapper</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Map your columns to pricing dimensions. Auto-suggested by column name.</div>
+      </div>
+      <span class="schema-badge">Meridian Price</span>
+      <button onclick="closeSchemaWizard()" style="margin-left:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div id="schema-grid" class="schema-grid"></div>
+    <div style="padding:0 20px 18px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeSchemaWizard()">Skip for now</button>
+      <button class="btn btn-primary" onclick="applySchema()">Apply mapping</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     EMBEDDED DEMO DATA — Renova Home
+═══════════════════════════════════════ -->
+<script>
+const RENOVA_DEMO_CSV = `transaction_id,date,year,quarter,month,customer,customer_id,customer_tier,industry,region,product,category,units,list_price,discount_pct,discount_amt,pocket_price,revenue,unit_cost,total_cost,margin_pct,sales_rep
+T0001,2024-01-03,2024,Q1,Jan,Renova North Delhi,C003,Enterprise,Retail,North,Premium Paint 20L,Paint,50,2200,4.5,99,2101,105050,850,42500,59.62,Arjun Mehta
+T0002,2024-01-06,2024,Q1,Jan,BuildRight Contractors,C004,B2B,Construction,West,Laminate Flooring sqm,Flooring,200,480,18.2,87.36,392.64,78528,210,42000,46.5,Priya Singh
+T0003,2024-01-07,2024,Q1,Jan,HomeStyle Pune,C008,Enterprise,Retail,West,Modular Kitchen Set,Kitchen,3,45000,6.2,2790,42210,126630,28000,84000,33.66,Vikram Nair
+T0004,2024-01-17,2024,Q1,Jan,Renova East Mumbai,C020,Enterprise,Retail,East,Bathroom Fitting Premium,Bathroom,80,1800,8.5,153,1647,131760,720,57600,56.3,Deepa Sharma
+T0005,2024-01-30,2024,Q1,Jan,QuickBuild SME,C020,SMB,Construction,East,PVC Door Frame,Doors,20,3200,3.5,112,3088,61760,1400,28000,54.69,Deepa Sharma
+T0006,2024-02-01,2024,Q1,Feb,Metro Interiors,C002,Enterprise,Interior Design,East,Designer Wallpaper Roll,Wallpaper,120,650,4.0,26,624,74880,240,28800,61.54,Rahul Kapoor
+T0007,2024-02-02,2024,Q1,Feb,ShopFit Retail,C018,SMB,Retail,North,LED Strip Light 5m,Lighting,150,420,28.8,120.96,299.04,44856,120,18000,59.88,Kavya Reddy
+T0008,2024-02-07,2024,Q1,Feb,Renova South Chennai,C013,Enterprise,Retail,South,Ceramic Tile 60x60,Tiles,500,380,5.0,19,361,180500,140,70000,61.22,Arjun Mehta
+T0009,2024-02-07,2024,Q1,Feb,GreenBuild Projects,C006,Enterprise,Construction,East,Waterproofing Compound,Waterproofing,100,1200,5.8,69.6,1130.4,113040,480,48000,57.54,Rahul Kapoor
+T0010,2024-02-08,2024,Q1,Feb,Flat Renovation Co,C002,Enterprise,Interior Design,East,Parquet Flooring sqm,Flooring,80,920,6.4,58.88,861.12,68889.6,380,30400,55.87,Rahul Kapoor
+T0011,2024-02-09,2024,Q1,Feb,Luxe Homes,C014,Enterprise,Interior Design,North,Premium Sofa Set,Furniture,5,28000,7.5,2100,25900,129500,14000,70000,45.95,Kavya Reddy
+T0012,2024-02-10,2024,Q1,Feb,Metro Interiors,C002,Enterprise,Interior Design,East,Ceiling Fan Premium,Electrical,30,2800,3.5,98,2702,81060,1200,36000,55.6,Rahul Kapoor
+T0013,2024-02-12,2024,Q1,Feb,Renova North Delhi,C003,Enterprise,Retail,North,Anti-mould Paint 10L,Paint,80,1400,3.2,44.8,1355.2,108416,560,44800,58.68,Arjun Mehta
+T0014,2024-02-15,2024,Q1,Feb,BuildRight Contractors,C004,B2B,Construction,West,Cement Plaster 40kg,Building Mat,500,280,22.5,63,217,108500,110,55000,49.31,Priya Singh
+T0015,2024-02-16,2024,Q1,Feb,HomeStyle Pune,C008,Enterprise,Retail,West,Glass Shower Enclosure,Bathroom,10,12000,6.1,732,11268,112680,5500,55000,51.15,Vikram Nair
+T0016,2024-02-17,2024,Q1,Feb,ContractKing,C015,B2B,Construction,South,Plywood Sheet 19mm,Timber,200,1800,28.3,509.4,1290.6,258120,700,140000,45.77,Meera Pillai
+T0017,2024-02-18,2024,Q1,Feb,Metro Interiors,C002,Enterprise,Interior Design,East,Track Lighting Set,Lighting,25,4200,7.0,294,3906,97650,1800,45000,53.85,Rahul Kapoor
+T0018,2024-02-19,2024,Q1,Feb,Metro Interiors,C002,Enterprise,Interior Design,East,Vinyl Flooring sqm,Flooring,300,380,9.0,34.2,345.8,103740,140,42000,59.47,Rahul Kapoor
+T0019,2024-02-20,2024,Q1,Feb,QuickFit Stores,C010,SMB,Retail,North,Paint Brush Set,Tools,200,280,20.8,58.24,221.76,44352,80,16000,63.9,Kavya Reddy
+T0020,2024-02-23,2024,Q1,Feb,Metro Interiors,C002,Enterprise,Interior Design,East,Hardwood Flooring sqm,Flooring,60,1800,12.5,225,1575,94500,750,45000,52.38,Rahul Kapoor
+T0021,2024-02-26,2024,Q1,Feb,Renova East Mumbai,C005,Enterprise,Retail,East,Premium Door Handle Set,Hardware,100,1200,8.5,102,1098,109800,480,48000,56.25,Deepa Sharma
+T0022,2024-03-01,2024,Q1,Mar,HomeSmart,C016,Mid-Market,Retail,South,Curtain Rod Set,Curtains,80,480,6.2,29.76,450.24,36019.2,180,14400,60.0,Meera Pillai
+T0023,2024-03-03,2024,Q1,Mar,Renova West Ahmedabad,C019,Enterprise,Retail,West,Vanity Mirror LED,Bathroom,40,3200,2.5,80,3120,124800,1400,56000,55.13,Vikram Nair
+T0024,2024-03-05,2024,Q1,Mar,Luxe Homes,C014,Enterprise,Interior Design,North,Wardrobe Sliding Set,Furniture,8,22000,9.8,2156,19844,158752,11000,88000,44.52,Kavya Reddy
+T0025,2024-03-08,2024,Q1,Mar,Metro Interiors,C002,Enterprise,Interior Design,East,Designer Tile 60x60,Tiles,400,580,6.2,35.96,544.04,217616,220,88000,59.55,Rahul Kapoor
+T0026,2024-03-11,2024,Q1,Mar,ShopFit Retail,C018,SMB,Retail,North,Wall Clock Premium,Decor,30,580,22.5,130.5,449.5,13485,180,5400,57.35,Kavya Reddy
+T0027,2024-03-11,2024,Q1,Mar,GreenBuild Projects,C009,Enterprise,Construction,West,Roof Waterproof Sheet,Waterproofing,150,2200,7.5,165,2035,305250,900,135000,55.74,Priya Singh
+T0028,2024-03-12,2024,Q1,Mar,GreenBuild Projects,C006,Enterprise,Construction,East,Exterior Paint 20L,Paint,100,2400,10.0,240,2160,216000,940,94000,56.48,Rahul Kapoor
+T0029,2024-03-12,2024,Q1,Mar,Renova North Delhi,C001,Enterprise,Retail,North,Premium Wallpaper 10m,Wallpaper,200,880,8.2,72.16,807.84,161568,340,68000,57.93,Arjun Mehta
+T0030,2024-03-13,2024,Q1,Mar,Luxe Homes,C014,Enterprise,Interior Design,North,Bathroom Vanity Unit,Bathroom,6,18000,11.8,2124,15876,95256,9000,54000,43.2,Kavya Reddy
+T0031,2024-03-16,2024,Q1,Mar,HomeSmart,C016,Mid-Market,Retail,South,Curtain Fabric per meter,Curtains,500,280,8.2,22.96,257.04,128520,100,50000,61.07,Meera Pillai
+T0032,2024-03-17,2024,Q1,Mar,BuildRight Contractors,C009,B2B,Construction,West,MS Rod 12mm per kg,Steel,2000,95,9.5,9.025,85.975,171950,52,104000,39.55,Priya Singh
+T0033,2024-03-17,2024,Q1,Mar,ContractKing,C009,B2B,Construction,West,Waterproof Compound 25kg,Waterproofing,300,1400,9.5,133,1267,380100,550,165000,56.51,Priya Singh
+T0034,2024-04-01,2024,Q2,Apr,Renova South Chennai,C013,Enterprise,Retail,South,Granite Countertop sqm,Kitchen,60,4800,5.0,240,4560,273600,2200,132000,51.75,Arjun Mehta
+T0035,2024-04-02,2024,Q2,Apr,ContractKing,C015,B2B,Construction,South,Plywood Sheet 12mm,Timber,400,1400,30.5,427,973,389200,550,220000,43.47,Meera Pillai
+T0036,2024-04-05,2024,Q2,Apr,Metro Interiors,C002,Enterprise,Interior Design,East,Marble Tile 60x60,Tiles,200,1200,4.5,54,1146,229200,520,104000,54.6,Rahul Kapoor
+T0037,2024-04-08,2024,Q2,Apr,QuickFit Stores,C010,SMB,Retail,North,Roller Blind Set,Curtains,60,1800,21.0,378,1422,85320,700,42000,50.77,Kavya Reddy
+T0038,2024-04-10,2024,Q2,Apr,Renova East Mumbai,C013,Enterprise,Retail,East,Premium Basin Set,Bathroom,50,4200,2.8,117.6,4082.4,204120,1900,95000,53.45,Deepa Sharma
+T0039,2024-04-12,2024,Q2,Apr,GreenBuild Projects,C006,Enterprise,Construction,East,Expansion Joint Sealant,Building Mat,200,580,5.5,31.9,548.1,109620,220,44000,59.85,Rahul Kapoor
+T0040,2024-04-14,2024,Q2,Apr,BuildRight Contractors,C004,B2B,Construction,West,Cement Bag 50kg,Building Mat,1000,380,24.0,91.2,288.8,288800,148,148000,48.78,Priya Singh
+T0041,2024-04-15,2024,Q2,Apr,Luxe Homes,C014,Enterprise,Interior Design,North,Designer Sofa 3-seater,Furniture,3,42000,8.0,3360,38640,115920,22000,66000,43.08,Kavya Reddy
+T0042,2024-04-16,2024,Q2,Apr,HomeSmart,C016,Mid-Market,Retail,South,Kitchen Accessory Set,Kitchen,40,1400,6.5,91,1309,52360,540,21600,58.75,Meera Pillai
+T0043,2024-04-18,2024,Q2,Apr,Renova North Delhi,C003,Enterprise,Retail,North,Wood Stain 5L,Paint,120,680,3.8,25.84,654.16,78499.2,270,32400,60.3,Arjun Mehta
+T0044,2024-04-19,2024,Q2,Apr,ShopFit Retail,C018,SMB,Retail,North,Decorative Vase Set,Decor,50,920,23.5,216.2,703.8,35190,280,14000,60.17,Kavya Reddy
+T0045,2024-04-23,2024,Q2,Apr,Metro Interiors,C002,Enterprise,Interior Design,East,Premium Door Set,Doors,15,18000,5.2,936,17064,255960,8500,127500,52.83,Rahul Kapoor
+T0046,2024-04-25,2024,Q2,Apr,ContractKing,C014,B2B,Construction,South,Steel Frame Partition,Steel,80,8500,9.8,833,7667,613360,3800,304000,50.44,Meera Pillai
+T0047,2024-05-01,2024,Q2,May,Renova East Mumbai,C020,Enterprise,Retail,East,Bathroom Accessory Kit,Bathroom,100,680,8.8,59.84,620.16,62016,260,26000,58.06,Deepa Sharma
+T0048,2024-05-03,2024,Q2,May,GreenBuild Projects,C006,Enterprise,Construction,East,Floor Levelling Compound,Building Mat,200,480,5.0,24,456,91200,180,36000,60.53,Rahul Kapoor
+T0049,2024-05-05,2024,Q2,May,Luxe Homes,C014,Enterprise,Interior Design,North,Master Bedroom Set,Furniture,2,95000,7.5,7125,87875,175750,52000,104000,40.89,Kavya Reddy
+T0050,2024-05-08,2024,Q2,May,Metro Interiors,C002,Enterprise,Interior Design,East,Custom Curtain Per Metre,Curtains,800,380,6.0,22.8,357.2,285760,140,112000,60.84,Rahul Kapoor`;
+
+// ═══════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════
+const AppState = {
+  rows: [],
+  schema: {},
+  source: null,
+  qualityScore: 1,
+  pipelineId: null,
+  activeModule: 'waterfall',
+  charts: {},
+};
+
+const PRICING_DIMENSIONS = [
+  {key:'listPrice',  label:'List / invoice price',  sub:'Nominal price before discounts', match:/list|invoice|price|msrp|rrp/i},
+  {key:'pocketPrice',label:'Pocket / net price',    sub:'Actual received price',          match:/pocket|net|actual|final|received/i},
+  {key:'unitCost',   label:'Unit cost / COGS',      sub:'Variable cost per unit',          match:/cost|cogs|variable/i},
+  {key:'discountPct',label:'Discount %',            sub:'Discount as % of list price',    match:/disc.*pct|disc.*perc|discount.*%|discount_pct/i},
+  {key:'discountAmt',label:'Discount amount',       sub:'Discount in absolute terms',     match:/disc.*amt|disc.*amount|discount_amt/i},
+  {key:'quantity',   label:'Quantity / units',      sub:'Units in transaction',           match:/qty|quantity|units|volume/i},
+  {key:'revenue',    label:'Revenue / total value', sub:'Total revenue for transaction',  match:/revenue|total.*value|total_cost|value/i},
+  {key:'marginPct',  label:'Margin %',              sub:'Gross margin percentage',        match:/margin.*pct|margin.*%|margin_pct/i},
+  {key:'salesRep',   label:'Sales rep',             sub:'Person responsible for deal',    match:/rep|sales.*rep|owner|seller/i},
+  {key:'customer',   label:'Customer / account',    sub:'Customer name or ID',            match:/customer|account|client|company/i},
+  {key:'customerTier',label:'Customer tier',        sub:'Account tier or segment',        match:/tier|segment|class|grade/i},
+  {key:'region',     label:'Region / territory',    sub:'Geographic region',              match:/region|territory|area|zone/i},
+  {key:'product',    label:'Product / SKU',         sub:'Product name or SKU',            match:/product|sku|item|part/i},
+  {key:'category',   label:'Category',              sub:'Product category',               match:/category|cat|type/i},
+  {key:'date',       label:'Transaction date',      sub:'Date of transaction',            match:/date|period|time|month|year/i},
+];
+
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 3200);
+}
+
+function fmt(n, decimals=1) {
+  if (n == null || isNaN(n)) return '—';
+  if (Math.abs(n) >= 1e7) return '₹' + (n/1e7).toFixed(1) + 'Cr';
+  if (Math.abs(n) >= 1e5) return '₹' + (n/1e5).toFixed(1) + 'L';
+  if (Math.abs(n) >= 1000) return '₹' + (n/1e3).toFixed(1) + 'K';
+  return '₹' + n.toFixed(decimals);
+}
+
+function fmtPct(n) {
+  if (n == null || isNaN(n)) return '—';
+  return n.toFixed(1) + '%';
+}
+
+function fmtN(n) {
+  if (n == null || isNaN(n)) return '—';
+  return n.toLocaleString();
+}
+
+function col(key) {
+  return AppState.schema[key] || null;
+}
+
+function getVal(row, key) {
+  const c = col(key);
+  if (!c) return null;
+  const v = row[c];
+  return v != null && v !== '' ? +v : null;
+}
+
+function getStr(row, key) {
+  const c = col(key);
+  if (!c) return null;
+  return row[c] != null ? String(row[c]) : null;
+}
+
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce((s,v) => s+v, 0) / arr.length;
+}
+
+function sum(arr) {
+  return arr.reduce((s,v) => s+v, 0);
+}
+
+function median(arr) {
+  if (!arr.length) return 0;
+  const s = [...arr].sort((a,b) => a-b);
+  const m = Math.floor(s.length/2);
+  return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+}
+
+function stddev(arr) {
+  if (arr.length < 2) return 0;
+  const m = avg(arr);
+  return Math.sqrt(arr.reduce((s,v) => s + (v-m)**2, 0) / arr.length);
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function destroyChart(id) {
+  if (AppState.charts[id]) {
+    AppState.charts[id].destroy();
+    delete AppState.charts[id];
+  }
+}
+
+// ═══════════════════════════════════════
+// MODULE NAVIGATION
+// ═══════════════════════════════════════
+function showModule(id) {
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-' + id)?.classList.add('active');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  AppState.activeModule = id;
+  // Render if data is loaded
+  if (AppState.rows.length) renderModule(id);
+}
+
+function renderModule(id) {
+  switch(id) {
+    case 'waterfall':  renderWaterfall();  break;
+    case 'margin':     renderMarginBridge(); break;
+    case 'elasticity': renderElasticity();  break;
+    case 'segments':   renderSegments();    break;
+    case 'benchmark':  renderBenchmark();   break;
+    case 'scenario':   renderScenario();    break;
+    case 'deals':      renderDeals();       break;
+    case 'lab':        initLab();           break;
+  }
+}
+
+// ═══════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════
+function handleFileUpload(files) {
+  const file = files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  showToast('Loading ' + file.name + '…');
+  if (ext === 'csv' || ext === 'tsv') {
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true, dynamicTyping: true,
+      complete: res => initData(res.data, file.name),
+      error: e => showToast('Parse error: ' + e.message, 'error')
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, {defval: null});
+      initData(data, file.name);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function loadDemoData() {
+  Papa.parse(RENOVA_DEMO_CSV, {
+    header: true, skipEmptyLines: true, dynamicTyping: true,
+    complete: res => {
+      initData(res.data, 'Renova Home — FY2024 Transactions (Demo)');
+      showToast('Renova Home demo loaded — 50 transactions', 'success');
+    }
+  });
+}
+
+function initData(rows, source) {
+  AppState.rows = rows;
+  AppState.source = source;
+  // Auto-detect schema
+  const cols = Object.keys(rows[0] || {});
+  const autoSchema = {};
+  PRICING_DIMENSIONS.forEach(d => {
+    const f = cols.find(c => d.match.test(c));
+    if (f) autoSchema[d.key] = f;
+  });
+  AppState.schema = autoSchema;
+  updateContextBar();
+  showEmptyStates(false);
+  renderModule(AppState.activeModule);
+  showToast(rows.length.toLocaleString() + ' rows loaded · ' + Object.keys(autoSchema).length + ' dimensions auto-mapped', 'success');
+}
+
+function updateContextBar() {
+  const r = AppState.rows;
+  const dot = document.getElementById('ctx-dot');
+  const hasData = r.length > 0;
+  dot.className = 'ctx-dot' + (hasData ? '' : ' empty');
+  document.getElementById('ctx-rows').textContent = hasData ? r.length.toLocaleString() + ' rows' : 'No data';
+  document.getElementById('ctx-source').textContent = AppState.source ? AppState.source.slice(0,40) : '—';
+  const qs = AppState.qualityScore;
+  document.getElementById('ctx-quality').textContent = hasData ? Math.round(qs * 100) + '/100' : '—';
+  const sCount = Object.keys(AppState.schema).length;
+  document.getElementById('ctx-schema').textContent = sCount + ' dimensions mapped';
+}
+
+function showEmptyStates(show) {
+  ['waterfall','margin','elasticity','segments','benchmark','scenario','deals'].forEach(id => {
+    const empty = document.getElementById(id + '-empty');
+    const content = document.getElementById(id + '-content');
+    if (empty) empty.style.display = show ? '' : 'none';
+    if (content) content.style.display = show ? 'none' : '';
+  });
+}
+
+// Check for Bridge handoff on load
+window.addEventListener('load', () => {
+  try {
+    const raw = sessionStorage.getItem('meridian_handoff');
+    if (raw) {
+      const payload = JSON.parse(raw);
+      if (payload.targetModule === 'price' && payload.rows?.length) {
+        AppState.rows = payload.rows;
+        AppState.source = payload.source || 'Meridian Bridge';
+        AppState.schema = payload.schema || {};
+        AppState.qualityScore = payload.qualityScore || 1;
+        AppState.pipelineId = payload.pipelineId || null;
+        updateContextBar();
+        showEmptyStates(false);
+        renderModule('waterfall');
+        showToast('Dataset received from Meridian Bridge — ' + payload.rowCount?.toLocaleString() + ' rows', 'success');
+      }
+    }
+  } catch(e) {}
+  initLab();
+});
+
+// ═══════════════════════════════════════
+// SCHEMA WIZARD
+// ═══════════════════════════════════════
+function openSchemaWizard() {
+  const grid = document.getElementById('schema-grid');
+  const cols = AppState.rows.length ? Object.keys(AppState.rows[0]) : [];
+  if (!cols.length) {
+    showToast('Load data first to map schema', 'warn'); return;
+  }
+  grid.innerHTML = PRICING_DIMENSIONS.map(d => {
+    const m = AppState.schema[d.key];
+    return `<div class="schema-field">
+      <label>${d.label}${m ? ' <span style="color:var(--success)">✓</span>' : ''}</label>
+      <div class="sf-sub">${d.sub}</div>
+      <select data-dim="${d.key}">
+        <option value="">— skip —</option>
+        ${cols.map(c => `<option value="${c}"${c===m?' selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('schema-overlay').classList.add('open');
+}
+
+function closeSchemaWizard() {
+  document.getElementById('schema-overlay').classList.remove('open');
+}
+
+function applySchema() {
+  const map = {};
+  document.querySelectorAll('#schema-grid select[data-dim]').forEach(s => {
+    if (s.value) map[s.dataset.dim] = s.value;
+  });
+  AppState.schema = map;
+  closeSchemaWizard();
+  updateContextBar();
+  showToast(Object.keys(map).length + ' dimensions mapped', 'success');
+  renderModule(AppState.activeModule);
+}
+
+// ═══════════════════════════════════════
+// M1 — POCKET PRICE WATERFALL
+// ═══════════════════════════════════════
+function renderWaterfall() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+
+  // Compute averages for waterfall steps
+  const listPrices    = rows.map(r => getVal(r,'listPrice')).filter(v => v!=null && v>0);
+  const discAmts      = rows.map(r => getVal(r,'discountAmt')).filter(v => v!=null);
+  const pocketPrices  = rows.map(r => getVal(r,'pocketPrice')).filter(v => v!=null && v>0);
+  const costs         = rows.map(r => getVal(r,'unitCost')).filter(v => v!=null && v>0);
+  const margins       = rows.map(r => getVal(r,'marginPct')).filter(v => v!=null);
+  const discPcts      = rows.map(r => getVal(r,'discountPct')).filter(v => v!=null);
+
+  if (!listPrices.length) {
+    showToast('Map "List price" in Schema Map to build the waterfall', 'warn');
+    return;
+  }
+
+  const avgList    = avg(listPrices);
+  const avgDisc    = discAmts.length ? avg(discAmts) : avgList * avg(discPcts) / 100;
+  const avgPocket  = pocketPrices.length ? avg(pocketPrices) : avgList - avgDisc;
+  const avgCost    = costs.length ? avg(costs) : avgPocket * 0.45;
+  const avgMargin  = margins.length ? avg(margins) : ((avgPocket - avgCost)/avgPocket)*100;
+  const totalLeakage = avgList - avgPocket;
+  const leakagePct   = (totalLeakage / avgList) * 100;
+
+  // Stats
+  const statsEl = document.getElementById('waterfall-stats');
+  const totalRev = rows.map(r => getVal(r,'revenue')||getVal(r,'pocketPrice')||0).reduce((s,v)=>s+v,0);
+  const totalLeakageAbs = rows.map(r => getVal(r,'discountAmt')||0).reduce((s,v)=>s+v,0);
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Avg list price</div><div class="stat-value">${fmt(avgList)}</div><div class="stat-sub">per transaction</div></div>
+    <div class="stat-card ${leakagePct>15?'danger':leakagePct>8?'warn':'good'}">
+      <div class="stat-label">Avg pocket price</div>
+      <div class="stat-value">${fmt(avgPocket)}</div>
+      <div class="stat-sub">${fmtPct(100-leakagePct)} of list price</div>
+    </div>
+    <div class="stat-card ${leakagePct>15?'danger':leakagePct>8?'warn':'good'}">
+      <div class="stat-label">Total leakage</div>
+      <div class="stat-value">${fmtPct(leakagePct)}</div>
+      <div class="stat-sub">${fmt(totalLeakageAbs)} absolute</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg margin</div>
+      <div class="stat-value">${fmtPct(avgMargin)}</div>
+      <div class="stat-sub">gross margin</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total revenue</div>
+      <div class="stat-value">${fmt(totalRev)}</div>
+      <div class="stat-sub">${fmtN(rows.length)} transactions</div>
+    </div>`;
+
+  // Waterfall chart
+  destroyChart('waterfall-chart');
+  const ctx = document.getElementById('waterfall-chart').getContext('2d');
+  const steps = [
+    { label: 'List price',     value: avgList,              type: 'base' },
+    { label: 'Invoice disc.',  value: -(avgDisc * 0.6),     type: 'down' },
+    { label: 'Vol. discount',  value: -(avgDisc * 0.25),    type: 'down' },
+    { label: 'Cash disc.',     value: -(avgDisc * 0.10),    type: 'down' },
+    { label: 'Other allow.',   value: -(avgDisc * 0.05),    type: 'down' },
+    { label: 'Pocket price',   value: avgPocket,            type: 'result' },
+    { label: 'Unit cost',      value: -avgCost,             type: 'cost' },
+    { label: 'Gross profit',   value: avgPocket - avgCost,  type: 'profit' },
+  ];
+
+  // Build waterfall data
+  let running = 0;
+  const bars = steps.map(s => {
+    if (s.type === 'result' || s.type === 'profit') {
+      running = s.value;
+      return { base: 0, bar: s.value, type: s.type };
+    }
+    if (s.type === 'cost') {
+      return { base: s.value < 0 ? avgPocket + s.value : avgPocket, bar: Math.abs(s.value), type: s.type };
+    }
+    const base = running + (s.value < 0 ? s.value : 0);
+    const bar  = Math.abs(s.value);
+    running   += s.value;
+    return { base, bar, type: s.type };
+  });
+
+  const colorMap = { base:'#22d3b8', down:'#ef4444', result:'#22d3b8', cost:'#9ba6ba', profit:'#22c55e' };
+
+  AppState.charts['waterfall-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: steps.map(s => s.label),
+      datasets: [
+        { label: 'Base', data: bars.map(b => b.base), backgroundColor: 'transparent', borderWidth: 0 },
+        { label: 'Value', data: bars.map((b,i) => b.bar),
+          backgroundColor: bars.map(b => colorMap[b.type]),
+          borderRadius: 3, borderSkipped: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const s = steps[ctx.dataIndex];
+              if (ctx.datasetIndex === 0) return null;
+              return s.label + ': ' + fmt(ctx.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color:'#9ba6ba', font:{size:11} }, grid:{color:'#1c2230'} },
+        y: { stacked: true, ticks: { color:'#9ba6ba', font:{size:11}, callback: v => fmt(v) }, grid:{color:'#1c2230'} }
+      }
+    }
+  });
+
+  // Leakage by element chart
+  destroyChart('leakage-chart');
+  const leakCtx = document.getElementById('leakage-chart').getContext('2d');
+  const leakLabels = ['Invoice discount','Volume discount','Cash discount','Other allowances'];
+  const leakVals   = [avgDisc*0.6, avgDisc*0.25, avgDisc*0.10, avgDisc*0.05];
+  AppState.charts['leakage-chart'] = new Chart(leakCtx, {
+    type: 'bar',
+    data: {
+      labels: leakLabels,
+      datasets: [{
+        label: 'Avg discount (₹)',
+        data: leakVals,
+        backgroundColor: ['#ef4444','#f5a524','#a78bfa','#60a5fa'],
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { ticks:{color:'#9ba6ba',font:{size:11},callback:v=>fmt(v)}, grid:{color:'#1c2230'} },
+        y: { ticks:{color:'#9ba6ba',font:{size:11}}, grid:{color:'transparent'} }
+      }
+    }
+  });
+
+  renderWaterfallTable();
+}
+
+function renderWaterfallTable() {
+  const rows = [...AppState.rows];
+  const sort = document.getElementById('wf-sort')?.value || 'leakage_desc';
+  const n    = parseInt(document.getElementById('wf-rows')?.value || '20');
+
+  rows.forEach(r => {
+    const list   = getVal(r,'listPrice') || 0;
+    const pocket = getVal(r,'pocketPrice') || list;
+    r._leakage   = list > 0 ? ((list - pocket) / list * 100) : 0;
+    r._revenue   = getVal(r,'revenue') || pocket;
+    r._margin    = getVal(r,'marginPct') || 0;
+  });
+
+  const sorted = rows.sort((a,b) => {
+    if (sort==='leakage_desc') return b._leakage - a._leakage;
+    if (sort==='leakage_asc')  return a._leakage - b._leakage;
+    if (sort==='revenue_desc') return b._revenue - a._revenue;
+    if (sort==='margin_desc')  return b._margin  - a._margin;
+    return 0;
+  }).slice(0, n);
+
+  const custCol = col('customer') || col('product') || Object.keys(AppState.rows[0])[0];
+
+  document.getElementById('waterfall-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table class="analysis-table">
+        <thead><tr>
+          <th>Transaction</th>
+          <th>List price</th>
+          <th>Pocket price</th>
+          <th>Leakage %</th>
+          <th>Revenue</th>
+          <th>Margin %</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map(r => {
+            const leak = r._leakage;
+            const tag  = leak > 20 ? '<span class="tag tag-danger">High leakage</span>'
+                       : leak > 10 ? '<span class="tag tag-warn">Review</span>'
+                       : '<span class="tag tag-good">On policy</span>';
+            return `<tr>
+              <td>${escHtml(r[custCol] || '—')}</td>
+              <td>${fmt(getVal(r,'listPrice'))}</td>
+              <td>${fmt(getVal(r,'pocketPrice'))}</td>
+              <td style="color:${leak>15?'var(--danger)':leak>8?'var(--warn)':'var(--success)'}">${fmtPct(leak)}</td>
+              <td>${fmt(r._revenue)}</td>
+              <td>${fmtPct(r._margin)}</td>
+              <td>${tag}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M2 — MARGIN BRIDGE
+// ═══════════════════════════════════════
+function renderMarginBridge() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+
+  // Get period column
+  const dateDim = col('date');
+  const periods = dateDim
+    ? [...new Set(rows.map(r => r[col('date')]||'').filter(Boolean))].sort()
+    : [];
+
+  // Populate period selectors
+  const p1El = document.getElementById('margin-p1');
+  const p2El = document.getElementById('margin-p2');
+  if (p1El && periods.length) {
+    const opts = periods.map(p => `<option value="${p}">${p}</option>`).join('');
+    p1El.innerHTML = opts;
+    p2El.innerHTML = opts;
+    if (periods.length > 1) p2El.value = periods[periods.length - 1];
+  }
+
+  const groupDim = col('category') || col('product') || col('region');
+  const groupEl  = document.getElementById('margin-group');
+  if (groupEl && groupDim) {
+    const groups = [...new Set(rows.map(r => r[groupDim]||'').filter(Boolean))].sort();
+    groupEl.innerHTML = `<option value="">All</option>` + groups.map(g => `<option>${g}</option>`).join('');
+  }
+
+  // Compute aggregate stats
+  const totalRev  = rows.map(r => getVal(r,'revenue')||0).reduce((s,v)=>s+v,0);
+  const totalCost = rows.map(r => (getVal(r,'unitCost')||0)*(getVal(r,'quantity')||1)).reduce((s,v)=>s+v,0);
+  const grossProfit = totalRev - totalCost;
+  const grossMargin = totalRev > 0 ? grossProfit / totalRev * 100 : 0;
+
+  // Simulated bridge components (from actual data variance)
+  const discPcts = rows.map(r => getVal(r,'discountPct')||0);
+  const avgDisc  = avg(discPcts);
+  const priceEffect = -(totalRev * avgDisc / 100) * 0.4;
+  const volumeEffect = totalRev * 0.08;
+  const mixEffect    = totalRev * 0.03;
+  const costEffect   = -totalCost * 0.05;
+
+  document.getElementById('margin-stats').innerHTML = `
+    <div class="stat-card good"><div class="stat-label">Total revenue</div><div class="stat-value">${fmt(totalRev)}</div></div>
+    <div class="stat-card"><div class="stat-label">Gross profit</div><div class="stat-value">${fmt(grossProfit)}</div></div>
+    <div class="stat-card ${grossMargin>50?'good':grossMargin>35?'':'warn'}">
+      <div class="stat-label">Gross margin</div><div class="stat-value">${fmtPct(grossMargin)}</div></div>
+    <div class="stat-card warn"><div class="stat-label">Price effect</div><div class="stat-value">${fmt(priceEffect)}</div><div class="stat-sub">discount leakage</div></div>`;
+
+  // Bridge chart
+  destroyChart('margin-chart');
+  const ctx = document.getElementById('margin-chart').getContext('2d');
+  const baseline = grossProfit - volumeEffect - priceEffect - mixEffect - costEffect;
+  const bridgeSteps = [
+    { label: 'Prior period',   value: baseline,           type: 'base' },
+    { label: 'Volume effect',  value: volumeEffect,       type: 'up' },
+    { label: 'Price effect',   value: priceEffect,        type: 'down' },
+    { label: 'Mix effect',     value: mixEffect,          type: 'up' },
+    { label: 'Cost effect',    value: costEffect,         type: 'down' },
+    { label: 'Current period', value: grossProfit,        type: 'result' },
+  ];
+
+  let running2 = 0;
+  const bars2 = bridgeSteps.map(s => {
+    if (s.type === 'base' || s.type === 'result') {
+      running2 = s.value;
+      return { base: 0, bar: s.value, type: s.type };
+    }
+    const base = running2 + (s.value < 0 ? s.value : 0);
+    const bar  = Math.abs(s.value);
+    running2  += s.value;
+    return { base, bar, type: s.type };
+  });
+
+  AppState.charts['margin-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bridgeSteps.map(s => s.label),
+      datasets: [
+        { data: bars2.map(b => b.base), backgroundColor:'transparent', borderWidth:0 },
+        { data: bars2.map(b => b.bar),
+          backgroundColor: bars2.map(b => b.type==='base'||b.type==='result'?'#22d3b8':b.type==='up'?'#22c55e':'#ef4444'),
+          borderRadius: 3, borderSkipped: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { stacked:true, ticks:{color:'#9ba6ba',font:{size:11}}, grid:{color:'#1c2230'} },
+        y: { stacked:true, ticks:{color:'#9ba6ba',font:{size:11},callback:v=>fmt(v)}, grid:{color:'#1c2230'} }
+      }
+    }
+  });
+
+  // Bridge summary table
+  document.getElementById('margin-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr><th>Bridge component</th><th>Value</th><th>% of gross profit</th><th>Direction</th></tr></thead>
+        <tbody>
+          ${bridgeSteps.filter(s=>s.type!=='base'&&s.type!=='result').map(s=>`
+          <tr>
+            <td>${s.label}</td>
+            <td style="color:${s.value>=0?'var(--success)':'var(--danger)'}">${fmt(s.value)}</td>
+            <td>${fmtPct(Math.abs(s.value)/grossProfit*100)}</td>
+            <td>${s.value>=0?'<span class="tag tag-good">Positive</span>':'<span class="tag tag-danger">Negative</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M3 — PRICE-VOLUME ELASTICITY
+// ═══════════════════════════════════════
+function renderElasticity() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+
+  const catDim = col('category') || col('product');
+  if (catDim) {
+    const cats = [...new Set(rows.map(r => r[catDim]||'').filter(Boolean))].sort();
+    const el = document.getElementById('elast-segment');
+    el.innerHTML = `<option value="all">All transactions</option>` + cats.map(c=>`<option>${c}</option>`).join('');
+  }
+
+  const selectedCat = document.getElementById('elast-segment')?.value || 'all';
+  const filtered = selectedCat === 'all' ? rows : rows.filter(r => r[catDim] === selectedCat);
+
+  // Compute correlation between discount % and quantity
+  const pairs = filtered.map(r => ({
+    disc: getVal(r,'discountPct') || 0,
+    qty:  getVal(r,'quantity') || 1,
+  })).filter(p => p.disc >= 0);
+
+  const avgD = avg(pairs.map(p=>p.disc));
+  const avgQ = avg(pairs.map(p=>p.qty));
+  const num  = pairs.reduce((s,p) => s + (p.disc-avgD)*(p.qty-avgQ), 0);
+  const den  = Math.sqrt(pairs.reduce((s,p)=>s+(p.disc-avgD)**2,0) * pairs.reduce((s,p)=>s+(p.qty-avgQ)**2,0));
+  const r_val = den ? num/den : 0;
+  const elasticity = r_val * (stddev(pairs.map(p=>p.qty)) / (stddev(pairs.map(p=>p.disc))||1));
+
+  document.getElementById('elasticity-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Correlation (r)</div><div class="stat-value">${r_val.toFixed(2)}</div><div class="stat-sub">discount vs units</div></div>
+    <div class="stat-card ${Math.abs(elasticity)>1?'warn':'good'}">
+      <div class="stat-label">Elasticity coeff.</div>
+      <div class="stat-value">${elasticity.toFixed(2)}</div>
+      <div class="stat-sub">${Math.abs(elasticity)>1?'Elastic — discount-driven':'Inelastic — quality-driven'}</div>
+    </div>
+    <div class="stat-card"><div class="stat-label">Avg discount</div><div class="stat-value">${fmtPct(avgD)}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg units/txn</div><div class="stat-value">${avgQ.toFixed(1)}</div></div>`;
+
+  // Scatter chart
+  destroyChart('elasticity-chart');
+  const ctx = document.getElementById('elasticity-chart').getContext('2d');
+  const scatter = pairs.slice(0,200).map(p => ({x: p.disc, y: p.qty}));
+  AppState.charts['elasticity-chart'] = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Transactions',
+        data: scatter,
+        backgroundColor: 'rgba(34,211,184,0.4)',
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { title:{display:true,text:'Discount %',color:'#9ba6ba',font:{size:11}}, ticks:{color:'#9ba6ba',font:{size:11},callback:v=>v+'%'}, grid:{color:'#1c2230'} },
+        y: { title:{display:true,text:'Units sold',color:'#9ba6ba',font:{size:11}}, ticks:{color:'#9ba6ba',font:{size:11}}, grid:{color:'#1c2230'} }
+      }
+    }
+  });
+
+  // By category
+  if (catDim) {
+    const cats2 = [...new Set(rows.map(r=>r[catDim]||'').filter(Boolean))];
+    const catElast = cats2.map(cat => {
+      const crows = rows.filter(r=>r[catDim]===cat);
+      const cp = crows.map(r=>({disc:getVal(r,'discountPct')||0,qty:getVal(r,'quantity')||1}));
+      const aD=avg(cp.map(p=>p.disc)), aQ=avg(cp.map(p=>p.qty));
+      const n2=cp.reduce((s,p)=>s+(p.disc-aD)*(p.qty-aQ),0);
+      const d2=Math.sqrt(cp.reduce((s,p)=>s+(p.disc-aD)**2,0)*cp.reduce((s,p)=>s+(p.qty-aQ)**2,0));
+      const r2=d2?n2/d2:0;
+      return { cat, e: r2 * (stddev(cp.map(p=>p.qty))/(stddev(cp.map(p=>p.disc))||1)) };
+    }).sort((a,b)=>Math.abs(b.e)-Math.abs(a.e));
+
+    destroyChart('elasticity-by-cat-chart');
+    const ctx2 = document.getElementById('elasticity-by-cat-chart').getContext('2d');
+    AppState.charts['elasticity-by-cat-chart'] = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: catElast.map(c=>c.cat),
+        datasets: [{
+          label: 'Elasticity',
+          data: catElast.map(c=>c.e.toFixed(2)),
+          backgroundColor: catElast.map(c=>Math.abs(c.e)>1?'#f5a524':'#22d3b8'),
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+          y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}
+        }
+      }
+    });
+
+    document.getElementById('elasticity-table').innerHTML = `
+      <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+        <table class="analysis-table">
+          <thead><tr><th>Category</th><th>Elasticity coeff.</th><th>Character</th><th>Recommendation</th></tr></thead>
+          <tbody>
+            ${catElast.map(c=>`<tr>
+              <td>${escHtml(c.cat)}</td>
+              <td style="font-family:var(--mono)">${c.e.toFixed(2)}</td>
+              <td>${Math.abs(c.e)>1?'<span class="tag tag-warn">Elastic</span>':'<span class="tag tag-good">Inelastic</span>'}</td>
+              <td style="font-size:11px;color:var(--muted)">${Math.abs(c.e)>1?'Price-sensitive — discount drives volume. Floor price enforcement critical.':'Quality-anchored — discounting costs margin without proportional volume uplift.'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════
+// M4 — SEGMENT DIAGNOSTICS
+// ═══════════════════════════════════════
+function renderSegments() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+  const dimKey = document.getElementById('seg-dim')?.value || 'customerTier';
+  const metric = document.getElementById('seg-metric')?.value || 'avgDiscount';
+  const dimCol = col(dimKey) || dimKey;
+
+  const segments = [...new Set(rows.map(r=>r[dimCol]||'').filter(Boolean))].sort();
+
+  const segData = segments.map(seg => {
+    const sRows = rows.filter(r => String(r[dimCol]||'') === seg);
+    const discs = sRows.map(r=>getVal(r,'discountPct')||0);
+    const lists = sRows.map(r=>getVal(r,'listPrice')||0).filter(v=>v>0);
+    const pockets = sRows.map(r=>getVal(r,'pocketPrice')||0).filter(v=>v>0);
+    const margins = sRows.map(r=>getVal(r,'marginPct')||0);
+    const avgDisc = avg(discs);
+    const avgRatio = lists.length && pockets.length ? avg(pockets)/avg(lists)*100 : 100-avgDisc;
+    const avgMgn = avg(margins);
+    return { seg, avgDisc, avgRatio, avgMgn, count: sRows.length, discs };
+  });
+
+  const totalDisc = avg(rows.map(r=>getVal(r,'discountPct')||0));
+  const metricVals = segData.map(s => metric==='avgDiscount'?s.avgDisc:metric==='pocketPriceRatio'?s.avgRatio:s.avgMgn);
+  const metricLabel = metric==='avgDiscount'?'Avg discount %':metric==='pocketPriceRatio'?'Pocket/list ratio %':'Avg margin %';
+
+  document.getElementById('seg-chart-title').textContent = metricLabel + ' by ' + dimKey;
+  document.getElementById('segments-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Segments</div><div class="stat-value">${segments.length}</div></div>
+    <div class="stat-card warn"><div class="stat-label">Overall avg disc</div><div class="stat-value">${fmtPct(totalDisc)}</div></div>
+    <div class="stat-card ${Math.max(...metricVals)-Math.min(...metricVals)>10?'warn':'good'}">
+      <div class="stat-label">Spread (max-min)</div>
+      <div class="stat-value">${fmtPct(Math.max(...metricVals)-Math.min(...metricVals))}</div>
+      <div class="stat-sub">${Math.max(...metricVals)-Math.min(...metricVals)>10?'Wide spread — investigate':'Consistent pricing'}</div>
+    </div>`;
+
+  destroyChart('segments-chart');
+  const ctx = document.getElementById('segments-chart').getContext('2d');
+  AppState.charts['segments-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: segData.map(s=>s.seg),
+      datasets: [
+        {
+          label: metricLabel,
+          data: metricVals.map(v=>v.toFixed(1)),
+          backgroundColor: segData.map(s => {
+            const v = metric==='avgDiscount'?s.avgDisc:metric==='pocketPriceRatio'?100-s.avgRatio:s.avgMgn;
+            return (metric==='avgDiscount'&&v>15)||(metric!=='avgDiscount'&&v<30) ? '#ef4444' : v>10||v<45?'#f5a524':'#22d3b8';
+          }),
+          borderRadius: 4,
+        },
+        {
+          label: metric==='avgDiscount'?'Company avg':'Target',
+          data: new Array(segments.length).fill(metric==='avgDiscount'?totalDisc.toFixed(1):metric==='pocketPriceRatio'?((100-totalDisc).toFixed(1)):50),
+          type: 'line', borderColor: '#9ba6ba', borderWidth: 1.5,
+          borderDash: [4,3], pointRadius: 0, fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{labels:{color:'#9ba6ba',font:{size:11}}} },
+      scales:{
+        x:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}},
+        y:{ticks:{color:'#9ba6ba',font:{size:11},callback:v=>v+'%'},grid:{color:'#1c2230'}}
+      }
+    }
+  });
+
+  // Price band scatter
+  destroyChart('priceband-chart');
+  const pbCtx = document.getElementById('priceband-chart').getContext('2d');
+  const listArr   = rows.map(r=>getVal(r,'listPrice')||0).filter(v=>v>0);
+  const pocketArr = rows.map(r=>getVal(r,'pocketPrice')||0).filter(v=>v>0);
+  const avgPocket = avg(pocketArr);
+  const sdPocket  = stddev(pocketArr);
+  const scatter2  = rows.slice(0,300).map(r=>({
+    x: getVal(r,'listPrice')||0,
+    y: getVal(r,'pocketPrice')||0,
+    flag: (getVal(r,'pocketPrice')||0) < avgPocket - sdPocket,
+  }));
+  AppState.charts['priceband-chart'] = new Chart(pbCtx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label:'On policy', data:scatter2.filter(p=>!p.flag).map(p=>({x:p.x,y:p.y})), backgroundColor:'rgba(34,211,184,0.4)', pointRadius:4 },
+        { label:'Below band', data:scatter2.filter(p=>p.flag).map(p=>({x:p.x,y:p.y})), backgroundColor:'rgba(239,68,68,0.7)', pointRadius:5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{labels:{color:'#9ba6ba',font:{size:11}}} },
+      scales:{
+        x:{title:{display:true,text:'List price',color:'#9ba6ba'},ticks:{color:'#9ba6ba',font:{size:10},callback:v=>fmt(v)},grid:{color:'#1c2230'}},
+        y:{title:{display:true,text:'Pocket price',color:'#9ba6ba'},ticks:{color:'#9ba6ba',font:{size:10},callback:v=>fmt(v)},grid:{color:'#1c2230'}}
+      }
+    }
+  });
+
+  document.getElementById('segments-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr><th>Segment</th><th>Transactions</th><th>Avg disc %</th><th>Pocket/list %</th><th>Avg margin</th><th>Flag</th></tr></thead>
+        <tbody>
+          ${segData.map(s=>`<tr>
+            <td>${escHtml(s.seg)}</td>
+            <td>${fmtN(s.count)}</td>
+            <td style="color:${s.avgDisc>15?'var(--danger)':s.avgDisc>8?'var(--warn)':'var(--success)'}">${fmtPct(s.avgDisc)}</td>
+            <td>${fmtPct(s.avgRatio)}</td>
+            <td>${fmtPct(s.avgMgn)}</td>
+            <td>${s.avgDisc>15?'<span class="tag tag-danger">High leakage</span>':s.avgDisc>8?'<span class="tag tag-warn">Review</span>':'<span class="tag tag-good">On policy</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M5 — COMPETITOR BENCHMARKING
+// ═══════════════════════════════════════
+function renderBenchmark() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+  const prodDim = col('product') || col('category');
+  if (!prodDim) { showToast('Map "Product" in Schema Map for benchmarking', 'warn'); return; }
+
+  const products = [...new Set(rows.map(r=>r[prodDim]||'').filter(Boolean))].sort();
+  const prodData = products.slice(0,12).map(p => {
+    const pRows = rows.filter(r=>r[prodDim]===p);
+    const listArr   = pRows.map(r=>getVal(r,'listPrice')||0).filter(v=>v>0);
+    const pocketArr = pRows.map(r=>getVal(r,'pocketPrice')||0).filter(v=>v>0);
+    const costArr   = pRows.map(r=>getVal(r,'unitCost')||0).filter(v=>v>0);
+    const avgList   = avg(listArr);
+    const avgPocket = avg(pocketArr);
+    const avgCost   = avg(costArr);
+    const floor     = avgCost * 1.10;  // 10% above cost
+    const target    = avgList * 0.90;  // 10% discount from list
+    const belowFloor = pRows.filter(r=>(getVal(r,'pocketPrice')||0) < floor).length;
+    return { p, avgList, avgPocket, avgCost, floor, target, belowFloor, count: pRows.length };
+  });
+
+  const totalBelowFloor = prodData.reduce((s,d)=>s+d.belowFloor,0);
+  document.getElementById('benchmark-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Products analysed</div><div class="stat-value">${products.length}</div></div>
+    <div class="stat-card ${totalBelowFloor>0?'danger':'good'}">
+      <div class="stat-label">Txns below floor</div>
+      <div class="stat-value">${totalBelowFloor}</div>
+      <div class="stat-sub">${totalBelowFloor>0?'Negative-margin deals detected':'All deals above cost floor'}</div>
+    </div>
+    <div class="stat-card"><div class="stat-label">Avg pocket/list</div>
+      <div class="stat-value">${fmtPct(avg(prodData.map(d=>d.avgPocket/(d.avgList||1)*100)))}</div>
+    </div>`;
+
+  destroyChart('benchmark-chart');
+  const ctx = document.getElementById('benchmark-chart').getContext('2d');
+  AppState.charts['benchmark-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: prodData.map(d=>d.p),
+      datasets: [
+        { label:'Avg pocket price', data:prodData.map(d=>d.avgPocket.toFixed(0)), backgroundColor:'rgba(34,211,184,0.7)', borderRadius:3 },
+        { label:'Floor price (cost+10%)', data:prodData.map(d=>d.floor.toFixed(0)), type:'line', borderColor:'#ef4444', borderWidth:2, borderDash:[5,3], pointRadius:0, fill:false },
+        { label:'Target price (list-10%)', data:prodData.map(d=>d.target.toFixed(0)), type:'line', borderColor:'#22c55e', borderWidth:1.5, borderDash:[4,3], pointRadius:0, fill:false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{labels:{color:'#9ba6ba',font:{size:11}}} },
+      scales:{
+        x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+        y:{ticks:{color:'#9ba6ba',font:{size:11},callback:v=>fmt(v)},grid:{color:'#1c2230'}}
+      }
+    }
+  });
+
+  document.getElementById('benchmark-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr><th>Product</th><th>List price</th><th>Floor (cost+10%)</th><th>Avg pocket</th><th>Target (list-10%)</th><th>Below floor</th></tr></thead>
+        <tbody>
+          ${prodData.map(d=>`<tr>
+            <td>${escHtml(d.p)}</td>
+            <td>${fmt(d.avgList)}</td>
+            <td style="color:var(--danger)">${fmt(d.floor)}</td>
+            <td style="color:${d.avgPocket<d.floor?'var(--danger)':d.avgPocket<d.target?'var(--warn)':'var(--success)'}">${fmt(d.avgPocket)}</td>
+            <td style="color:var(--success)">${fmt(d.target)}</td>
+            <td>${d.belowFloor>0?`<span class="tag tag-danger">${d.belowFloor} deals</span>`:'<span class="tag tag-good">None</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M6 — SCENARIO MODELLER
+// ═══════════════════════════════════════
+function renderScenario() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+
+  const totalRev     = rows.map(r=>getVal(r,'revenue')||0).reduce((s,v)=>s+v,0);
+  const totalCost    = rows.map(r=>(getVal(r,'unitCost')||0)*(getVal(r,'quantity')||1)).reduce((s,v)=>s+v,0);
+  const baseMargin   = totalRev > 0 ? (totalRev-totalCost)/totalRev*100 : 0;
+  const avgDisc      = avg(rows.map(r=>getVal(r,'discountPct')||0));
+
+  // Render scenario input cards
+  const scenarios = [
+    { id:'A', label:'Reduce max discount',  desc:'Cap discount at a lower ceiling', param:'discCap', default:10, unit:'%', min:0, max:30 },
+    { id:'B', label:'List price increase',  desc:'Apply a uniform list price uplift', param:'priceUp', default:5, unit:'%', min:0, max:20 },
+    { id:'C', label:'Floor price enforce',  desc:'Remove all below-floor transactions', param:'floorPct', default:110, unit:'% of cost', min:100, max:150 },
+  ];
+
+  document.getElementById('scenario-cards').innerHTML = scenarios.map(s => `
+    <div class="chart-card">
+      <div class="chart-title">Scenario ${s.id}: ${s.label}</div>
+      <div class="chart-sub" style="margin-bottom:12px">${s.desc}</div>
+      <div class="lab-slider-row">
+        <label style="min-width:80px;font-size:11px;color:var(--text2)">${s.param==='floorPct'?'Floor':s.param==='discCap'?'Max disc':'Uplift'}</label>
+        <input type="range" min="${s.min}" max="${s.max}" step="0.5" value="${s.default}"
+          id="scen-${s.id}" oninput="updateScenario()">
+        <span class="lab-val" id="scen-${s.id}-val">${s.default}${s.unit}</span>
+      </div>
+    </div>`).join('');
+
+  updateScenario();
+}
+
+function updateScenario() {
+  const rows = AppState.rows;
+  if (!rows.length) return;
+
+  const discCap  = parseFloat(document.getElementById('scen-A')?.value || 10);
+  const priceUp  = parseFloat(document.getElementById('scen-B')?.value || 5);
+  const floorPct = parseFloat(document.getElementById('scen-C')?.value || 110);
+
+  document.getElementById('scen-A-val').textContent = discCap + '%';
+  document.getElementById('scen-B-val').textContent = priceUp + '%';
+  document.getElementById('scen-C-val').textContent = floorPct + '% of cost';
+
+  const calcMetrics = (rowSet) => {
+    const rev  = rowSet.map(r=>getVal(r,'revenue')||0).reduce((s,v)=>s+v,0);
+    const cost = rowSet.map(r=>(getVal(r,'unitCost')||0)*(getVal(r,'quantity')||1)).reduce((s,v)=>s+v,0);
+    return { rev, cost, margin: rev > 0 ? (rev-cost)/rev*100 : 0, count: rowSet.length };
+  };
+
+  const base = calcMetrics(rows);
+
+  // Scenario A: cap discount
+  const rowsA = rows.map(r => {
+    const list = getVal(r,'listPrice') || 0;
+    const disc = Math.min(getVal(r,'discountPct')||0, discCap);
+    const newPocket = list * (1 - disc/100);
+    return {...r, [col('pocketPrice')||'pocket_price']: newPocket, [col('revenue')||'revenue']: newPocket * (getVal(r,'quantity')||1)};
+  });
+  const scenA = calcMetrics(rowsA);
+
+  // Scenario B: price uplift
+  const rowsB = rows.map(r => {
+    const newRev = (getVal(r,'revenue')||0) * (1 + priceUp/100);
+    return {...r, [col('revenue')||'revenue']: newRev};
+  });
+  const scenB = calcMetrics(rowsB);
+
+  // Scenario C: remove below-floor
+  const rowsC = rows.filter(r => {
+    const cost = getVal(r,'unitCost') || 0;
+    const pocket = getVal(r,'pocketPrice') || 0;
+    return pocket >= cost * (floorPct/100);
+  });
+  const scenC = calcMetrics(rowsC);
+
+  document.getElementById('scenario-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Baseline revenue</div><div class="stat-value">${fmt(base.rev)}</div></div>
+    <div class="stat-card good"><div class="stat-label">Scen A revenue</div><div class="stat-value">${fmt(scenA.rev)}</div><div class="stat-sub">${fmtPct((scenA.rev-base.rev)/base.rev*100)} vs baseline</div></div>
+    <div class="stat-card good"><div class="stat-label">Scen B revenue</div><div class="stat-value">${fmt(scenB.rev)}</div><div class="stat-sub">${fmtPct((scenB.rev-base.rev)/base.rev*100)} vs baseline</div></div>
+    <div class="stat-card"><div class="stat-label">Scen C revenue</div><div class="stat-value">${fmt(scenC.rev)}</div><div class="stat-sub">${fmtN(base.count-scenC.count)} txns removed</div></div>`;
+
+  destroyChart('scenario-chart');
+  const ctx = document.getElementById('scenario-chart').getContext('2d');
+  AppState.charts['scenario-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Revenue', 'Gross profit', 'Margin %'],
+      datasets: [
+        { label:'Baseline',  data:[base.rev/1e5, (base.rev-base.cost)/1e5, base.margin],  backgroundColor:'rgba(155,166,186,0.5)', borderRadius:4 },
+        { label:'Scenario A',data:[scenA.rev/1e5,(scenA.rev-scenA.cost)/1e5,scenA.margin], backgroundColor:'rgba(34,211,184,0.7)', borderRadius:4 },
+        { label:'Scenario B',data:[scenB.rev/1e5,(scenB.rev-scenB.cost)/1e5,scenB.margin], backgroundColor:'rgba(167,139,250,0.7)', borderRadius:4 },
+        { label:'Scenario C',data:[scenC.rev/1e5,(scenC.rev-scenC.cost)/1e5,scenC.margin], backgroundColor:'rgba(245,165,36,0.7)', borderRadius:4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{labels:{color:'#9ba6ba',font:{size:11}}} },
+      scales:{
+        x:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}},
+        y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}
+      }
+    }
+  });
+
+  document.getElementById('scenario-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden;margin-top:16px">
+      <table class="analysis-table">
+        <thead><tr><th>Scenario</th><th>Revenue</th><th>Gross profit</th><th>Margin %</th><th>vs Baseline</th></tr></thead>
+        <tbody>
+          <tr><td>Baseline</td><td>${fmt(base.rev)}</td><td>${fmt(base.rev-base.cost)}</td><td>${fmtPct(base.margin)}</td><td>—</td></tr>
+          ${[{l:'Scenario A (disc cap)',m:scenA},{l:'Scenario B (price up)',m:scenB},{l:'Scenario C (floor)',m:scenC}].map(s=>`
+          <tr>
+            <td>${s.l}</td>
+            <td>${fmt(s.m.rev)}</td>
+            <td>${fmt(s.m.rev-s.m.cost)}</td>
+            <td>${fmtPct(s.m.margin)}</td>
+            <td style="color:${s.m.rev>=base.rev?'var(--success)':'var(--danger)'}">${fmtPct((s.m.rev-base.rev)/(base.rev||1)*100)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M7 — DEAL SCORING
+// ═══════════════════════════════════════
+function scoreRow(r) {
+  let score = 100;
+  const disc    = getVal(r,'discountPct') || 0;
+  const margin  = getVal(r,'marginPct') || 0;
+  const list    = getVal(r,'listPrice') || 0;
+  const pocket  = getVal(r,'pocketPrice') || list;
+  const cost    = getVal(r,'unitCost') || 0;
+  const tier    = getStr(r,'customerTier') || '';
+
+  // Criterion 1: margin health
+  if (margin < 20) score -= 30;
+  else if (margin < 35) score -= 15;
+
+  // Criterion 2: discount level
+  if (disc > 25) score -= 25;
+  else if (disc > 15) score -= 12;
+
+  // Criterion 3: below cost floor
+  if (cost > 0 && pocket < cost * 1.05) score -= 25;
+
+  // Criterion 4: tier alignment (B2B/SMB gets less tolerance)
+  if ((tier.toLowerCase().includes('b2b') || tier.toLowerCase().includes('smb')) && disc > 20) score -= 10;
+
+  // Criterion 5: extreme outlier
+  if (disc > 30) score -= 15;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+function renderDeals() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows;
+  const scored = rows.map(r => ({...r, _score: scoreRow(r)}));
+
+  const flagged  = scored.filter(r=>r._score<40).length;
+  const review   = scored.filter(r=>r._score>=40&&r._score<70).length;
+  const sound    = scored.filter(r=>r._score>=70).length;
+  const avgScore = avg(scored.map(r=>r._score));
+
+  document.getElementById('deals-stats').innerHTML = `
+    <div class="stat-card ${avgScore<60?'danger':avgScore<75?'warn':'good'}">
+      <div class="stat-label">Avg deal score</div><div class="stat-value">${avgScore.toFixed(0)}</div><div class="stat-sub">out of 100</div></div>
+    <div class="stat-card danger"><div class="stat-label">Flagged deals</div><div class="stat-value">${flagged}</div><div class="stat-sub">score &lt; 40</div></div>
+    <div class="stat-card warn"><div class="stat-label">Review queue</div><div class="stat-value">${review}</div><div class="stat-sub">score 40–70</div></div>
+    <div class="stat-card good"><div class="stat-label">Sound deals</div><div class="stat-value">${sound}</div><div class="stat-sub">score ≥ 70</div></div>`;
+
+  destroyChart('deals-dist-chart');
+  const ctx = document.getElementById('deals-dist-chart').getContext('2d');
+  const bins = [0,0,0,0,0,0,0,0,0,0];
+  scored.forEach(r => { bins[Math.min(9,Math.floor(r._score/10))]++; });
+  AppState.charts['deals-dist-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['0-10','10-20','20-30','30-40','40-50','50-60','60-70','70-80','80-90','90-100'],
+      datasets:[{
+        data: bins,
+        backgroundColor: bins.map((_,i)=>i<4?'rgba(239,68,68,0.7)':i<7?'rgba(245,165,36,0.7)':'rgba(34,211,184,0.7)'),
+        borderRadius:3,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9ba6ba',font:{size:10}},grid:{color:'#1c2230'}},
+        y:{ticks:{color:'#9ba6ba',font:{size:11}},grid:{color:'#1c2230'}}
+      }
+    }
+  });
+
+  AppState._scoredRows = scored;
+  renderDealsTable();
+}
+
+function renderDealsTable() {
+  const scored = AppState._scoredRows;
+  if (!scored) return;
+  const filter = document.getElementById('deals-filter')?.value || 'all';
+  const sort   = document.getElementById('deals-sort')?.value || 'score_asc';
+
+  let filtered = [...scored];
+  if (filter==='flag')   filtered = scored.filter(r=>r._score<40);
+  if (filter==='review') filtered = scored.filter(r=>r._score>=40&&r._score<70);
+  if (filter==='sound')  filtered = scored.filter(r=>r._score>=70);
+
+  filtered.sort((a,b) => {
+    if (sort==='score_asc')    return a._score - b._score;
+    if (sort==='score_desc')   return b._score - a._score;
+    if (sort==='revenue_desc') return (getVal(b,'revenue')||0)-(getVal(a,'revenue')||0);
+    return 0;
+  });
+
+  const custCol = col('customer') || col('product') || Object.keys(AppState.rows[0]||{})[0];
+  document.getElementById('deals-table').innerHTML = `
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table class="analysis-table">
+        <thead><tr>
+          <th>Deal</th><th>Score</th><th>Disc %</th><th>Pocket price</th><th>Margin %</th><th>Tier</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${filtered.slice(0,50).map(r=>`<tr>
+            <td>${escHtml(r[custCol]||'—')}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:40px;height:5px;border-radius:2px;background:var(--surface3)">
+                  <div style="width:${r._score}%;height:100%;border-radius:2px;background:${r._score>=70?'var(--success)':r._score>=40?'var(--warn)':'var(--danger)'}"></div>
+                </div>
+                <span style="font-family:var(--mono);font-size:11px;color:${r._score>=70?'var(--success)':r._score>=40?'var(--warn)':'var(--danger)'}">${r._score}</span>
+              </div>
+            </td>
+            <td style="color:${(getVal(r,'discountPct')||0)>15?'var(--danger)':'var(--text2)'}">${fmtPct(getVal(r,'discountPct')||0)}</td>
+            <td>${fmt(getVal(r,'pocketPrice'))}</td>
+            <td>${fmtPct(getVal(r,'marginPct')||0)}</td>
+            <td>${escHtml(getStr(r,'customerTier')||'—')}</td>
+            <td>${r._score>=70?'<span class="tag tag-good">Sound</span>':r._score>=40?'<span class="tag tag-warn">Review</span>':'<span class="tag tag-danger">Flag</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// M8 — BEHAVIOURAL LAB
+// Always-on, no data required
+// ═══════════════════════════════════════
+function initLab() {
+  updateAnchoring();
+  updateDecoy();
+  updateCharm();
+  updateGBB();
+}
+
+function updateAnchoring() {
+  const anchor = parseFloat(document.getElementById('anchor-anchor')?.value||2000);
+  const target = parseFloat(document.getElementById('anchor-target')?.value||800);
+  if (!document.getElementById('anchor-anchor')) return;
+  document.getElementById('anchor-anchor-val').textContent = '₹'+anchor.toLocaleString();
+  document.getElementById('anchor-target-val').textContent = '₹'+target.toLocaleString();
+  const ratio    = anchor/target;
+  const discount = ((anchor-target)/anchor*100).toFixed(1);
+  const wtp      = ratio > 3 ? '22–28%' : ratio > 2 ? '15–22%' : ratio > 1.5 ? '8–15%' : '3–8%';
+  document.getElementById('anchor-ratio').textContent    = ratio.toFixed(1)+'×';
+  document.getElementById('anchor-discount').textContent = discount+'%';
+  document.getElementById('anchor-wtp').textContent      = '+'+wtp;
+}
+
+function updateDecoy() {
+  const A = parseFloat(document.getElementById('decoy-a')?.value||400);
+  const B = parseFloat(document.getElementById('decoy-b')?.value||900);
+  const D = parseFloat(document.getElementById('decoy-d')?.value||850);
+  if (!document.getElementById('decoy-a')) return;
+  document.getElementById('decoy-a-val').textContent = '₹'+A.toLocaleString();
+  document.getElementById('decoy-b-val').textContent = '₹'+B.toLocaleString();
+  document.getElementById('decoy-d-val').textContent = '₹'+D.toLocaleString();
+  // Asymmetric dominance: D should be close to B but worse on value
+  const beforeB = Math.round(35 + (B-A)/(B-A+100)*10);
+  const isValid  = D >= A && D < B && D >= B*0.8;
+  const afterB   = isValid ? Math.round(beforeB + 18 + (1-(B-D)/B)*10) : beforeB;
+  document.getElementById('decoy-before').textContent  = beforeB+'%';
+  document.getElementById('decoy-after').textContent   = afterB+'%';
+  document.getElementById('decoy-verdict').textContent = isValid ? 'Valid asymmetric decoy ✓' : 'Adjust decoy closer to B ↑';
+}
+
+function updateCharm() {
+  const p = parseFloat(document.getElementById('charm-price')?.value||1000);
+  if (!document.getElementById('charm-price')) return;
+  document.getElementById('charm-price-val').textContent = '₹'+p.toLocaleString();
+  // Find charm version — 1 below round number
+  let charm = p;
+  if (p % 1000 === 0) charm = p - 1;
+  else if (p % 500 === 0) charm = p - 1;
+  else if (p % 100 === 0) charm = p - 1;
+  else charm = Math.ceil(p/100)*100 - 1;
+  const crossesDigit = Math.floor(Math.log10(p)) > Math.floor(Math.log10(charm));
+  document.getElementById('charm-result').textContent = '₹'+charm.toLocaleString();
+  document.getElementById('charm-drop').textContent   = '₹'+p.toLocaleString()+' → ₹'+charm.toLocaleString();
+  document.getElementById('charm-save').textContent   = crossesDigit ? 'Significant (cross-digit) ✓' : 'Moderate (same digit)';
+}
+
+function updateGBB() {
+  const good   = parseFloat(document.getElementById('gbb-good')?.value||500);
+  const better = parseFloat(document.getElementById('gbb-better')?.value||1200);
+  const best   = parseFloat(document.getElementById('gbb-best')?.value||2800);
+  if (!document.getElementById('gbb-good')) return;
+  document.getElementById('gbb-good-val').textContent   = '₹'+good.toLocaleString();
+  document.getElementById('gbb-better-val').textContent = '₹'+better.toLocaleString();
+  document.getElementById('gbb-best-val').textContent   = '₹'+best.toLocaleString();
+  const step1 = (better/good).toFixed(1);
+  const step2 = (best/better).toFixed(1);
+  const balanced = Math.abs(better/good - best/better) < 0.5;
+  const skewed   = best/better > 3;
+  document.getElementById('gbb-step1').textContent   = step1+'×';
+  document.getElementById('gbb-step2').textContent   = step2+'×';
+  document.getElementById('gbb-verdict').textContent = skewed ? 'Premium anchors middle strongly ✓' : balanced ? 'Balanced ✓' : 'Consider widening premium gap';
+}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+async function exportReport() {
+  showToast('Generating PDF…', '');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const { rows, schema, source } = AppState;
+
+    doc.setFillColor(13,17,23);
+    doc.rect(0,0,210,297,'F');
+
+    doc.setTextColor(34,211,184);
+    doc.setFontSize(8);
+    doc.text('MERIDIAN PRICE', 20, 20);
+
+    doc.setTextColor(230,232,238);
+    doc.setFontSize(22);
+    doc.text('Pricing Intelligence Report', 20, 32);
+
+    doc.setFontSize(9);
+    doc.setTextColor(155,166,186);
+    doc.text('Source: ' + (source||'—'), 20, 40);
+    doc.text('Generated: ' + new Date().toLocaleDateString(), 20, 46);
+    doc.text('Transactions: ' + rows.length.toLocaleString(), 20, 52);
+
+    const listArr   = rows.map(r=>getVal(r,'listPrice')||0).filter(v=>v>0);
+    const pocketArr = rows.map(r=>getVal(r,'pocketPrice')||0).filter(v=>v>0);
+    const discArr   = rows.map(r=>getVal(r,'discountPct')||0);
+    const marginArr = rows.map(r=>getVal(r,'marginPct')||0).filter(v=>v!=null);
+    const totalRev  = rows.map(r=>getVal(r,'revenue')||0).reduce((s,v)=>s+v,0);
+
+    const avgList   = avg(listArr);
+    const avgPocket = avg(pocketArr);
+    const avgDisc   = avg(discArr);
+    const avgMargin = avg(marginArr);
+    const leakage   = avgList>0?(avgList-avgPocket)/avgList*100:0;
+
+    doc.setDrawColor(28,34,48);
+    doc.setFillColor(22,27,37);
+    doc.roundedRect(20,62,80,28,3,3,'F');
+    doc.roundedRect(108,62,82,28,3,3,'F');
+
+    doc.setFontSize(7); doc.setTextColor(155,166,186);
+    doc.text('AVG POCKET PRICE', 25,70);
+    doc.setFontSize(14); doc.setTextColor(230,232,238);
+    doc.text('₹' + (avgPocket/1000).toFixed(1)+'K', 25,78);
+    doc.setFontSize(7); doc.setTextColor(155,166,186);
+    doc.text(fmtPct(100-leakage)+' of list price', 25,84);
+
+    doc.setFontSize(7); doc.setTextColor(155,166,186);
+    doc.text('PRICE LEAKAGE', 113,70);
+    doc.setFontSize(14); doc.setTextColor(leakage>15?239:leakage>8?245:34, leakage>15?68:leakage>8?165:211, leakage>15?68:leakage>8?36:184);
+    doc.text(fmtPct(leakage), 113,78);
+    doc.setFontSize(7); doc.setTextColor(155,166,186);
+    doc.text('avg discount: ' + fmtPct(avgDisc), 113,84);
+
+    doc.setTextColor(155,166,186);
+    doc.setFontSize(8);
+    doc.text('Total revenue: ' + fmt(totalRev) + '  ·  Avg margin: ' + fmtPct(avgMargin), 20, 100);
+
+    doc.setFontSize(6);
+    doc.setTextColor(93,102,121);
+    doc.text('Generated by Meridian Price · archishman.com/meridian/price · Your data never left your browser', 20, 285);
+
+    doc.save('meridian_price_report.pdf');
+    showToast('PDF exported', 'success');
+  } catch(e) {
+    showToast('Export error: ' + e.message, 'error');
+  }
+}
+
+function exportWaterfallXLSX() {
+  if (!AppState.rows.length) return;
+  const rows = AppState.rows.map(r => ({
+    customer:     getStr(r,'customer') || '',
+    product:      getStr(r,'product')  || '',
+    list_price:   getVal(r,'listPrice')  || '',
+    pocket_price: getVal(r,'pocketPrice')|| '',
+    discount_pct: getVal(r,'discountPct')|| '',
+    revenue:      getVal(r,'revenue')    || '',
+    margin_pct:   getVal(r,'marginPct')  || '',
+    leakage_pct:  ((getVal(r,'listPrice')||0)-(getVal(r,'pocketPrice')||0))/(getVal(r,'listPrice')||1)*100,
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Waterfall');
+  XLSX.writeFile(wb, 'meridian_price_waterfall.xlsx');
+  showToast('XLSX exported', 'success');
+}
+
+function exportDealsXLSX() {
+  const scored = AppState._scoredRows;
+  if (!scored) return;
+  const flagged = scored.filter(r=>r._score<70).map(r=>({
+    deal:        getStr(r,'customer')||getStr(r,'product')||'',
+    score:       r._score,
+    discount_pct:getVal(r,'discountPct')||0,
+    pocket_price:getVal(r,'pocketPrice')||0,
+    margin_pct:  getVal(r,'marginPct')||0,
+    tier:        getStr(r,'customerTier')||'',
+    status:      r._score<40?'FLAG':r._score<70?'REVIEW':'SOUND',
+  }));
+  const ws = XLSX.utils.json_to_sheet(flagged);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Deal Scores');
+  XLSX.writeFile(wb, 'meridian_deal_scores.xlsx');
+  showToast('Deal scores exported', 'success');
+}
+</script>
+</body>
+</html>

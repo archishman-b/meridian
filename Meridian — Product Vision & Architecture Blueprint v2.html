@@ -236,6 +236,65 @@ pre code{color:var(--text2)}
   .persona-grid,.feature-row{grid-template-columns:1fr}
   .hero h1{font-size:38px}
 }
+
+/* ── Build Journal additions ── */
+.adr{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;
+  padding:18px 22px;margin:22px 0;
+}
+.adr-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.adr-id{
+  font-family:var(--mono);font-size:9px;color:var(--teal);
+  background:var(--teal-dim);border:1px solid var(--teal-bd);
+  padding:2px 7px;border-radius:3px;letter-spacing:0.06em;text-transform:uppercase;
+}
+.adr-title{font-size:13px;font-weight:600;color:var(--text)}
+.dec-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--dim);margin:10px 0 3px;display:block;
+}
+.adr p{margin-bottom:8px;font-size:13px;color:var(--text2)}
+.adr p:last-child{margin-bottom:0}
+.backlog-item{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-left:3px solid var(--amber);border-radius:0 8px 8px 0;
+  padding:14px 18px;margin:10px 0;
+}
+.bl-header{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.bl-id{
+  font-family:var(--mono);font-size:9px;color:var(--amber);
+  background:rgba(180,83,9,0.1);border:1px solid rgba(180,83,9,0.25);
+  padding:2px 6px;border-radius:3px;letter-spacing:0.06em;text-transform:uppercase;
+}
+.bl-title{font-size:13px;font-weight:600;color:var(--text)}
+.bl-body{font-size:12px;color:var(--muted);line-height:1.65;margin-top:4px}
+.bug-rec{
+  background:var(--surface2);border:1px solid rgba(251,113,133,0.25);
+  border-left:3px solid var(--coral);border-radius:0 8px 8px 0;
+  padding:12px 18px;margin:10px 0;
+}
+.bug-rec h4{font-size:11px;font-weight:600;color:var(--coral);margin:0 0 4px;font-family:var(--mono)}
+.bug-rec p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+.bug-rec code{font-family:var(--mono);font-size:10px;color:var(--coral)}
+.iter-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.iter-row:last-child{border-bottom:none}
+.iter-label{
+  font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;
+  white-space:nowrap;margin-top:2px;height:fit-content;flex-shrink:0;
+  background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-bd);
+}
+.iter-row h4{font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px}
+.iter-row p{font-size:12px;color:var(--muted);margin:0 0 4px;line-height:1.6}
+.iter-row p:last-child{margin:0}
+.method-note{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:13px 18px;margin:10px 0;
+}
+.method-note h4{font-size:12px;font-weight:600;color:var(--text);margin:0 0 4px}
+.method-note p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+.method-note code{font-family:var(--mono);font-size:10px;color:var(--teal)}
+
 </style>
 </head>
 <body>
@@ -250,37 +309,47 @@ pre code{color:var(--text2)}
   </div>
 
   <span class="nav-section">Context</span>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#problem" class="nav-link active"><span class="nav-dot"></span>The problem</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#vision" class="nav-link"><span class="nav-dot"></span>Product vision</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#positioning" class="nav-link"><span class="nav-dot"></span>Positioning</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#users" class="nav-link"><span class="nav-dot"></span>Who it's for</a>
+  <a href="#problem" class="nav-link active"><span class="nav-dot"></span>The problem</a>
+  <a href="#vision" class="nav-link"><span class="nav-dot"></span>Product vision</a>
+  <a href="#positioning" class="nav-link"><span class="nav-dot"></span>Positioning</a>
+  <a href="#users" class="nav-link"><span class="nav-dot"></span>Who it's for</a>
 
   <span class="nav-section">Architecture</span>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#platform" class="nav-link"><span class="nav-dot"></span>Platform structure</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#repo" class="nav-link"><span class="nav-dot"></span>Repository structure</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#canvas" class="nav-link"><span class="nav-dot"></span>Canvas system</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#pipelines" class="nav-link"><span class="nav-dot"></span>Reusable pipelines</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#handoff" class="nav-link"><span class="nav-dot"></span>AppHandoff protocol</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#compute" class="nav-link"><span class="nav-dot"></span>Compute model</a>
+  <a href="#platform" class="nav-link"><span class="nav-dot"></span>Platform structure</a>
+  <a href="#repo" class="nav-link"><span class="nav-dot"></span>Repository structure</a>
+  <a href="#canvas" class="nav-link"><span class="nav-dot"></span>Canvas system</a>
+  <a href="#pipelines" class="nav-link"><span class="nav-dot"></span>Reusable pipelines</a>
+  <a href="#handoff" class="nav-link"><span class="nav-dot"></span>AppHandoff protocol</a>
+  <a href="#compute" class="nav-link"><span class="nav-dot"></span>Compute model</a>
 
   <span class="nav-section">Modules</span>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#modules" class="nav-link"><span class="nav-dot"></span>Module registry</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#bridge" class="nav-link"><span class="nav-dot"></span>Meridian Bridge</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#price" class="nav-link"><span class="nav-dot"></span>Meridian Price</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#pulse" class="nav-link"><span class="nav-dot"></span>Meridian Pulse</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#ledger" class="nav-link"><span class="nav-dot"></span>Meridian Ledger</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#org" class="nav-link"><span class="nav-dot"></span>Meridian Org</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#field" class="nav-link"><span class="nav-dot"></span>Meridian Field</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#flow" class="nav-link"><span class="nav-dot"></span>Meridian Flow</a>
+  <a href="#modules" class="nav-link"><span class="nav-dot"></span>Module registry</a>
+  <a href="#bridge" class="nav-link"><span class="nav-dot"></span>Meridian Bridge</a>
+  <a href="#price" class="nav-link"><span class="nav-dot"></span>Meridian Price</a>
+  <a href="#pulse" class="nav-link"><span class="nav-dot"></span>Meridian Pulse</a>
+  <a href="#ledger" class="nav-link"><span class="nav-dot"></span>Meridian Ledger</a>
+  <a href="#org" class="nav-link"><span class="nav-dot"></span>Meridian Org</a>
+  <a href="#field" class="nav-link"><span class="nav-dot"></span>Meridian Field</a>
+  <a href="#flow" class="nav-link"><span class="nav-dot"></span>Meridian Flow</a>
 
   <span class="nav-section">Demo Universe</span>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#renova" class="nav-link"><span class="nav-dot"></span>Renova Home</a>
+  <a href="#renova" class="nav-link"><span class="nav-dot"></span>Renova Home</a>
 
   <span class="nav-section">Delivery</span>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#principles" class="nav-link"><span class="nav-dot"></span>Design principles</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#roadmap" class="nav-link"><span class="nav-dot"></span>Build roadmap</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#claudemd" class="nav-link"><span class="nav-dot"></span>CLAUDE.md template</a>
-  <a href="file:///Users/archishmanbandyopadhyay/Downloads/meridian-platform-blueprint.html#constraints" class="nav-link"><span class="nav-dot"></span>Constraints</a>
+  <a href="#principles" class="nav-link"><span class="nav-dot"></span>Design principles</a>
+  <a href="#roadmap" class="nav-link"><span class="nav-dot"></span>Build roadmap</a>
+  <a href="#claudemd" class="nav-link"><span class="nav-dot"></span>CLAUDE.md template</a>
+  <a href="#constraints" class="nav-link"><span class="nav-dot"></span>Constraints</a>
+
+  <span class="nav-section">Build journal</span>
+  <a href="#j-origin" class="nav-link"><span class="nav-dot"></span>Origin &amp; problem</a>
+  <a href="#j-arch" class="nav-link"><span class="nav-dot"></span>Architecture ADRs</a>
+  <a href="#j-p0" class="nav-link"><span class="nav-dot"></span>Phase 0 — Core</a>
+  <a href="#j-p1" class="nav-link"><span class="nav-dot"></span>Phase 1 — Price</a>
+  <a href="#j-p2" class="nav-link"><span class="nav-dot"></span>Phase 2 — Pulse</a>
+  <a href="#j-ux" class="nav-link"><span class="nav-dot"></span>UX iteration log</a>
+  <a href="#j-bugs" class="nav-link"><span class="nav-dot"></span>Bug log</a>
+  <a href="#j-backlog" class="nav-link"><span class="nav-dot"></span>Backlog</a>
 </aside>
 
 <!-- ── Main ── -->
@@ -905,6 +974,312 @@ Phase 2: [ ] Meridian Pulse (first Pyodide module)
 </section>
 
 </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     BUILD JOURNAL — Sections 17–24
+     Decision log: granular, specific, consulting-grounded.
+     PM lifecycle map to be overlaid post-build.
+══════════════════════════════════════════════════════════════ -->
+
+<section id="j-origin">
+  <div class="section-label">17 — Build Journal · Origin</div>
+  <h2>The two engagements that made this product necessary</h2>
+
+  <p>This product was not designed to fill a market gap identified in a whitepaper. It was designed to resolve a specific professional frustration encountered twice in twelve years — in two different organisations, with two different datasets, and the same structural cause each time.</p>
+
+  <div class="callout purple">
+    <p><strong>The observation that created the product:</strong> The person who understands the business question is almost never the same person who can execute the analysis. This separation is not a skills gap. It is an infrastructure gap — and it is structural, not accidental.</p>
+  </div>
+
+  <h3>Engagement 1 — Monitor Deloitte, US auto parts retail (~$50M pricing transformation)</h3>
+  <p>A large NAPA-scale auto parts retailer. The analytical question was clear within the first week: isolate pocket price leakage across 200,000 SKUs, by category, channel, and customer tier. Every pricing manager in the room knew what the waterfall framework was. The question was not what to do. The question was how long it would take to do it.</p>
+  <p>The answer was weeks — not because the analysis was hard, but because the infrastructure required to run it (SQL Server, Alteryx pipelines, Tableau dashboards) needed setup time and dedicated analyst capacity. The analytical logic was locked in days. The clean, production-ready dataset that would let the analysis run took weeks. The bottleneck was infrastructure latency, not intellectual capacity.</p>
+
+  <h3>Engagement 2 — Mahindra AFS, consumer analytics CoE</h3>
+  <p>A multi-million customer dataset on SQL Server, with a dedicated analytics CoE running CLTV models, propensity scores, and churn signals. The outputs were decision-relevant. But every iteration — every "what if we segment by use case instead of geography?" — went back into the analyst queue. Two to three days per iteration cycle. The strategic conversation was moving faster than the analytical pipeline could follow it.</p>
+  <p>In both cases: the bottleneck was not intelligence. It was infrastructure latency. The solution is not to hire more analysts — it is to close the distance between the question and the answer. DataBridge proved the zero-server, browser-native architecture was viable at commercial data volumes. Meridian extends that architecture across the full strategy consulting engagement lifecycle.</p>
+</section>
+
+<section id="j-arch">
+  <div class="section-label">18 — Build Journal · Architecture ADRs</div>
+  <h2>Five architecture decisions — with the reasoning that locked them</h2>
+
+  <div class="adr">
+    <div class="adr-header"><span class="adr-id">ADR-01</span><span class="adr-title">Single HTML file per module — no build step, ever</span></div>
+    <span class="dec-label">Decision</span>
+    <p>Each module is a single self-contained HTML file. No bundler. No framework. No compilation step. No local toolchain dependency.</p>
+    <span class="dec-label">Why</span>
+    <p>A build step immediately excludes users who want to fork, inspect, and adapt. The product vision is consulting IP as open infrastructure — which means the IP must be readable by a developer with a browser and no installed tooling. GitHub Pages serves static files. A single HTML file deploys with zero configuration. Meridian Bridge is 4,500 lines, Meridian Price 2,600, Meridian Pulse 2,100 — large but legible.</p>
+    <span class="dec-label">Tradeoff accepted</span>
+    <p>As files grow, surgical edits risk breaking adjacent code. Mitigated by the CLAUDE.md session handoff protocol, which documents exact file locations, function names, and the four-method module interface contract before every Code session.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adr-header"><span class="adr-id">ADR-02</span><span class="adr-title">Pyodide deferred — all Phase 2.0 ML in vanilla JS</span></div>
+    <span class="dec-label">Decision</span>
+    <p>Meridian Pulse ships with ML implemented in vanilla JS: logistic regression via gradient descent for churn, DCF-based CLTV, deterministic propensity scoring. Pyodide (browser Python) deferred to Phase 2.1.</p>
+    <span class="dec-label">Why</span>
+    <p>BG/NBD CLTV requires the <code>lifetimes</code> Python library — not in Pyodide's standard distribution. Loading Pyodide adds ~8MB WASM plus a 2–5 second initialisation penalty before the first ML call. For a consulting diagnostic tool where results need to appear in under 2 seconds, that is not acceptable for Phase 1. JS-implemented logistic regression with gradient descent produces genuinely fitted weights on the user's actual data in under 200ms. That output is analytically defensible in a client meeting. The upgrade path exists and is designed into the interface.</p>
+    <span class="dec-label">Upgrade path locked in</span>
+    <p>Phase 2.1. The four-method module interface already includes an optional <code>initPyodide()</code> call. The upgrade is additive — no structural change required.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adr-header"><span class="adr-id">ADR-03</span><span class="adr-title">AppHandoff schema — immutable; additions allowed, removals not</span></div>
+    <span class="dec-label">Decision</span>
+    <p>The data contract between Meridian Bridge and all downstream modules is a fixed JSON schema written to sessionStorage under <code>meridian_handoff</code>. Existing fields cannot be removed or renamed. New fields can be added.</p>
+    <span class="dec-label">Why</span>
+    <p>All modules run in separate browser tabs with no runtime type checking. The only way to guarantee that adding Module 4 does not silently break Module 2 is to make the interface immutable at the field level. Adding new fields is safe because existing modules ignore unknown fields. The constraint is enforced by convention and documented in CLAUDE.md as a hard rule — not a preference.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adr-header"><span class="adr-id">ADR-04</span><span class="adr-title">Pipeline storage — localStorage + JSON export, zero cloud</span></div>
+    <span class="dec-label">Decision</span>
+    <p>Named pipelines persist in <code>localStorage</code> under the key <code>meridian_pipelines</code>. Export format is <code>.meridian</code> (JSON). No cloud sync. No account system.</p>
+    <span class="dec-label">Why</span>
+    <p>The zero-server constraint eliminates cloud sync as an option. localStorage is the only browser-native persistence mechanism that survives page refreshes on the same device. The JSON export gives the portability that matters for the consulting use case: a consultant can share their "Q3 Pricing Review" pipeline with a client's finance lead as a file attachment. The client imports it, loads their own data, runs the same analysis. No account creation. No platform dependency. Pipelines as portable consulting IP — which is exactly the right model.</p>
+    <span class="dec-label">Limitation acknowledged</span>
+    <p>localStorage is per-device, per-browser, per-origin. Clearing browser data clears pipelines. The export prompt in the pipeline library is the explicit mitigation. This limitation is surfaced to users, not hidden.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adr-header"><span class="adr-id">ADR-05</span><span class="adr-title">Canvas scoped to genuine pipelines only — removed from independent analyses</span></div>
+    <span class="dec-label">Decision</span>
+    <p>The Alteryx-style canvas exists in Meridian Bridge (where ETL is a true pipeline) and the Scenario Modeller in Meridian Price (where three scenario branches genuinely fan out from a shared base). It was added to Price and Pulse panel views and then removed.</p>
+    <span class="dec-label">Why it was removed from panels</span>
+    <p>In Bridge, the canvas represents real data flow — each ETL node transforms the output of the previous one. In the Price and Pulse panels, the eight and seven analyses respectively are independent — the waterfall does not feed the elasticity model. A canvas that draws arrows between independent analyses implies sequential dependency that does not exist. It is visually misleading. A misleading canvas is worse than no canvas. The panel UI is the correct interaction model for independent analyses.</p>
+    <span class="dec-label">Where canvas is correct</span>
+    <p>The Scenario Modeller in Price: base dataset fans out to three parallel transformation branches (discount cap, list price increase, floor price enforcement), each computing independently, converging on a comparison output. The branching structure is real. The canvas represents it accurately.</p>
+  </div>
+</section>
+
+<section id="j-p0">
+  <div class="section-label">19 — Build Journal · Phase 0</div>
+  <h2>Platform core — decisions and rationale for each component</h2>
+
+  <p>Phase 0 was the prerequisite gate before any module could be built correctly. The three shared utilities (handoff.js, pipelines.js, canvas.js) were built before any module took a dependency on them — ensuring the interface contracts were stable before they were consumed.</p>
+
+  <div class="iter-row">
+    <span class="iter-label">handoff.js</span>
+    <div>
+      <h4>AppHandoff protocol (163 lines)</h4>
+      <p>Defines the data contract, column type inference, quality score helpers, schema validation, and module navigation utility. Made a shared file — not embedded in Bridge — because every module needs to read the handoff the same way. A single shared implementation prevents the interface contract from drifting across five or six independently-maintained modules.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">pipelines.js</span>
+    <div>
+      <h4>Pipeline engine (306 lines)</h4>
+      <p>CRUD, topological sort (Kahn's algorithm), JSON export/import, pipeline library renderer. The topological sort was included even though all current pipelines are linear chains — because the node graph in Bridge can express non-linear dependencies, and building the correct data structure early costs nothing. Refactoring a linear sort into a topological sort later, after six modules have taken a dependency on the pipeline format, would be expensive.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">Bridge</span>
+    <div>
+      <h4>Meridian Bridge — DataBridge extended, not replaced</h4>
+      <p>DataBridge v1 is live at its existing URL, used by people who arrived at it independently. The decision to leave it untouched and build Meridian Bridge as a separate working copy was deliberate. Original DataBridge = canonical standalone ETL tool. Meridian Bridge = extended version that knows it is part of a platform. Key additions: Meridian branding, privacy notice bar, module router replacing the old Pricing Analyser button, pipeline save, universal schema wizard covering all six module dimension sets, AppHandoff v2 payload, sessionStorage key migration from <code>pa_incoming_dataset</code> to <code>meridian_handoff</code>.</p>
+      <p>Also fixed a genuine usability bug in the original DataBridge: the delete (✕) button was only shown on result tables, not source tables. Source tables were unremovable without clearing all data. Fixed in Bridge — source tables now show the delete button on hover.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">index.html</span>
+    <div>
+      <h4>Platform home — module router and pipeline library</h4>
+      <p>Reads directly from localStorage on load — no server call. Module cards that are not yet live show disabled state with "Coming soon." The home page requires no update when a new module launches — only the card's disabled state is toggled. Pipeline library renders saved pipelines from Bridge with run, export, delete, and import actions.</p>
+    </div>
+  </div>
+</section>
+
+<section id="j-p1">
+  <div class="section-label">20 — Build Journal · Phase 1</div>
+  <h2>Meridian Price — eight sub-modules, analytical methodology decisions</h2>
+
+  <p>Meridian Price maps directly to the analytical sequence of the Monitor Deloitte pricing engagement. Every sub-module corresponds to a diagnostic that was run (or needed to be run) in the first four weeks of that project.</p>
+
+  <div class="method-note">
+    <h4>M1 — Pocket price waterfall · the 60/25/10/5 heuristic decision</h4>
+    <p>When only one discount column is mapped, the waterfall splits it across four elements — invoice discount (60%), volume discount (25%), cash discount (10%), other allowances (5%) — using a heuristic grounded in the McKinsey pocket price methodology. This is documented explicitly in the UI. A heuristic waterfall with a clear disclosure is more useful than no waterfall. When the user maps separate discount columns, each maps to its own step exactly.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>M3 — Price-volume elasticity · Pearson correlation, framed as approximation</h4>
+    <p>Elasticity estimated via Pearson correlation between discount % and units per transaction, scaled by the ratio of standard deviations. True price elasticity requires controlled price variation — transaction-level sales data rarely provides this. The output is framed accordingly in the UI: "estimated from observed discount/volume correlation." Four plain-language interpretation bands translate the coefficient for a non-technical audience: strongly elastic, moderately elastic, moderately inelastic, highly inelastic.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>M7 — Deal scoring · five criteria, exact threshold calibration</h4>
+    <p>All thresholds calibrated to common commercial policy norms in B2B and retail distribution contexts. Criterion 1: margin below 20% triggers the largest penalty (–30 pts) because below that threshold, fixed cost absorption makes the deal structurally unprofitable. Criterion 2: discount above 25% (–25 pts) is the standard enterprise B2B maximum policy limit — above this, deals typically require VP+ approval. Criterion 3: pocket price below unit cost × 1.05 (–25 pts) — the variable-cost floor; below it, the deal is cash-negative. Criterion 4: B2B/SMB tier with discount above 20% (–10 pts) — B2B annual contracts mean per-transaction discounts above policy are a signal of unauthorised ad-hoc concessions. Criterion 5: discount above 30% triggers an additional –15 pts (the outlier tax). All criteria and thresholds are shown in a full table in the UI, with a worked example showing how penalties compound.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>M6 — Scenario Modeller · why this is the only canvas in Price</h4>
+    <p>Three parallel branches — discount cap, list price increase, floor price enforcement — each applying a different transformation to the base dataset and computing revenue, profit, and margin independently. The canvas here is justified because the branching is real data flow. The three scenario nodes genuinely fan out from a shared source and converge on a comparison node. This is structurally identical to how scenarios are modelled in a pricing war-gaming exercise — which is exactly what this module replicates.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>M8 — Behavioural pricing lab · always-on, data-free entry point</h4>
+    <p>The lab is the only module that requires no data. Anchoring, decoy pricing, charm pricing, and Good-Better-Best tiering are interactive simulators that let a user explore behavioural pricing mechanics before loading any transaction data. This was a deliberate design principle: the tool should be explorable before any data is loaded. A data-free entry point reduces the onboarding barrier and demonstrates the product's depth before any file is uploaded.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>Run Analysis button pattern — why analyses don't execute on load</h4>
+    <p>Initial build rendered all outputs immediately on navigation to a module. This was changed. The distinction between instant computations (deterministic, sub-100ms — RFM segmentation, waterfall) and model training or compute-intensive analyses (churn logistic regression, CLTV DCF projection, elasticity computation) is analytically meaningful and should be visible to the user. The pending state + explicit Run button makes this distinction legible. The button label changes on second run: "Re-run analysis" or "Re-train model." Auto-running vs user-triggered is enforced consistently.</p>
+  </div>
+</section>
+
+<section id="j-p2">
+  <div class="section-label">21 — Build Journal · Phase 2</div>
+  <h2>Meridian Pulse — consumer analytics methodology decisions</h2>
+
+  <p>Meridian Pulse is grounded in the Mahindra AFS analytics CoE work — specifically the CLTV model on ~2M customers, the propensity scoring system, the cohort retention analysis, and the churn prediction model that was built on SQL Server. The browser-native version replicates that analytical capability set within the zero-server constraint.</p>
+
+  <div class="method-note">
+    <h4>RFM — percentile scoring, not fixed thresholds</h4>
+    <p>RFM scores (1–5) are percentile ranks across the loaded customer base. Alternative: fixed absolute thresholds (e.g. "recency ≤ 30 days = R5"). Rejected because fixed thresholds are context-dependent — a 60-day-recency customer is highly active in a furniture business and dormant in a grocery business. Percentile scoring is self-calibrating: segments are always meaningful relative to this dataset. Segment labels (Champions, At Risk, etc.) follow explicit classification rules based on R/F/M score combinations, documented in the UI.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>CLTV — DCF model for Phase 2.0, tier thresholds corrected mid-build</h4>
+    <p>The DCF approach uses actual per-customer purchase rates (frequency ÷ tenure in months), projects forward over the user's chosen horizon (12/24/36 months), discounts each future period at the chosen annual rate (10–18%). Churn adjustment: customers with recency 90–180 days get 0.75× multiplier; over 180 days 0.50×. These are documented as heuristics in the UI, not presented as fitted parameters.</p>
+    <p>Tier thresholds were corrected mid-build. Original implementation used fixed absolutes (₹80K / ₹40K / ₹15K) — meaningless for datasets with different transaction scales. Corrected to P25/P50/P75 quartiles of the actual CLTV distribution. Tier 1 is always the top 25% of this customer base, regardless of absolute values. Each tier card shows the actual threshold range computed from the data.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>Churn prediction — logistic regression, gradient descent, 100 iterations</h4>
+    <p>Four features: normalised recency (0→1), inverse frequency (1 − freq/max_freq), inverse monetary (1 − spend/max_spend), binary inactivity flag (1 if R score ≤ 2). Training label: churned = 1 if recency &gt; 90 days AND R score ≤ 2. Learning rate 0.1, 100 gradient descent iterations, sigmoid activation. After training, the fitted weights on the loaded dataset are displayed dynamically — the user sees actual relative feature importances (e.g. "Recency: 42% · Low frequency: 28%"), not a static diagram. A real model on real data, with its reasoning surfaced.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>Propensity scoring — known limitation, backlog item PULSE-B01</h4>
+    <p>Current formula: <code>0.35×recency + 0.30×frequency + 0.20×monetary + 0.10×tenure + segment_bonus</code>. Weights are heuristic — informed by feature importance literature but not fitted to this specific dataset. Documented explicitly in the UI as such. Noise term removed mid-build (was adding <code>(Math.random()-0.5)*0.05</code> to prevent ties — made scores non-deterministic). Scores are now fully deterministic: same data always produces the same scores. Statistically derived weights are backlog item PULSE-B01, planned for Phase 2.1.</p>
+  </div>
+
+  <div class="method-note">
+    <h4>Data mode detection — transaction vs summary, proxy disclosure</h4>
+    <p>On load, Pulse detects data format: checks for date column, amount column, customer ID column, and whether unique customer ID ratio &lt; 0.80 (multiple rows per customer). Transaction-level data enables true cohort computation. Summary data (one row per customer) triggers proxy mode for cohort retention, segment migration, and acquisition/retention mix — using recency and tenure as retention proxies. Proxy mode shows a clear amber badge on affected modules: "Customer summary data — cohort curves use recency/tenure proxy." The limitation is surfaced, not hidden.</p>
+  </div>
+</section>
+
+<section id="j-ux">
+  <div class="section-label">22 — Build Journal · UX Iteration Log</div>
+  <h2>What changed in the UX — the decisions and what drove them</h2>
+
+  <div class="iter-row">
+    <span class="iter-label">Canvas</span>
+    <div>
+      <h4>Canvas removed from panel views, retained only in Scenario Modeller</h4>
+      <p>Implemented initially as a platform-wide toggle across all modules — a ▦ Panel / ◇ Canvas mode button in every topbar. Removed after recognising the structural problem: the canvas is useful in Bridge because ETL is a directed pipeline (each node's output is the next node's input). In Price and Pulse panels, the eight and seven analyses are independent — the waterfall does not feed the elasticity model, the RFM segmentation does not feed the churn model. A canvas drawing arrows between them implies a sequential dependency that does not exist. Worse than no canvas. Panel view is the correct interaction model for independent analyses. Canvas retained in Scenario Modeller only — where three genuine parallel branches fan out from a shared base and converge on a comparison output. The branching there is real.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">Run pattern</span>
+    <div>
+      <h4>"Run Analysis" button pattern introduced across ML modules</h4>
+      <p>Initial build executed all analyses silently on module navigation. Two problems: (1) blurred the distinction between instant deterministic analyses (RFM, waterfall — sub-100ms) and genuine model training (churn logistic regression — 100 gradient descent iterations). (2) Made re-running with different parameters ambiguous — unclear whether results reflected the current configuration or a previous run. Pattern introduced: pending state with explicit Run button → spinner with descriptive text during execution → results render. Button text changes after first run ("Re-train model", "Re-run analysis"). Auto-running analyses (RFM, waterfall) remain auto-run because they are fast and deterministic. The distinction is enforced and visible.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">Transparency</span>
+    <div>
+      <h4>Methodology notes added to every analytical output</h4>
+      <p>The intended user presents Meridian outputs in board meetings and client reviews. They must be able to answer "how did you get this number?" without opening a notebook. Systematic pass added inline methodology notes across all Price and Pulse outputs: elasticity coefficient interpretation in four plain-language bands; deal scoring full criteria table with exact thresholds and worked example; CLTV DCF four-step breakdown with formula; churn model feature explanations plus dynamic fitted-weights display post-training; propensity formula with normalisation notes; RFM segment classification rules; waterfall heuristic disclosure; floor/target price derivation logic. Every number that could be questioned in a meeting has an accessible explanation one level down from the output itself.</p>
+    </div>
+  </div>
+
+  <div class="iter-row">
+    <span class="iter-label">Onboarding</span>
+    <div>
+      <h4>Step indicator and guidance callouts added to both modules</h4>
+      <p>Both Price and Pulse now have a step indicator in the context bar (Load data → Map schema → [Run segments/waterfall] → Run models → Export) that updates dynamically as each step completes — green when done, accent colour for active. Guidance callouts appear inline before each analysis pending state, explaining what the analysis does, what data it needs, and linking directly to the schema mapper where relevant. The waterfall guidance auto-hides once schema is mapped — it is not a permanent fixture, it is a transitional aid.</p>
+    </div>
+  </div>
+</section>
+
+<section id="j-bugs">
+  <div class="section-label">23 — Build Journal · Bug Log</div>
+  <h2>Every bug found and fixed — root cause first</h2>
+
+  <p>Six of the seven bugs below share a single structural pattern: a render function that rebuilds its own UI on every call, overwriting state set by the user before reading it back. This is a consequence of the single-function render model — when one function handles both state-building and rendering, it resets what the user has changed.</p>
+
+  <div class="bug-rec">
+    <h4>BUG-01 · Elasticity category filter had no effect on the chart</h4>
+    <p><strong>Root cause:</strong> <code>renderElasticity()</code> called <code>el.innerHTML = ...</code> to rebuild the dropdown on every invocation, which reset the browser's <code>.value</code> property back to the first option before the function read it. The selected category was always <code>'all'</code>.<br>
+    <strong>Fix:</strong> Populate-once guard — <code>if (el.options.length &lt;= 1)</code> before rebuilding. Dropdown resets and repopulates only when new data is loaded. User selection preserved across re-renders.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-02 · Margin group and period filters — same root cause as BUG-01</h4>
+    <p><strong>Root cause:</strong> <code>renderMarginBridge()</code> also rebuilt its group dropdown and both period selectors on every call — same pattern.<br>
+    <strong>Fix:</strong> Same populate-once guard. Period selectors also check <code>options.length === 0</code> before populating.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-03 · Segment diagnostics dimension filter resolved to wrong column</h4>
+    <p><strong>Root cause:</strong> <code>dimCol = col(dimKey) || dimKey</code> — the fallback used the schema key name (e.g. <code>'customerTier'</code>) when the dimension was not mapped, not the actual column name in the data. Filter compared row values against a non-existent column name, returning zero matches silently.<br>
+    <strong>Fix:</strong> Added <code>FALLBACK_COLS</code> — a regex map that scans actual column names for a semantic match when schema is not mapped (e.g. <code>/tier|segment|class|grade|loyalty/i</code> for the customerTier dimension). If no match found, surface a toast directing the user to map the dimension rather than silently returning nothing.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-04 · Propensity scores were non-deterministic</h4>
+    <p><strong>Root cause:</strong> A <code>(Math.random()-0.5)*0.05</code> noise term was added to propensity scores to break ties in decile assignment. This made scores stochastic — the same customer could be D9 on one run and D8 on the next. Re-running the model on the same data would produce different ranked lists.<br>
+    <strong>Fix:</strong> Noise term removed entirely. Scores are now fully deterministic. Ties are resolved by natural floating-point precision differences in the weighted formula.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-05 · CLTV tier thresholds were fixed absolute values</h4>
+    <p><strong>Root cause:</strong> Tier boundaries hardcoded at ₹80,000 / ₹40,000 / ₹15,000. For a dataset where the top customer has ₹12,000 in CLTV, every customer lands in Tier 4. For a dataset where the average is ₹200,000, every customer is Tier 1. The thresholds carried no meaning relative to the actual distribution.<br>
+    <strong>Fix:</strong> Thresholds now computed as P25, P50, and P75 of the actual CLTV distribution from the loaded dataset. Tier 1 is always the top quartile of this customer base. Each tier card shows the actual computed threshold range.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-06 · Run Analysis button rendered as unstyled default (black text, white background)</h4>
+    <p><strong>Root cause:</strong> The <code>.run-analysis-btn</code> CSS class was used across both Price and Pulse modules but was only defined in the Price stylesheet. When the Pulse file was built from the phase3-fix build, the CSS block was not carried over. The browser applied zero custom styling, rendering the button as a native default OS button.<br>
+    <strong>Fix:</strong> CSS block injected into Pulse with full styling — module accent colour background (<code>#a78bfa</code>), dark text (<code>#0d1117</code>), hover state, disabled state, spinner animation.</p>
+  </div>
+
+  <div class="bug-rec">
+    <h4>BUG-07 · Pulse file truncated during canvas-stripping regex pass</h4>
+    <p><strong>Root cause:</strong> A Python <code>re.sub()</code> call with the <code>DOTALL</code> flag was used to strip the canvas JS block. The regex pattern matched beyond the intended end of the canvas block, consuming the closing <code>&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</code> tags and the run model functions that had been injected in a previous pass. The file was written back truncated — no closing HTML tags, no run functions.<br>
+    <strong>Fix:</strong> Detected by checking for <code>&lt;/html&gt;</code> presence and counting run function references. Closing tags and run functions appended. Regex patterns narrowed with more specific end anchors to prevent recurrence.</p>
+  </div>
+</section>
+
+<section id="j-backlog">
+  <div class="section-label">24 — Build Journal · Backlog</div>
+  <h2>Known limitations and what is planned to address them</h2>
+
+  <div class="backlog-item">
+    <div class="bl-header"><span class="bl-id">PULSE-B01</span><span class="bl-title">Propensity weights should be statistically derived, not heuristic</span></div>
+    <div class="bl-body">Current weights (0.35 recency / 0.30 frequency / 0.20 monetary / 0.10 tenure) are informed by consumer analytics literature but not fitted to the specific dataset. The correct approach treats propensity scoring as a supervised learning problem: label each customer-period pair as purchased=1 or not=0, run logistic regression or survival analysis to fit coefficients, use those as weights. Requires transaction-level data and consumer analytics reference texts (being sourced). <strong>Planned: Phase 2.1.</strong></div>
+  </div>
+
+  <div class="backlog-item">
+    <div class="bl-header"><span class="bl-id">PULSE-B02</span><span class="bl-title">CLTV model upgrade to BG/NBD + Gamma-Gamma with Pyodide</span></div>
+    <div class="bl-body">BG/NBD is the correct probabilistic model for non-contractual consumer businesses — it models the alive/dead latent process and heterogeneous purchase rates. Gamma-Gamma models the monetary value conditional on a purchase. Both are available via the <code>lifetimes</code> Python library. Requires Pyodide integration. Module interface already includes the optional <code>initPyodide()</code> hook — upgrade is additive. <strong>Planned: Phase 2.1.</strong></div>
+  </div>
+
+  <div class="backlog-item">
+    <div class="bl-header"><span class="bl-id">PRICE-B01</span><span class="bl-title">Waterfall multi-column discount decomposition</span></div>
+    <div class="bl-body">Schema wizard currently supports mapping one discount amount column. When a user has separate invoice discount, volume discount, cash discount columns, these should each map to their own waterfall step — eliminating the 60/25/10/5 heuristic split. Requires a schema wizard extension for sub-type discount mapping. <strong>Planned: Price v1.1.</strong></div>
+  </div>
+
+  <div class="backlog-item">
+    <div class="bl-header"><span class="bl-id">BRIDGE-B01</span><span class="bl-title">Source table delete needs a confirmation prompt</span></div>
+    <div class="bl-body">The delete button now appears on source tables (Phase 0 fix for DataBridge usability gap). However, deleting a source table is irreversible within the session — the data came from a file. A confirmation prompt is required before execution: "Remove this dataset? This cannot be undone in the current session." <strong>Planned: Bridge v1.2.</strong></div>
+  </div>
+
+  <div class="backlog-item">
+    <div class="bl-header"><span class="bl-id">PLATFORM-B01</span><span class="bl-title">Renova Home transaction-level dataset for Pulse cohort analyses</span></div>
+    <div class="bl-body">Current Renova customer dataset is a 100-customer summary file (one row per customer). Cohort retention, segment migration, and acquisition/retention mix analyses require event-level transaction data (one row per purchase event) to compute true cohort curves. A transaction-level Renova dataset of approximately 2,000 rows across 18 months is needed to demonstrate these analyses running in full computation mode rather than proxy mode. <strong>Planned: before Phase 3.</strong></div>
+  </div>
+</section>
+
 </main>
 </div>
 

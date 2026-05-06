@@ -240,6 +240,24 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13
 .data-mode-badge.computed{background:var(--success-bg);color:var(--success)}
 .data-mode-badge.proxy{background:var(--warn-bg);color:var(--warn)}
 
+
+/* ── Run Analysis button ── */
+.run-analysis-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 22px;background:var(--accent);color:#0d1117;
+  border:none;border-radius:8px;font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:opacity 0.12s;margin:20px 0;
+  letter-spacing:0.01em;
+}
+.run-analysis-btn:hover{opacity:0.85}
+.run-analysis-btn:disabled{opacity:0.35;cursor:not-allowed}
+.run-analysis-btn .spin{
+  animation:spin 0.75s linear infinite;
+  display:inline-block;font-size:14px;
+}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
 @media(max-width:800px){.sidebar{display:none}.schema-grid{grid-template-columns:1fr}.rfm-grid{grid-template-columns:1fr 1fr}.cltv-tiers{grid-template-columns:1fr 1fr}}
 </style>
 </head>

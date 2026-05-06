@@ -295,6 +295,19 @@ pre code{color:var(--text2)}
 .method-note p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
 .method-note code{font-family:var(--mono);font-size:10px;color:var(--teal)}
 
+/* ── Build Journal section content width ── */
+/* Journal sections live inside their own .content wrapper so they */
+/* get the same centred max-width column as the rest of the document. */
+/* Individual text elements are further constrained to a readable column. */
+section[id^="j-"] h2,
+section[id^="j-"] > p,
+section[id^="j-"] > .callout {
+  max-width:640px;
+}
+section[id^="j-"] .section-label {
+  /* already inherits inline flow, no additional constraint needed */
+}
+
 </style>
 </head>
 <body>
@@ -1139,6 +1152,7 @@ Phase 3: [ ] Meridian Ledger  [ ] Meridian Org
      PM lifecycle map to be overlaid post-build.
 ══════════════════════════════════════════════════════════════ -->
 
+<div class="content">
 <section id="j-arch">
   <div class="section-label">17 — Build Journal · Architecture ADRs</div>
   <h2>Five architecture decisions — with the reasoning that locked them</h2>
@@ -1417,6 +1431,8 @@ Phase 3: [ ] Meridian Ledger  [ ] Meridian Org
     <div class="bl-body">Current Renova customer dataset is a 100-customer summary file (one row per customer). Cohort retention, segment migration, and acquisition/retention mix analyses require event-level transaction data (one row per purchase event) to compute true cohort curves. A transaction-level Renova dataset of approximately 2,000 rows across 18 months is needed to demonstrate these analyses running in full computation mode rather than proxy mode. <strong>Planned: before Phase 3.</strong></div>
   </div>
 </section>
+
+</div><!-- end journal .content -->
 
 </main>
 </div>

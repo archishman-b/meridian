@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Pulse — PM Build Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090d;--surface:#0e1018;--surface2:#131720;--surface3:#181e2c;
+  --border:#1c2234;--border2:#242e48;--border3:#2e3c5e;
+  --text:#dce6fc;--text2:#7888aa;--text3:#3a4565;
+  --pulse:#a78bfa;--pulse-dim:rgba(167,139,250,0.10);--pulse-bd:rgba(167,139,250,0.25);
+  --green:#34d399;--amber:#fbbf24;--red:#f87171;--blue:#60a5fa;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--serif:'DM Serif Display',serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(167,139,250,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(167,139,250,0.012) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh;position:relative;z-index:1}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.sb-brand{padding:22px 20px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--pulse);margin-bottom:5px}
+.sb-title{font-family:var(--serif);font-size:18px;line-height:1.2;color:var(--text);margin-bottom:3px}
+.sb-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.sb-body{flex:1;overflow-y:auto;padding:10px 0}
+.sb-body::-webkit-scrollbar{display:none}
+.sb-body{-ms-overflow-style:none;scrollbar-width:none}
+.nav-group{padding:10px 20px 4px;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-top:4px}
+.nav-link{display:block;padding:6px 20px;font-size:11.5px;color:var(--text2);text-decoration:none;border-left:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--pulse);border-left-color:var(--pulse);background:var(--pulse-dim)}
+.nav-link small{display:block;font-size:9.5px;color:var(--text3);margin-top:1px}
+.nav-divider{height:1px;background:var(--border);margin:6px 20px}
+
+/* ── Main ── */
+.main{overflow-x:hidden}
+
+/* ── Hero ── */
+.hero{background:var(--surface);border-bottom:1px solid var(--border2);padding:52px 60px 46px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-60px;width:400px;height:400px;background:radial-gradient(circle,rgba(167,139,250,.08) 0%,transparent 65%);pointer-events:none}
+.hero-tag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pulse);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.hero-tag::before{content:'';width:18px;height:1px;background:var(--pulse)}
+.hero-h1{font-family:var(--serif);font-size:clamp(26px,4vw,42px);line-height:1.12;margin-bottom:14px;color:var(--text)}
+.hero-h1 em{font-style:italic;color:var(--pulse)}
+.hero-sub{font-size:14px;color:var(--text2);line-height:1.8;max-width:580px;margin-bottom:24px}
+.hero-meta{display:flex;gap:0;border:1px solid var(--border2);border-radius:7px;overflow:hidden;width:fit-content}
+.hm-item{padding:10px 18px;font-family:var(--mono);font-size:10px;color:var(--text3);border-right:1px solid var(--border2)}
+.hm-item:last-child{border-right:none}
+.hm-item strong{display:block;color:var(--text2);font-size:11px;margin-bottom:2px;font-weight:500}
+
+/* ── Sections ── */
+.section{padding:46px 60px;border-bottom:1px solid var(--border);max-width:840px}
+.section:last-child{border-bottom:none}
+.s-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;display:flex;align-items:center;gap:10px}
+.s-eyebrow::after{content:'';flex:0 0 30px;height:1px;background:var(--border2)}
+.s-title{font-family:var(--serif);font-size:clamp(20px,3vw,30px);color:var(--text);line-height:1.18;margin-bottom:14px}
+.s-title em{font-style:italic;color:var(--pulse)}
+.body{font-size:13.5px;color:var(--text2);line-height:1.85;margin-bottom:16px;max-width:680px}
+.body strong{color:var(--text);font-weight:500}
+.body em{color:var(--pulse);font-style:italic}
+
+/* ── Callouts ── */
+.callout{border-left:2px solid;border-radius:0 6px 6px 0;padding:12px 16px;margin:18px 0;max-width:680px}
+.callout-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;font-weight:700}
+.callout-body{font-size:12.5px;line-height:1.7}
+.c-pulse{border-color:var(--pulse);background:var(--pulse-dim)}
+.c-pulse .callout-label{color:var(--pulse)}.c-pulse .callout-body{color:rgba(167,139,250,.8)}
+.c-green{border-color:var(--green);background:rgba(52,211,153,.08)}
+.c-green .callout-label{color:var(--green)}.c-green .callout-body{color:rgba(52,211,153,.75)}
+.c-amber{border-color:var(--amber);background:rgba(251,191,36,.08)}
+.c-amber .callout-label{color:var(--amber)}.c-amber .callout-body{color:rgba(251,191,36,.75)}
+.c-blue{border-color:var(--blue);background:rgba(96,165,250,.08)}
+.c-blue .callout-label{color:var(--blue)}.c-blue .callout-body{color:rgba(96,165,250,.75)}
+
+/* ── Decision records ── */
+.decision{border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin:16px 0;max-width:720px}
+.decision-head{background:var(--surface2);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.decision-id{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);flex-shrink:0}
+.decision-title{font-size:13px;font-weight:500;color:var(--text);flex:1}
+.decision-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px}
+.db-kept{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25)}
+.db-changed{background:rgba(167,139,250,.12);color:var(--pulse);border:1px solid rgba(167,139,250,.25)}
+.decision-body{padding:14px 16px}
+.decision-q{font-size:11.5px;color:var(--text2);line-height:1.65}
+.decision-a{font-size:12px;color:var(--text2);line-height:1.65;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.decision-a strong{color:var(--text);font-weight:500}
+
+/* ── Module table ── */
+.mod-table{width:100%;border-collapse:collapse;font-size:12px;max-width:720px;margin:16px 0}
+.mod-table th{background:var(--surface2);color:var(--text3);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.mod-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.mod-table td:first-child{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.mod-table td strong{color:var(--text);font-weight:500}
+.mod-table tr:last-child td{border:none}
+.layer-pill{display:inline-flex;padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700}
+.lp-1{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.lp-2{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.25)}
+.lp-3{background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+
+/* ── Stat row ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;max-width:720px}
+.stat-item{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:14px}
+.stat-val{font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:3px}
+.stat-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)}
+
+/* ── Quote ── */
+.pull-quote{border-left:2px solid var(--pulse);padding:14px 0 14px 22px;margin:22px 0;font-family:var(--serif);font-style:italic;font-size:16px;color:var(--text);line-height:1.6;max-width:640px}
+
+/* ── Interpreter box ── */
+.interpreter{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:18px;margin:18px 0;max-width:720px}
+.interp-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--pulse);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.interp-label::before{content:'';width:3px;height:10px;background:var(--pulse);border-radius:2px;flex-shrink:0}
+.interp-row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--border);align-items:baseline}
+.interp-row:last-child{border:none}
+.interp-feature{font-family:var(--mono);font-size:10px;color:var(--text3);width:160px;flex-shrink:0}
+.interp-coef{font-family:var(--mono);font-size:11px;width:60px;flex-shrink:0}
+.interp-positive{color:var(--green)}.interp-negative{color:var(--red)}
+.interp-meaning{font-size:12px;color:var(--text2);line-height:1.55}
+
+/* ── Data flow ── */
+.flow-block{font-family:var(--mono);font-size:11.5px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:18px 20px;line-height:2;max-width:600px;margin:16px 0}
+.flow-block .arrow{color:var(--pulse)}
+.flow-block .node{color:var(--text)}
+.flow-block .note{color:var(--text3);font-size:10px}
+
+/* ── Timeline ── */
+.sprint-list{max-width:680px;margin:14px 0}
+.sprint-item{display:flex;gap:16px;margin-bottom:22px;position:relative}
+.sprint-item::before{content:'';position:absolute;left:15px;top:26px;bottom:-22px;width:1px;background:var(--border2)}
+.sprint-item:last-child::before{display:none}
+.sprint-num{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--pulse);flex-shrink:0;position:relative;z-index:1}
+.sprint-body{}
+.sprint-title{font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:4px}
+.sprint-desc{font-size:12.5px;color:var(--text2);line-height:1.65}
+.sprint-outcome{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:5px}
+
+@media(max-width:800px){.shell{grid-template-columns:1fr}.sidebar{display:none}.section{padding:32px 20px}.hero{padding:36px 20px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-tag">Meridian Pulse · PM Journal</div>
+    <div class="sb-title">Build Journal<br>v2.0</div>
+    <div class="sb-sub">Consumer & Marketing Analytics</div>
+  </div>
+  <div class="sb-body">
+    <div class="nav-group">Context</div>
+    <a class="nav-link active" href="#problem">The problem we solved</a>
+    <a class="nav-link" href="#mahindra">The Mahindra context</a>
+    <div class="nav-divider"></div>
+    <div class="nav-group">PM Lifecycle</div>
+    <a class="nav-link" href="#vision">Vision & positioning</a>
+    <a class="nav-link" href="#personas">Personas & use cases</a>
+    <a class="nav-link" href="#architecture">Architecture decisions</a>
+    <div class="nav-divider"></div>
+    <div class="nav-group">The Build</div>
+    <a class="nav-link" href="#layer1">Layer 1 — Foundation</a>
+    <a class="nav-link" href="#layer2">Layer 2 — Predictive</a>
+    <a class="nav-link" href="#layer3">Layer 3 — Marketing</a>
+    <div class="nav-divider"></div>
+    <div class="nav-group">Hard Problems</div>
+    <a class="nav-link" href="#pyodide">The Pyodide bet</a>
+    <a class="nav-link" href="#bgnbd">BG/NBD — why it matters</a>
+    <a class="nav-link" href="#interpreter">Making models legible</a>
+    <div class="nav-divider"></div>
+    <a class="nav-link" href="#v1tov2">v1 → v2: what changed</a>
+    <a class="nav-link" href="#backlog">Backlog</a>
+  </div>
+</nav>
+
+<!-- ── Main ── -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero" id="top">
+  <div class="hero-tag">Meridian Pulse · Build Journal · v2.0 · May 2026</div>
+  <h1 class="hero-h1">From heuristics<br>to <em>econometrics</em></h1>
+  <p class="hero-sub">The complete PM record for Meridian Pulse — a nine-module consumer and marketing analytics platform built browser-native, Pyodide-powered, and grounded in a 2M+ customer engagement at Mahindra. This journal documents every architectural decision, every analytical choice, and every moment where the easy path was rejected in favour of the defensible one.</p>
+  <div class="hero-meta">
+    <div class="hm-item"><strong>Version</strong>v2.0 · 9 modules</div>
+    <div class="hm-item"><strong>Shipped</strong>May 2026</div>
+    <div class="hm-item"><strong>Stack</strong>JS · Pyodide · Chart.js</div>
+    <div class="hm-item"><strong>Demo data</strong>Renova Home · 2,000 customers</div>
+  </div>
+</div>
+
+<!-- ══ PROBLEM ══ -->
+<section class="section" id="problem">
+  <div class="s-eyebrow">01 — The problem</div>
+  <h2 class="s-title">The structural gap this tool exists to close</h2>
+  <p class="body">Consumer analytics in most organisations operates under a structural constraint that has nothing to do with data availability or analytical capability: the person who understands the business question and the person who can execute the analysis are almost never the same person. The commercial manager knows which customers are at risk. The analyst knows how to run a logistic regression. They do not share a workflow.</p>
+  <p class="body">The consequence is a chronic lag between the commercial question and the analytical answer. In practice, this manifests as: the analysis takes two weeks; by the time it arrives, the campaign has already launched; the insights are filed in a deck that nobody reads; the customer base continues to erode. The bottleneck is not the database. It is the handoff.</p>
+
+  <div class="pull-quote">"The problem at Mahindra was not that we lacked 2M+ customer records. We had them. The problem was that the person who understood what question to ask could not get the answer in the same room as the question."</div>
+
+  <p class="body"><strong>Meridian Pulse is designed to eliminate that handoff.</strong> It puts the statistical methods — the ones that actually determine whether a customer is likely to buy, churn, or upsell — directly in the hands of the commercial analyst who already knows the business context. No queue. No SQL ticket. No analyst pool. The judgment layer and the analytical layer in the same tool, operated by the same person.</p>
+</section>
+
+<!-- ══ MAHINDRA ══ -->
+<section class="section" id="mahindra">
+  <div class="s-eyebrow">02 — Engagement context</div>
+  <h2 class="s-title">The <em>Mahindra</em> reference engagement</h2>
+  <p class="body">The analytical architecture of Pulse is grounded in a real engagement: consumer analytics across Mahindra's tractor business on a 2M+ customer dataset in a SQL Server environment. The core problem was structural: the commercial team had hypotheses but no analytical access; the analyst pool had tools but no commercial framing. The question ("which customers should we prioritise for the new implements range?") and the capability (CLTV modelling, propensity scoring, churn segmentation) existed in the same organisation — separated by a queue and a different reporting line.</p>
+
+  <p class="body">Three things from that engagement directly shaped Pulse's analytical choices:</p>
+
+  <div class="sprint-list">
+    <div class="sprint-item">
+      <div class="sprint-num">1</div>
+      <div class="sprint-body">
+        <div class="sprint-title">RFM is always the right starting point</div>
+        <div class="sprint-desc">Every consumer analytics engagement begins with the same three questions: who bought recently, who buys frequently, and who spends the most. RFM is not sophisticated — it is foundational. Building Layer 1 around RFM was non-negotiable because it gives any commercial analyst an immediately legible starting point before any statistical modelling begins.</div>
+      </div>
+    </div>
+    <div class="sprint-item">
+      <div class="sprint-num">2</div>
+      <div class="sprint-body">
+        <div class="sprint-title">The DCF CLV formula is wrong for heterogeneous populations</div>
+        <div class="sprint-desc">The simple CLV formula — (avg spend × margin) / churn rate — applies a single population-level churn rate to every customer. In the Mahindra dataset, the customer population ranged from annual large-equipment buyers to irregular consumable purchasers. Applying a single churn rate produced a CLV estimate that was wrong for almost every individual customer. This is why BG/NBD is in Layer 2: it estimates individual-level dropout probability from each customer's own purchase history, not from the population average.</div>
+      </div>
+    </div>
+    <div class="sprint-item">
+      <div class="sprint-num">3</div>
+      <div class="sprint-body">
+        <div class="sprint-title">Propensity scores are only useful if you can explain them</div>
+        <div class="sprint-desc">A propensity model that outputs a score between 0 and 1 is analytically correct but commercially useless if the commercial manager cannot understand why a customer scores 0.82 versus 0.24. The interpreter layer — the "what this means for you" translation of every statistical output — is not a UI nicety. It is the difference between an analytical tool and a commercial decision-support tool.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VISION ══ -->
+<section class="section" id="vision">
+  <div class="s-eyebrow">03 — Product vision</div>
+  <h2 class="s-title">Vision and positioning</h2>
+  <p class="body">Pulse's positioning within the Meridian platform is the <strong>customer intelligence layer</strong>: the tool that answers "who are these customers, what are they worth, what are they likely to do next, and what marketing decisions should follow from that?" It is explicitly not a data visualisation tool. Every analytical output in Pulse is accompanied by an interpretation layer that connects the statistical result to the commercial decision.</p>
+
+  <div class="callout c-pulse">
+    <div class="callout-label">Product vision statement</div>
+    <div class="callout-body">A commercial analyst with no statistical training should be able to load a customer dataset, run a BG/NBD lifetime value model, identify their at-risk Champions, and generate a propensity-ranked targeting list — in under ten minutes, in a browser, with no server, no licence, and no data engineering team. The model does the statistics. The interpreter does the translation. The analyst makes the decision.</div>
+  </div>
+
+  <p class="body">The three-layer architecture — Foundation, Predictive, Marketing — reflects a deliberate workflow sequencing. You do not run a BG/NBD model before you know who your customers are. You do not build a marketing mix model before you have propensity scores to validate against. The layers are not just organisational. They are the analytical sequence that a competent engagement would actually follow.</p>
+</section>
+
+<!-- ══ PERSONAS ══ -->
+<section class="section" id="personas">
+  <div class="s-eyebrow">04 — Personas</div>
+  <h2 class="s-title">Who this is built for</h2>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">P1</div><div class="decision-title">The Engagement Consultant (Archetype: Monitor Deloitte commercial track)</div></div>
+    <div class="decision-body">
+      <div class="decision-q">8–12 years. Working on a commercial transformation — pricing, GTM, or operating model. Has the business framing. Does not have the technical access to run anything beyond Excel. Needs to tell a client "here is your customer tiering by CLV" without a 3-week analyst queue.</div>
+      <div class="decision-a"><strong>Pulse serves this user</strong> by making CLV, RFM, and propensity outputs available in the same session as the data upload. The output is boardroom-ready, not analyst-ready.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">P2</div><div class="decision-title">The In-House Strategy Analyst (Archetype: Mahindra commercial analytics team)</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Has Python or SQL access but not the statistical depth to implement BG/NBD or Kaplan-Meier from scratch. Has the business domain knowledge to know when a model output looks wrong. Wants to own the analysis, not delegate it to a specialist.</div>
+      <div class="decision-a"><strong>Pulse serves this user</strong> by providing validated, production-grade statistical implementations — BG/NBD, logistic regression, Kaplan-Meier — that they can run on their own data without needing to implement or debug the underlying algorithms.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">P3</div><div class="decision-title">The SaaS Founder / Head of Growth (Archetype: Series A, 5–50K customers)</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Needs to understand customer cohort behaviour and prioritise retention spend. Has transaction data in CSV. Does not have a dedicated data scientist. Needs answers this week, not next quarter.</div>
+      <div class="decision-a"><strong>Pulse serves this user</strong> through the cohort retention heatmap, the propensity targeting list, and the marketing mix ROMI output — all of which translate directly into budget allocation decisions without requiring statistical expertise.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">P4</div><div class="decision-title">The AI PM Demonstrating Technical Fluency (Archetype: this portfolio)</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Needs to demonstrate, publicly and verifiably, that they can design and ship analytically rigorous tools that run production-grade econometric models. The tool must be impressive to a hiring manager at a US tech firm who clicks on a GitHub link and has five minutes.</div>
+      <div class="decision-a"><strong>Pulse serves this user</strong> by doing something that is genuinely hard: running BG/NBD maximum likelihood estimation, logistic regression gradient descent, and Kaplan-Meier survival analysis — in a browser, with no server — and making the outputs interpretable to someone without a statistics degree.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ARCHITECTURE ══ -->
+<section class="section" id="architecture">
+  <div class="s-eyebrow">05 — Architecture</div>
+  <h2 class="s-title">Architecture decisions</h2>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">AD-01</div><div class="decision-title">Single HTML file, browser-native, zero server</div><div class="decision-badge db-kept">Kept from v1</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Could we have used a proper backend (FastAPI, Node) to run the statistical models server-side?</div>
+      <div class="decision-a"><strong>No, deliberately.</strong> The zero-server constraint is the product's core value proposition: data never leaves the machine. For a tool handling customer transaction data in commercial consulting contexts, this is not a nice-to-have. It is the architectural fact that makes the tool deployable on an engagement where client data governance would block any cloud upload. The constraint also eliminates all operational overhead — no hosting costs, no authentication, no maintenance.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">AD-02</div><div class="decision-title">Pyodide for Layer 2 — lazy-loaded on first use</div><div class="decision-badge db-changed">New in v2</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Should the econometric models run in JavaScript (math.js) or Python (Pyodide)?</div>
+      <div class="decision-a"><strong>Python via Pyodide, lazy-loaded.</strong> BG/NBD maximum likelihood estimation requires scipy.optimize and scipy.special (gammaln, betaln). Implementing these in JavaScript is technically possible but produces fragile, hard-to-audit code. The correct implementation of BG/NBD has been validated in Python against the original Fader, Hardie & Lee (2005) paper — using that implementation is both more reliable and more defensible. The 10–15 second load cost is paid once per session, not per analysis. The loading experience (branded overlay, step indicators, green dot on ready) makes the wait legible and purposeful.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">AD-03</div><div class="decision-title">Three-layer module architecture (Foundation / Predictive / Marketing)</div><div class="decision-badge db-changed">New in v2</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Should modules be organised by analytical type or by dependency sequence?</div>
+      <div class="decision-a"><strong>By dependency sequence — which is also analytical type.</strong> The three layers are not a UI organisational choice. They reflect the analytical logic: you must segment customers (Layer 1) before you can predict their behaviour (Layer 2), and you must understand behaviour before you can optimise marketing spend against it (Layer 3). The layer indicator in the sidebar makes this dependency visible to the user without being prescriptive — they can access any module at any time.</div>
+    </div>
+  </div>
+
+  <div class="decision">
+    <div class="decision-head"><div class="decision-id">AD-04</div><div class="decision-title">Renova Home synthetic demo with baked-in analytical signals</div><div class="decision-badge db-kept">Consistent with platform</div></div>
+    <div class="decision-body">
+      <div class="decision-q">Should the demo data be generic or domain-specific?</div>
+      <div class="decision-a"><strong>Domain-specific with known signals.</strong> Generic demo data produces generic-looking outputs. The Renova Home dataset is designed so that every module surfaces something specific: Champions cluster skewed to Institutional/Tier 1, paid-search month-6 retention cliff, referral cohort 2× durability at month 12, BG/NBD CLV diverging from DCF by ~25-35% due to customer heterogeneity. A user who runs all nine modules on the demo data sees a coherent analytical story, not nine disconnected outputs.</div>
+    </div>
+  </div>
+
+  <p class="body" style="margin-top:18px">The data flow through the three layers:</p>
+
+  <div class="flow-block">
+    <span class="node">DataBridge / Upload</span> <span class="arrow">→</span> <span class="node">AppState.customers[]</span><br>
+    <span class="arrow">↓</span><br>
+    <span class="node">Layer 1: Foundation (JS)</span><br>
+    <span class="note">&nbsp;&nbsp;P1 RFM → _rfm_score, _seg attached to each customer</span><br>
+    <span class="note">&nbsp;&nbsp;P2 Cohort → retention matrix computed from monthly_active[]</span><br>
+    <span class="note">&nbsp;&nbsp;P3 k-means → _cluster_id attached to each customer</span><br>
+    <span class="arrow">↓ enriched dataset</span><br>
+    <span class="node">Layer 2: Predictive (Pyodide)</span><br>
+    <span class="note">&nbsp;&nbsp;P4 BG/NBD → _p_alive, _e_future, _bgnbd_clv per customer</span><br>
+    <span class="note">&nbsp;&nbsp;P5 Logistic → _propensity score per customer</span><br>
+    <span class="note">&nbsp;&nbsp;P6 KM Survival → hazard flag, median survival by group</span><br>
+    <span class="arrow">↓ scored dataset</span><br>
+    <span class="node">Layer 3: Marketing (JS)</span><br>
+    <span class="note">&nbsp;&nbsp;P7 MMM → marginal ROMI by channel</span><br>
+    <span class="note">&nbsp;&nbsp;P8 Bass → adoption curve forecast by category</span><br>
+    <span class="note">&nbsp;&nbsp;P9 Behavioural Lab → offer lift estimate (always-active)</span>
+  </div>
+</section>
+
+<!-- ══ LAYER 1 ══ -->
+<section class="section" id="layer1">
+  <div class="s-eyebrow">06 — The build · Layer 1</div>
+  <h2 class="s-title">Foundation — <em>descriptive segmentation</em></h2>
+
+  <table class="mod-table">
+    <thead><tr><th>Module</th><th>Analytical method</th><th>Key output</th><th>Runtime</th></tr></thead>
+    <tbody>
+      <tr><td>P1 · Segments</td><td>RFM quintile scoring, Dick & Basu classification</td><td>Segment labels: Champions, At-Risk, Lost, Promising…</td><td><span class="layer-pill lp-1">JS · instant</span></td></tr>
+      <tr><td>P2 · Cohorts</td><td>Monthly retention matrix, channel stratification</td><td>Heatmap, channel retention curves</td><td><span class="layer-pill lp-1">JS · instant</span></td></tr>
+      <tr><td>P3 · Clusters</td><td>k-means on normalised RFM, elbow method</td><td>Cluster profiles, silhouette-optimised k</td><td><span class="layer-pill lp-1">JS · 1–3s</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-green">
+    <div class="callout-label">Build decision: RFM weights are configurable</div>
+    <div class="callout-body">The default RFM weights (50/30/20 for recency/frequency/monetary) reflect the empirical finding that recency is the strongest predictor of future purchase in most consumer categories. But "most categories" is not "all categories" — in luxury goods, monetary dominates; in subscription software, frequency and recency have equal weight. Making the weights configurable cost two hours of development and permanently eliminates the "this doesn't reflect our business" objection from any commercial stakeholder.</div>
+  </div>
+
+  <p class="body">The RFM module's segment labels are mapped to the Dick & Basu four-quadrant loyalty typology — not just a score. "RFM composite: 4.2" is not a commercial output. "At-Risk Champions — previously highest-value, now going quiet" is actionable by a CRM manager without any statistical training. Every module in Pulse was built with this principle: the statistical output is the engine, not the deliverable.</p>
+</section>
+
+<!-- ══ LAYER 2 ══ -->
+<section class="section" id="layer2">
+  <div class="s-eyebrow">07 — The build · Layer 2</div>
+  <h2 class="s-title">Predictive — <em>where the hard decisions were</em></h2>
+
+  <table class="mod-table">
+    <thead><tr><th>Module</th><th>Analytical method</th><th>Key output</th><th>Runtime</th></tr></thead>
+    <tbody>
+      <tr><td>P4 · Lifetime Value</td><td>BG/NBD MLE via scipy.optimize, comparison vs DCF</td><td>Per-customer P(alive), E[future tx], CLV distribution</td><td><span class="layer-pill lp-2">Pyodide · 8–20s</span></td></tr>
+      <tr><td>P5 · Propensity</td><td>Logistic regression gradient descent, lift curve</td><td>Per-customer propensity score, feature coefficients</td><td><span class="layer-pill lp-2">Pyodide · 5–12s</span></td></tr>
+      <tr><td>P6 · Churn Risk</td><td>Kaplan-Meier estimator, stratified by group</td><td>Survival curves, median survival, at-risk flags</td><td><span class="layer-pill lp-2">Pyodide · 4–8s</span></td></tr>
+    </tbody>
+  </table>
+
+  <p class="body">Layer 2 was the hardest build in the Pulse v2 architecture. The statistical methods are correct but the implementation is in Python running in a browser via a WebAssembly runtime — a stack that requires careful attention to numerical stability, data serialisation, and user experience during the load wait.</p>
+
+  <div class="callout c-amber">
+    <div class="callout-label">The numerical stability problem in BG/NBD</div>
+    <div class="callout-body">The BG/NBD log-likelihood involves gammaln and betaln operations on arrays of customer data. For customers with very high frequency or very low recency, these operations can produce numerical overflow or underflow. The implementation uses numpy's logaddexp for numerical stability when summing log-probability terms, and clips P(alive) estimates to [0.01, 0.99] to prevent degenerate outputs. This is the kind of decision that a hiring manager reading the build journal should notice — it signals that the implementation was built by someone who understands both the statistics and the numerical reality of running it on real data.</div>
+  </div>
+</section>
+
+<!-- ══ PYODIDE ══ -->
+<section class="section" id="pyodide">
+  <div class="s-eyebrow">08 — Hard problem 1</div>
+  <h2 class="s-title">The <em>Pyodide</em> bet</h2>
+  <p class="body">Loading a full Python runtime in a browser is a deliberate architectural bet. Pyodide (via CDN) adds approximately 10–15 seconds of load time on first use. This is real friction. The alternatives were:</p>
+
+  <div class="sprint-list">
+    <div class="sprint-item">
+      <div class="sprint-num">A</div>
+      <div class="sprint-body">
+        <div class="sprint-title">Implement BG/NBD in JavaScript</div>
+        <div class="sprint-desc">Technically possible using math.js for the gamma function approximations. Rejected because: (a) the scipy implementation is validated against the original Fader, Hardie & Lee (2005) paper; a JS port introduces the possibility of subtle numerical differences that are hard to audit; (b) the Python code is more readable and auditable, which matters for a portfolio artefact.</div>
+        <div class="sprint-outcome">Decision: rejected</div>
+      </div>
+    </div>
+    <div class="sprint-item">
+      <div class="sprint-num">B</div>
+      <div class="sprint-body">
+        <div class="sprint-title">Use a serverless API (Vercel Edge Functions)</div>
+        <div class="sprint-desc">Would have eliminated the load time. Rejected because it breaks the zero-server architecture — customer data would transit a network. In a consulting context where client data governance is real, this is not acceptable.</div>
+        <div class="sprint-outcome">Decision: rejected</div>
+      </div>
+    </div>
+    <div class="sprint-item">
+      <div class="sprint-num">C</div>
+      <div class="sprint-body">
+        <div class="sprint-title">Pyodide, lazy-loaded with branded loading experience</div>
+        <div class="sprint-desc">Load the Pyodide runtime dynamically only when the user first accesses a Layer 2 module. Show a branded loading overlay with step-by-step progress indicators. Cache the loaded runtime for subsequent Layer 2 modules in the same session. The load cost is paid once, not repeatedly, and the user is given context ("Initialising econometric engine — loading NumPy · SciPy") rather than a blank screen.</div>
+        <div class="sprint-outcome">Decision: adopted</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout c-blue">
+    <div class="callout-label">What the Pyodide bet signals</div>
+    <div class="callout-body">Choosing Pyodide over a JS implementation is a deliberate signal: the tool prioritises statistical correctness over implementation simplicity. A generic analytics dashboard would use a JS approximation and nobody would notice. A tool claiming to run BG/NBD — a model with a specific mathematical formulation from a peer-reviewed paper — needs to implement it correctly. The Pyodide bet is also the AI PM signal: this is someone who knows the difference between "it runs" and "it runs correctly."</div>
+  </div>
+</section>
+
+<!-- ══ BG/NBD ══ -->
+<section class="section" id="bgnbd">
+  <div class="s-eyebrow">09 — Hard problem 2</div>
+  <h2 class="s-title">BG/NBD — <em>why the formula is wrong</em></h2>
+
+  <p class="body">The standard CLV formula — (avg monthly spend × margin) / monthly churn rate — contains an assumption that is wrong for almost every real customer population: that all customers have the same churn probability. They do not. In any meaningful B2B or B2C customer base, there is a population of high-purchase-rate, low-dropout-probability customers and a population of low-purchase-rate, high-dropout-probability customers. Averaging these produces a single churn rate that accurately describes neither.</p>
+
+  <p class="body">The BG/NBD model (Fader, Hardie & Lee, 2005) resolves this by estimating two separate distributions from observed purchase history:</p>
+
+  <div class="stat-row">
+    <div class="stat-item"><div class="stat-val" style="font-size:16px;color:var(--blue)">Gamma</div><div class="stat-label">Distribution over purchase rate λ per customer</div></div>
+    <div class="stat-item"><div class="stat-val" style="font-size:16px;color:var(--pulse)">Beta</div><div class="stat-label">Distribution over dropout probability p per customer</div></div>
+    <div class="stat-item"><div class="stat-val">P(alive)</div><div class="stat-label">Prob customer hasn't dropped out by time T</div></div>
+    <div class="stat-item"><div class="stat-val">E[Y]</div><div class="stat-label">Expected future purchases in next t periods</div></div>
+  </div>
+
+  <p class="body">In the Renova Home demo dataset, the DCF formula and BG/NBD CLV diverge by 25–35% on average — and the divergence is not random. The DCF formula overestimates CLV for low-frequency customers (whose individual churn rate is higher than the population average) and underestimates CLV for high-frequency customers (whose individual churn rate is lower). The BG/NBD model gets both right because it uses each customer's own purchase history to update the population-level parameter estimates.</p>
+
+  <div class="callout c-pulse">
+    <div class="callout-label">The commercial consequence</div>
+    <div class="callout-body">A company using DCF CLV to allocate retention spend will systematically overspend on retaining customers who are already churned (they look valuable because their historical spend was high) and underspend on retaining genuinely loyal customers who happen to have a lower purchase frequency. The BG/NBD model corrects both errors. This is not a theoretical improvement — it is a budget allocation improvement.</div>
+  </div>
+</section>
+
+<!-- ══ INTERPRETER ══ -->
+<section class="section" id="interpreter">
+  <div class="s-eyebrow">10 — Hard problem 3</div>
+  <h2 class="s-title">Making <em>statistical models legible</em> to commercial users</h2>
+
+  <p class="body">The screenshot that prompted this section showed the logistic regression P5 output as a bar chart of feature coefficients labelled with their statistical variable names — "recency", "is_referral", "is_paid_search", "monetary" — alongside a propensity distribution histogram that was heavily skewed to the left. Both outputs are analytically correct. Neither is commercially legible without interpretation.</p>
+
+  <p class="body">A logistic regression coefficient of 1.82 for "recency" tells a statistician: "a one-unit increase in the normalised recency variable increases the log-odds of the target outcome by 1.82." It tells a commercial manager: nothing. The interpretation layer is the work of translating log-odds into plain commercial English:</p>
+
+  <div class="interpreter">
+    <div class="interp-label">Feature Coefficients — what they actually mean for this business</div>
+    <div class="interp-row">
+      <div class="interp-feature">recency</div>
+      <div class="interp-coef interp-positive">+1.82</div>
+      <div class="interp-meaning"><strong>Strongest positive signal.</strong> Customers who purchased recently are dramatically more likely to buy again. Every week of additional recency reduces propensity meaningfully — act within 30 days of last purchase for maximum conversion efficiency.</div>
+    </div>
+    <div class="interp-row">
+      <div class="interp-feature">frequency</div>
+      <div class="interp-coef interp-positive">+0.43</div>
+      <div class="interp-meaning"><strong>Habit strength.</strong> Customers with more historical transactions are more likely to transact again — repeat purchase creates a self-reinforcing pattern. Prioritise customers with ≥3 transactions in the targeting list.</div>
+    </div>
+    <div class="interp-row">
+      <div class="interp-feature">is_referral</div>
+      <div class="interp-coef interp-positive">+0.18</div>
+      <div class="interp-meaning"><strong>Channel quality premium.</strong> Referral-acquired customers have 18% higher propensity vs equivalent customers from other channels. Not a surprise — they came in with social proof. Referral programme investment is justified by this structural advantage.</div>
+    </div>
+    <div class="interp-row">
+      <div class="interp-feature">is_paid_search</div>
+      <div class="interp-coef interp-negative">−0.12</div>
+      <div class="interp-meaning"><strong>Channel quality deficit.</strong> Paid search customers have lower propensity than the baseline — consistent with the cohort retention cliff visible in P2. Higher acquisition volume, lower lifetime quality. CAC/CLV ratio needs revalidation for this channel.</div>
+    </div>
+    <div class="interp-row">
+      <div class="interp-feature">monetary</div>
+      <div class="interp-coef interp-negative">−0.08</div>
+      <div class="interp-meaning"><strong>Counterintuitive — do not mis-read this.</strong> Higher historical spend has a slight negative coefficient because it correlates with episodic high-value purchases (Sessioner pattern) rather than consistent engagement. A customer who spent ₹50,000 once is less likely to buy again than one who spent ₹5,000 ten times.</div>
+    </div>
+  </div>
+
+  <div class="callout c-amber">
+    <div class="callout-label">The design principle this establishes</div>
+    <div class="callout-body">Every statistical output in Pulse that produces a number a commercial user cannot directly interpret — a coefficient, a probability, a hazard ratio — must be accompanied by a plain-English interpretation that connects the number to a business decision. This is not optional documentation. It is the product. The statistical method is the engine. The interpretation is the car.</div>
+  </div>
+</section>
+
+<!-- ══ LAYER 3 ══ -->
+<section class="section" id="layer3">
+  <div class="s-eyebrow">11 — The build · Layer 3</div>
+  <h2 class="s-title">Marketing layer — <em>decisions, not analyses</em></h2>
+
+  <table class="mod-table">
+    <thead><tr><th>Module</th><th>Analytical method</th><th>Key output</th><th>Runtime</th></tr></thead>
+    <tbody>
+      <tr><td>P7 · Marketing Mix</td><td>OLS multiple regression (math.js), configurable lags</td><td>Marginal ROMI by channel, actual vs fitted revenue</td><td><span class="layer-pill lp-3">JS · instant</span></td></tr>
+      <tr><td>P8 · Adoption</td><td>Bass diffusion model, category-level p/q estimation</td><td>S-curve forecast, peak adoption timing</td><td><span class="layer-pill lp-3">JS · instant</span></td></tr>
+      <tr><td>P9 · Behavioural Lab</td><td>Six Ariely force composite, no data required</td><td>Offer lift estimate, force breakdown radar</td><td><span class="layer-pill lp-3">JS · always-active</span></td></tr>
+    </tbody>
+  </table>
+
+  <p class="body">The Marketing Mix Modeller (P7) uses the SCAN*PRO-style regression framework: sales as a function of spend by channel, price index, promotion flags, and seasonality. The key methodological decision was making channel lags configurable — trade spend in the Renova Home demo has a 2-month lag before appearing in sales, which the default model captures by lagging that channel's spend data by 2 months before including it in the regression. This is a substantive modelling choice, not a UI feature.</p>
+
+  <p class="body">The Behavioural Lab (P9) is the only module that does not require a dataset. It is always active from first load, allowing a user to stress-test an offer design before any customer data is available. This addresses the most common complaint about analytics tools: they require you to already have data before they give you any value. P9 gives immediate value — a commercial manager designing a promotion can use it before uploading anything.</p>
+</section>
+
+<!-- ══ v1 → v2 ══ -->
+<section class="section" id="v1tov2">
+  <div class="s-eyebrow">12 — Version history</div>
+  <h2 class="s-title">v1 → v2: what changed and why</h2>
+
+  <div class="stat-row">
+    <div class="stat-item"><div class="stat-val">5→9</div><div class="stat-label">Modules (v1 → v2)</div></div>
+    <div class="stat-item"><div class="stat-val">Heuristic→MLE</div><div class="stat-label">CLV method upgrade</div></div>
+    <div class="stat-item"><div class="stat-val">0.35/0.30</div><div class="stat-label">v1 propensity weights (fixed → derived)</div></div>
+    <div class="stat-item"><div class="stat-val">+Pyodide</div><div class="stat-label">Econometric runtime added</div></div>
+  </div>
+
+  <p class="body">Pulse v1 shipped with five modules and heuristic weights throughout. The propensity scoring used a fixed 0.35/0.30/0.20/0.10 weighting across recency, frequency, monetary, and channel — weights derived from consulting judgment rather than statistical estimation. The CLV model used the simple DCF formula. Both were reasonable starting points and both were explicitly marked as PULSE-B01 (backlog item: derive weights statistically) in the original build plan.</p>
+
+  <p class="body">Pulse v2 closes PULSE-B01 completely. The propensity weights are now logistic regression coefficients estimated from labelled outcome data. The CLV model is BG/NBD. The churn output is a Kaplan-Meier survival curve, not a binary flag. Four new modules (Marketing Mix, Bass Diffusion, Behavioural Lab, plus the k-means Cluster module replacing the old basic segmentation) bring the total to nine. The three-layer architecture is new.</p>
+</section>
+
+<!-- ══ BACKLOG ══ -->
+<section class="section" id="backlog">
+  <div class="s-eyebrow">13 — What's next</div>
+  <h2 class="s-title">Backlog</h2>
+
+  <table class="mod-table">
+    <thead><tr><th>Item</th><th>Description</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>PULSE-B02</td><td><strong>Gamma-Gamma CLV model</strong> — add the spend heterogeneity layer on top of BG/NBD for more accurate monetary CLV estimation</td><td><span class="layer-pill lp-2">Phase 2</span></td></tr>
+      <tr><td>PULSE-B03</td><td><strong>Cohort simulator</strong> — given current cohort retention curves, project future revenue under different retention investment scenarios</td><td><span class="layer-pill lp-2">Phase 2</span></td></tr>
+      <tr><td>PULSE-B04</td><td><strong>LLM-powered cluster naming</strong> — replace hardcoded cluster names with AI-generated commercial labels based on the cluster's actual characteristic profile</td><td><span class="layer-pill lp-3">Phase 3</span></td></tr>
+      <tr><td>PULSE-B05</td><td><strong>DataBridge handoff</strong> — full sessionStorage integration so customers enriched in DataBridge flow directly into Pulse without re-upload</td><td><span class="layer-pill lp-1">Phase 1</span></td></tr>
+      <tr><td>PULSE-B06</td><td><strong>Interpreter layer expansion</strong> — every Layer 2 output should have a full plain-English interpretation section, not just propensity coefficients</td><td><span class="layer-pill lp-1">Phase 1</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-pulse">
+    <div class="callout-label">PULSE-B06 is the most important item</div>
+    <div class="callout-body">The screenshot that revealed the legibility gap — feature coefficients with no plain-English interpretation — points to a systematic gap across Layer 2 outputs. The BG/NBD P(alive) chart needs interpretation. The Kaplan-Meier survival curves need interpretation. The propensity distribution histogram needs interpretation. This is not a nice-to-have. It is the product definition: Pulse is a decision-support tool, not an analysis tool. Every statistical output must be translated.</div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section, .hero');
+const sbBody = document.querySelector('.sb-body');
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      const id=e.target.id;
+      const active=document.querySelector(`.nav-link[href="#${id}"]`);
+      if(active){
+        active.classList.add('active');
+        const top=active.offsetTop;
+        const bottom=top+active.offsetHeight;
+        const bTop=sbBody.scrollTop;
+        const bBottom=bTop+sbBody.clientHeight;
+        if(top<bTop+40||bottom>bBottom-40) sbBody.scrollTo({top:top-sbBody.clientHeight/2,behavior:'smooth'});
+      }
+    }
+  });
+},{threshold:0.3});
+sections.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

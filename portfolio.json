@@ -1,0 +1,241 @@
+{
+  "_meta": {
+    "version": "1.4",
+    "updated": "2026-05-08",
+    "description": "Single source of truth for all portfolio artefacts. Update here first, propagate to landing pages."
+  },
+
+  "platform": {
+    "name": "Meridian",
+    "url": "http://archishman.com/meridian/",
+    "module_count": 5,
+    "status": "live",
+    "version": "v1.0"
+  },
+
+  "modules": [
+    {
+      "id": "price",
+      "name": "Meridian Price",
+      "icon": "◈",
+      "color": "#22d3b8",
+      "phase": 1,
+      "status": "live",
+      "url": "http://archishman.com/meridian/price/",
+      "description": "Commercial pricing diagnostic. Price waterfall, discount governance, margin decomposition, EVE model, SaaS studio, competitive intelligence, behavioural lab.",
+      "module_count": 8,
+      "engagement_proven": true,
+      "engagement_context": "Monitor Deloitte $50M pricing transformation",
+      "trio": {
+        "tool": "http://archishman.com/meridian/price/",
+        "theory": "https://archishman-b.github.io/pricing-analyser/pricing-theory-companion.html",
+        "journal": "https://archishman-b.github.io/pricing-analyser/pricing-analyser-build-journal.html"
+      },
+      "tags": ["Price waterfall", "Discount governance", "EVE model", "Behavioural lab"]
+    },
+    {
+      "id": "pulse",
+      "name": "Meridian Pulse",
+      "icon": "⬟",
+      "color": "#a78bfa",
+      "phase": 2,
+      "status": "live",
+      "version": "v2.0",
+      "url": "http://archishman.com/meridian/pulse/",
+      "description": "Consumer & marketing analytics. BG/NBD probabilistic CLV, logistic regression propensity, Kaplan-Meier survival, RFM, cohort retention, k-means, marketing mix, Bass diffusion, behavioural lab.",
+      "module_count": 9,
+      "engagement_proven": true,
+      "engagement_context": "Mahindra 2M+ customer analytics",
+      "trio": {
+        "tool": "http://archishman.com/meridian/pulse/",
+        "theory": "http://archishman.com/meridian/pulse/consumer-marketing-analytics-companion.html",
+        "journal": "http://archishman.com/meridian/pulse/pulse-build-journal.html"
+      },
+      "tags": ["BG/NBD CLV", "RFM · Cohorts · Clusters", "Propensity scoring", "Survival analysis", "Marketing mix", "Bass diffusion", "Behavioural lab"]
+    },
+    {
+      "id": "ledger",
+      "name": "Meridian Ledger",
+      "icon": "▦",
+      "color": "#f5a524",
+      "phase": 3,
+      "status": "live",
+      "url": "http://archishman.com/meridian/ledger/",
+      "description": "Commercial finance diagnostics. Revenue bridge, P&L decomposition, working capital health, and cash flow waterfall.",
+      "module_count": 5,
+      "engagement_proven": false,
+      "trio": {
+        "tool": "http://archishman.com/meridian/ledger/",
+        "theory": null,
+        "journal": null
+      },
+      "tags": ["Revenue bridge", "P&L decomposition", "Working capital", "Cash flow"]
+    },
+    {
+      "id": "org",
+      "name": "Meridian Org",
+      "icon": "⊹",
+      "color": "#fb7185",
+      "phase": 3,
+      "status": "live",
+      "url": "http://archishman.com/meridian/org/",
+      "description": "HR and organisational analytics. Span of control, headcount cost decomposition, productivity benchmarking.",
+      "module_count": 5,
+      "engagement_proven": false,
+      "trio": {
+        "tool": "http://archishman.com/meridian/org/",
+        "theory": null,
+        "journal": null
+      },
+      "tags": ["Span of control", "Headcount cost", "Productivity benchmarking"]
+    },
+    {
+      "id": "flow",
+      "name": "Meridian Flow",
+      "icon": "⬡",
+      "color": "#4ade80",
+      "phase": 4,
+      "status": "live",
+      "url": "http://archishman.com/meridian/flow/",
+      "description": "Supply chain and operations analytics. ABC/XYZ inventory classification, demand forecasting, lead time analysis, EOQ optimisation, stockout risk scoring.",
+      "module_count": 5,
+      "engagement_proven": false,
+      "trio": {
+        "tool": "http://archishman.com/meridian/flow/",
+        "theory": null,
+        "journal": null
+      },
+      "tags": ["ABC/XYZ inventory", "Demand forecasting", "EOQ optimisation", "Stockout risk", "Lead time analysis"]
+    }
+  ],
+
+  "standalone_tools": [
+    {
+      "id": "pricing-analyser",
+      "name": "Pricing Analyser",
+      "status": "live",
+      "version": "v1.0",
+      "url": "https://archishman-b.github.io/pricing-analyser/",
+      "github": "https://github.com/archishman-b/pricing-analyser",
+      "description": "8-module commercial pricing diagnostic. Standalone, predates Meridian. Now integrated as Meridian Price.",
+      "trio": {
+        "tool": "https://archishman-b.github.io/pricing-analyser/",
+        "theory": "https://archishman-b.github.io/pricing-analyser/pricing-theory-companion.html",
+        "journal": "https://archishman-b.github.io/pricing-analyser/pricing-analyser-build-journal.html"
+      }
+    },
+    {
+      "id": "databridge",
+      "name": "DataBridge",
+      "status": "live",
+      "version": "v0.x",
+      "url": "https://archishman-b.github.io/databridge/databridge.html",
+      "github": "https://github.com/archishman-b/databridge",
+      "description": "Browser-native data transformation. The data layer for the Meridian platform.",
+      "trio": {
+        "tool": "https://archishman-b.github.io/databridge/databridge.html",
+        "theory": null,
+        "journal": null
+      }
+    },
+    {
+      "id": "initiative-prioritiser",
+      "name": "Strategic Initiative Prioritiser",
+      "status": "live",
+      "version": "v1.0",
+      "url": "https://archishman-b.github.io/initiative-prioritizer/strategic-initiative-prioritiser.html",
+      "github": "https://github.com/archishman-b/initiative-prioritizer",
+      "description": "AI-powered multi-criteria initiative scoring, 2x2 priority matrix, and AI-generated BizOps project briefs. Anthropic API.",
+      "trio": {
+        "tool": "https://archishman-b.github.io/initiative-prioritizer/strategic-initiative-prioritiser.html",
+        "theory": null,
+        "journal": "https://archishman-b.github.io/initiative-prioritizer/initiative-prioritiser-build-journal.html"
+      }
+    },
+    {
+      "id": "career-intelligence-map",
+      "name": "Career Intelligence Map",
+      "status": "live",
+      "version": "v1.0",
+      "url": "https://archishman-b.github.io/career-intelligence-map/",
+      "description": "Interactive career analysis. Skills, archetypes, competency synergies, 10-year trajectory modelling.",
+      "trio": {
+        "tool": "https://archishman-b.github.io/career-intelligence-map/",
+        "theory": null,
+        "journal": null
+      }
+    }
+  ],
+
+  "field_notes": [
+    {
+      "id": "pricing-theory",
+      "title": "The Pricing Intelligence Companion",
+      "tag": "Pricing · Theory",
+      "accent": "#22d3b8",
+      "url": "https://archishman-b.github.io/pricing-analyser/pricing-theory-companion.html",
+      "parent_module": "price"
+    },
+    {
+      "id": "ml-playbook",
+      "title": "ML for Strategy — Field Playbook",
+      "tag": "ML · Playbook",
+      "accent": "#5b8ef5",
+      "url": "https://archishman-b.github.io/ml-for-strategy/ML_Strategy_Playbook.html",
+      "parent_module": null
+    },
+    {
+      "id": "stats-reference",
+      "title": "Statistics for Strategy Practitioners",
+      "tag": "Statistics · Reference",
+      "accent": "#a78bfa",
+      "url": "https://archishman-b.github.io/ml-for-strategy/stats/index.html",
+      "parent_module": null
+    },
+    {
+      "id": "databridge-theory",
+      "title": "DataBridge — Theory Companion",
+      "tag": "Data · ETL · Theory",
+      "accent": "#e8a53c",
+      "url": "https://archishman-b.github.io/databridge/databridge-theory-companion.html",
+      "parent_module": "databridge"
+    },
+    {
+      "id": "consumer-analytics-theory",
+      "title": "Consumer & Marketing Analytics Companion",
+      "tag": "Consumer · Marketing · Analytics",
+      "accent": "#a78bfa",
+      "url": "http://archishman.com/meridian/pulse/consumer-marketing-analytics-companion.html",
+      "parent_module": "pulse"
+    }
+  ],
+
+  "planned": [
+    {
+      "id": "rag-agent",
+      "name": "Consulting Knowledge Agent",
+      "eta": "Q3 2026",
+      "description": "RAG-based Q&A over consulting frameworks, Field Notes, and engagement-grounded playbooks. LangChain + vector store."
+    },
+    {
+      "id": "code-analytics",
+      "name": "Code Analytics Tool",
+      "eta": "Q4 2026",
+      "description": "ML Playbook brought to life. Load a dataset, select a model class, get analysis + LLM business interpretation."
+    },
+    {
+      "id": "gtm-framework",
+      "name": "GTM Strategy Framework",
+      "eta": "Q3 2026",
+      "description": "Channel design, pricing model selection, partner ecosystem structure, RTM sequencing."
+    }
+  ],
+
+  "counts": {
+    "live_tools": 7,
+    "live_meridian_modules": 5,
+    "field_notes": 5,
+    "planned": 3,
+    "portfolio_headline": "Five Meridian modules. Four standalone tools. One platform."
+  }
+}

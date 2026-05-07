@@ -154,7 +154,17 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .heatmap td{padding:4px 6px;text-align:center;border-radius:3px;min-width:36px;cursor:default;transition:opacity .15s;color:var(--text)}
 .heatmap td:hover{opacity:.8}
 
-/* ── Cluster cards ── */
+/* ── Coefficient interpreter ── */
+.interp-block{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:14px;margin-top:14px}
+.interp-head{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--l2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.interp-head::before{content:'';width:3px;height:10px;background:var(--l2);border-radius:2px;flex-shrink:0}
+.interp-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:baseline}
+.interp-row:last-child{border:none}
+.interp-feat{font-family:var(--mono);font-size:10px;color:var(--text3);width:140px;flex-shrink:0}
+.interp-coef{font-family:var(--mono);font-size:11px;width:54px;flex-shrink:0}
+.interp-pos{color:var(--green)}.interp-neg{color:var(--red)}
+.interp-text{font-size:12px;color:var(--text2);line-height:1.55}
+.interp-text strong{color:var(--text);font-weight:500}
 .cluster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
 .cluster-card{border:1px solid var(--border2);border-radius:7px;padding:14px;background:var(--surface2)}
 .cluster-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -419,6 +429,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="card">
           <div class="card-title l2">Feature Coefficients (log-odds)</div>
           <div style="position:relative;height:260px"><canvas id="p5_coef_chart"></canvas></div>
+          <div class="interp-block" id="p5_interpreter" style="display:none">
+            <div class="interp-head">What these coefficients mean for your business</div>
+            <div id="p5_interp_rows"></div>
+          </div>
         </div>
         <div class="card">
           <div class="card-title l2">Propensity Distribution</div>
@@ -1318,7 +1332,25 @@ async function runP4() {
       <div class="grid-4" style="margin-bottom:14px">
         ${[['r','Purchase rate heterogeneity',params.r.toFixed(3)],['α','Purchase rate scale',params.alpha.toFixed(3)],['a','Dropout heterogeneity',params.a.toFixed(3)],['b','Dropout scale',params.b.toFixed(3)]].map(([k,l,v])=>`<div class="kpi"><div class="kpi-label">${k} — ${l}</div><div class="kpi-val" style="font-size:20px">${v}</div></div>`).join('')}
       </div>
-      <div class="insight l2">BG/NBD fitted on ${res.length} customers. <strong>r=${params.r.toFixed(2)}, α=${params.alpha.toFixed(2)}</strong> — purchase rate distribution (Gamma). <strong>a=${params.a.toFixed(2)}, b=${params.b.toFixed(2)}</strong> — dropout probability distribution (Beta). Higher a/b ratio = more customers dropout early.</div>`;
+      <div class="interp-block">
+        <div class="interp-head">What these parameters mean — in plain English</div>
+        <div class="interp-row">
+          <div class="interp-feat">r = ${params.r.toFixed(2)}, α = ${params.alpha.toFixed(2)}</div>
+          <div class="interp-coef interp-pos">Purchase rate</div>
+          <div class="interp-text">The average customer makes roughly <strong>${(params.r/params.alpha*52).toFixed(1)} purchases per year</strong> while active. Higher r means more customers cluster around this average; lower r means more spread — some buy much more, some much less. This heterogeneity is exactly what DCF ignores.</div>
+        </div>
+        <div class="interp-row">
+          <div class="interp-feat">a = ${params.a.toFixed(2)}, b = ${params.b.toFixed(2)}</div>
+          <div class="interp-coef ${params.a/params.b > 0.15 ? 'interp-neg' : 'interp-pos'}">Dropout</div>
+          <div class="interp-text">${params.a/(params.a+params.b) > 0.15 ? `<strong>Elevated dropout signal.</strong> The a/b ratio (${(params.a/params.b).toFixed(2)}) indicates a meaningful share of customers are at risk of having already churned — they appear in the data but are no longer active buyers. DCF would incorrectly assign these customers a full CLV.` : `<strong>Healthy retention profile.</strong> The a/b ratio (${(params.a/params.b).toFixed(2)}) indicates the majority of customers are still active. Most customer relationships are genuine, not phantom — DCF's constant-churn assumption is less damaging in this case, but still overestimates for the tail.`}</div>
+        </div>
+        <div class="interp-row">
+          <div class="interp-feat">P(alive) chart</div>
+          <div class="interp-coef">Reading it</div>
+          <div class="interp-text">Each bar shows the average probability of still being active, grouped by days since last purchase. <strong>Customers who bought within the last 2 weeks have very high P(alive).</strong> Customers quiet for 6+ months have a much lower probability — some have genuinely churned, even if they technically never "cancelled." The BG/NBD model can tell the difference. DCF cannot.</div>
+        </div>
+      </div>
+      <div class="insight l2" style="margin-top:12px">BG/NBD fitted on ${res.length} customers. <strong>Model divergence from DCF: ${divergence.toFixed(0)}%</strong> — DCF systematically overestimates CLV for low-frequency customers and underestimates for high-frequency ones. The per-customer scatter in the table below shows where the gap is largest.</div>`;
 
     // Top 20 table
     const top20 = [...res].sort((a,b)=>b.bgnbd_clv-a.bgnbd_clv).slice(0,20);
@@ -1471,6 +1503,42 @@ async function runP5() {
         const col=c._propensity>.75?'var(--green)':c._propensity>.5?'var(--amber)':'var(--red)';
         return `<tr><td style="font-family:var(--mono);font-size:10px">${c.customer_id}</td><td>${c.segment}</td><td>${c.channel}</td><td class="num" style="font-family:var(--mono);color:${col}">${c._propensity.toFixed(3)}</td><td class="num">${c.recency_days}d</td><td class="num">${c.frequency}</td><td class="num">₹${c.monetary.toLocaleString()}</td></tr>`;
       }).join('') + '</tbody>';
+
+    // ── Coefficient interpreter ──────────────────────────────────
+    const INTERP_MAP = {
+      recency:        { pos: '<strong>Strongest signal.</strong> Recent buyers are dramatically more likely to buy again. Target within 30 days of last purchase for highest conversion.',
+                        neg: 'Lower recency is pulling propensity down. Customers who have not bought recently are less likely to convert.' },
+      frequency:      { pos: '<strong>Habit strength.</strong> More transactions = stronger pattern. Prioritise customers with ≥3 transactions in your targeting list.',
+                        neg: 'Low transaction history is a weak propensity signal. Focus acquisition energy here rather than conversion.' },
+      monetary:       { pos: '<strong>Spend level lifts propensity.</strong> Higher-spend customers are more likely to buy again — possibly Composite Loyal rather than Specious Loyal.',
+                        neg: '<strong>Counter-intuitive — read carefully.</strong> High monetary with lower propensity usually means episodic big spenders (Sessioner pattern), not habitual buyers. A ₹50K one-time purchase predicts less reliably than ₹5K × 10 transactions.' },
+      is_referral:    { pos: '<strong>Channel quality premium.</strong> Referral customers are significantly more likely to convert — they arrived with social proof. Referral programme investment is justified by this structural advantage.',
+                        neg: 'Referral channel not improving propensity — investigate referral programme quality or referrer targeting.' },
+      is_paid_search: { pos: 'Paid search customers showing above-average propensity in this cohort.',
+                        neg: '<strong>Channel quality deficit.</strong> Paid search customers convert at below-baseline rates — consistent with the month-6 retention cliff in P2. High acquisition volume, lower lifetime quality. Revalidate CAC/CLV for this channel.' },
+      is_institutional:{ pos: '<strong>Segment advantage.</strong> Institutional customers have structurally higher propensity — likely driven by procurement cycles and repeat contract behaviour.',
+                          neg: 'Institutional segment underperforming. Check if contract renewal timing is misaligned with the prediction window.' },
+      is_contractor:  { pos: 'Contractor segment showing positive propensity signal.',
+                        neg: '<strong>Segment risk.</strong> Contractor customers have below-baseline propensity — likely project-driven purchasing that does not repeat predictably. Consider separate model for this segment.' },
+      email_opens:    { pos: '<strong>Engagement signal.</strong> Email opens in the last 30 days are a strong leading indicator of purchase intent. Prioritise this list for outbound contact.',
+                        neg: 'Low email engagement is dragging propensity. Re-examine subject lines and send cadence before investing in this channel.' },
+      web_visits:     { pos: 'Recent web visits correlate with higher propensity — active digital engagement signal.',
+                        neg: 'Low web visit frequency has a slight negative correlation. Not a primary driver — check for co-linearity with recency.' }
+    };
+
+    const interpRows = coefData.map(d => {
+      const map = INTERP_MAP[d.name];
+      if (!map) return '';
+      const isPos = d.val >= 0;
+      const text = isPos ? map.pos : map.neg;
+      return `<div class="interp-row">
+        <div class="interp-feat">${d.name}</div>
+        <div class="interp-coef ${isPos?'interp-pos':'interp-neg'}">${isPos?'+':''}${d.val.toFixed(3)}</div>
+        <div class="interp-text">${text}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('p5_interp_rows').innerHTML = interpRows;
+    document.getElementById('p5_interpreter').style.display = '';
 
     toast(`Model trained — accuracy ${(result.accuracy*100).toFixed(1)}%`, 'ok');
   } catch(e) {

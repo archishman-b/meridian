@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Consumer & Marketing Analytics Companion</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+
+:root {
+  --ink:       #1C1A16;
+  --ink-2:     #4A4740;
+  --ink-3:     #8A8680;
+  --paper:     #F8F5EF;
+  --paper-2:   #F0EDE5;
+  --paper-3:   #E8E3D8;
+  --rule:      rgba(28,26,22,0.10);
+  --rule-2:    rgba(28,26,22,0.05);
+  --amber:     #B85C00;
+  --amber-lt:  #FBF0E4;
+  --teal:      #0A6B50;
+  --teal-lt:   #E4F3EE;
+  --red:       #9C2A2A;
+  --red-lt:    #FAE8E8;
+  --purple:    #4B3F9A;
+  --purple-lt: #EEEDFB;
+  --gold:      #C8913A;
+  --gold-lt:   #FDF5E8;
+  --navy:      #1A2E4A;
+  --navy-lt:   #E8EEF6;
+  --accent:    #C8913A;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.65;
+  font-size: 16px;
+}
+
+.page-wrap {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--ink);
+  color: var(--paper);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-brand {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.sidebar-brand-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  color: var(--paper);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.sidebar-brand-sub {
+  font-size: 10px;
+  color: rgba(248,245,239,0.4);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.sidebar-body { flex: 1; padding: 14px 0; overflow-y: auto; }
+.nav-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(248,245,239,0.3);
+  padding: 12px 24px 5px;
+}
+.nav-link {
+  display: block;
+  padding: 7px 24px;
+  font-size: 12px;
+  color: rgba(248,245,239,0.65);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+  line-height: 1.4;
+}
+.nav-link:hover { color: var(--paper); background: rgba(255,255,255,0.06); }
+.nav-link.active { color: var(--gold); border-left-color: var(--gold); background: rgba(200,145,58,0.08); }
+.nav-link small { display: block; font-size: 10px; color: rgba(248,245,239,0.3); margin-top: 1px; }
+.nav-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 8px 24px; }
+
+/* ── MAIN ── */
+.main { overflow-x: hidden; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 72px 56px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -40px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,145,58,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(30px, 4.5vw, 52px);
+  font-weight: 400;
+  line-height: 1.12;
+  margin-bottom: 18px;
+  max-width: 620px;
+}
+.hero-title em { font-style: italic; color: var(--gold); }
+.hero-desc {
+  font-size: 15px;
+  color: rgba(248,245,239,0.65);
+  max-width: 560px;
+  line-height: 1.75;
+  margin-bottom: 28px;
+}
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.hero-meta-item {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: rgba(248,245,239,0.4);
+}
+.hero-meta-item strong { color: rgba(248,245,239,0.7); font-weight: 500; }
+
+/* ── CONTENT SECTIONS ── */
+.content-section {
+  padding: 52px 72px;
+  border-bottom: 1px solid var(--rule);
+  max-width: 860px;
+}
+.content-section:last-child { border-bottom: none; }
+
+.section-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-eyebrow::after {
+  content: '';
+  flex: 0 0 40px;
+  height: 1px;
+  background: var(--rule);
+}
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.section-subtitle {
+  font-size: 14px;
+  color: var(--ink-3);
+  font-style: italic;
+  margin-bottom: 28px;
+  max-width: 600px;
+  line-height: 1.6;
+}
+.body-text {
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.85;
+  max-width: 720px;
+  margin-bottom: 20px;
+}
+.body-text strong { color: var(--ink); font-weight: 500; }
+.body-text em { font-style: italic; }
+
+/* ── PULL QUOTE ── */
+.pull-quote {
+  border-left: 3px solid var(--gold);
+  margin: 28px 0;
+  padding: 18px 24px;
+  background: var(--gold-lt);
+  border-radius: 0 8px 8px 0;
+  max-width: 680px;
+}
+.pull-quote-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.pull-quote-attr {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .04em;
+}
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  border-left: 3px solid;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin: 20px 0;
+  max-width: 720px;
+}
+.callout-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+.callout-body { font-size: 13px; line-height: 1.7; }
+.callout-theory  { border-color: var(--purple); background: var(--purple-lt); }
+.callout-theory .callout-title  { color: var(--purple); }
+.callout-theory .callout-body   { color: #2C245A; }
+.callout-practice{ border-color: var(--teal);   background: var(--teal-lt); }
+.callout-practice .callout-title{ color: var(--teal); }
+.callout-practice .callout-body { color: #063D2E; }
+.callout-warning { border-color: var(--red);    background: var(--red-lt); }
+.callout-warning .callout-title { color: var(--red); }
+.callout-warning .callout-body  { color: #4A1414; }
+.callout-insight { border-color: var(--amber);  background: var(--amber-lt); }
+.callout-insight .callout-title { color: var(--amber); }
+.callout-insight .callout-body  { color: #3D2000; }
+.callout-module  { border-color: var(--navy);   background: var(--navy-lt); }
+.callout-module .callout-title  { color: var(--navy); }
+.callout-module .callout-body   { color: #0D1E33; }
+
+/* ── FORMULA ── */
+.formula-block {
+  background: var(--ink);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 20px 0;
+  max-width: 600px;
+}
+.formula-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.formula-main {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  color: #F8F5EF;
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+.formula-gloss {
+  font-size: 12px;
+  color: rgba(248,245,239,0.5);
+  line-height: 1.6;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── TWO-COL ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 20px 0;
+  max-width: 720px;
+}
+.col-card {
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+}
+.col-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+.col-card-item {
+  font-size: 13px;
+  color: var(--ink-2);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule-2);
+  line-height: 1.5;
+  display: flex;
+  gap: 8px;
+}
+.col-card-item:last-child { border: none; }
+
+/* ── NUMBERED LIST ── */
+.numbered-list { margin: 16px 0; max-width: 680px; }
+.numbered-item {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule-2);
+}
+.numbered-item:last-child { border: none; }
+.numbered-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--gold);
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+  min-width: 28px;
+}
+.numbered-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.numbered-text  { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
+
+/* ── CONCEPT TABLE ── */
+.concept-table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.concept-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-3);
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--rule);
+}
+.concept-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule-2);
+  color: var(--ink-2);
+  vertical-align: top;
+  line-height: 1.55;
+}
+.concept-table td:first-child { font-weight: 500; color: var(--ink); }
+.concept-table tr:last-child td { border: none; }
+
+/* ── MODULE TAG ── */
+.module-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy);
+  color: var(--paper);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* ── BIAS GRID ── */
+.bias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.bias-card {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.bias-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.bias-name  { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.bias-desc  { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+.bias-insight {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--amber);
+  font-style: italic;
+  line-height: 1.5;
+  border-top: 1px solid var(--rule-2);
+  padding-top: 6px;
+}
+
+/* ── STEP LIST ── */
+.step-list { margin: 16px 0; max-width: 680px; }
+.step-item  { display: flex; gap: 14px; margin-bottom: 12px; }
+.step-badge {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--gold);
+  font-family: 'DM Serif Display', serif;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 3px; }
+.step-text  { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
+
+/* ── MADS GRID ── */
+.mads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+  max-width: 720px;
+}
+.mads-card {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.mads-num  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-3); margin-bottom: 4px; }
+.mads-name { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.mads-desc { font-size: 11.5px; color: var(--ink-3); line-height: 1.5; }
+
+/* ── DATA TYPE BOX ── */
+.data-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+  max-width: 720px;
+}
+.data-type-card {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--paper-2);
+}
+.data-type-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--amber);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.data-type-name { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.data-type-desc { font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+
+/* ── FUNNEL ── */
+.funnel-diagram {
+  background: var(--ink);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin: 20px 0;
+  max-width: 560px;
+}
+.funnel-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.funnel-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.funnel-name {
+  font-size: 12px;
+  color: rgba(248,245,239,0.7);
+  flex: 0 0 180px;
+  font-family: 'DM Mono', monospace;
+}
+.funnel-bar-wrap {
+  flex: 1;
+  height: 22px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.funnel-bar {
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(0,0,0,0.7);
+  font-weight: 500;
+}
+
+/* ── QUAD GRID ── */
+.quad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 20px 0;
+  max-width: 640px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.quad-cell {
+  padding: 16px 18px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+}
+.quad-cell:nth-child(1) { border-radius: 10px 0 0 0; }
+.quad-cell:nth-child(2) { border-radius: 0 10px 0 0; }
+.quad-cell:nth-child(3) { border-radius: 0 0 0 10px; }
+.quad-cell:nth-child(4) { border-radius: 0 0 10px 0; }
+.quad-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+.quad-title { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.quad-desc  { font-size: 12px; color: var(--ink-3); line-height: 1.55; }
+
+/* ── SAAS METRIC BOX ── */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+  max-width: 720px;
+}
+.metric-card {
+  background: var(--navy-lt);
+  border: 1px solid rgba(26,46,74,0.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.metric-name { font-size: 11px; font-weight: 600; color: var(--navy); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.metric-abbr { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-3); margin-bottom: 6px; }
+.metric-text { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .content-section { padding: 40px 24px; }
+  .hero { padding: 40px 24px 36px; }
+  .two-col, .data-type-grid, .quad-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Hide sidebar scrollbar (keep scroll behaviour) ── */
+.sidebar-body::-webkit-scrollbar { display: none; }
+.sidebar-body { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-title">Consumer & Marketing<br>Analytics Companion</div>
+    <div class="sidebar-brand-sub">Theory · Frameworks · Modules</div>
+  </div>
+  <div class="sidebar-body">
+
+    <div class="nav-section-label">Foundations</div>
+    <a class="nav-link" href="#foundations">What consumer analytics actually is</a>
+    <a class="nav-link" href="#data-typology">Data typology & inference</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Purchase & Loyalty</div>
+    <a class="nav-link" href="#purchase-behaviour">Purchase behaviour fundamentals</a>
+    <a class="nav-link" href="#loyalty">Loyalty typology<small>Dick & Basu four-quadrant model</small></a>
+    <a class="nav-link" href="#rfm">RFM — the practitioner's first cut<small>Recency, Frequency, Monetary</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Customer Value</div>
+    <a class="nav-link" href="#clv">Customer Lifetime Value<small>Formula, NPV & CAC ratio</small></a>
+    <a class="nav-link" href="#bgnbd">Probabilistic CLV — BG/NBD<small>Why DCF fails at scale</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Segmentation</div>
+    <a class="nav-link" href="#segmentation">Clustering & segmentation<small>k-means, DNA scores, basket</small></a>
+    <a class="nav-link" href="#collaborative">Collaborative filtering<small>Recommendation mechanics</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Preferences & Choice</div>
+    <a class="nav-link" href="#conjoint">Conjoint & discrete choice<small>Measuring willingness-to-pay</small></a>
+    <a class="nav-link" href="#propensity">Propensity modelling<small>Logistic regression & PUV</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Decision & Behaviour</div>
+    <a class="nav-link" href="#decision">How customers actually decide<small>System 1/2, ExC paradigm</small></a>
+    <a class="nav-link" href="#behavioural">The behavioural layer<small>Six Ariely forces applied</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Digital & Social</div>
+    <a class="nav-link" href="#digital">Digital behaviour & web analytics<small>Funnel, ROMI, sentiment</small></a>
+    <a class="nav-link" href="#social-network">Social network analysis<small>Centrality & influence mapping</small></a>
+    <a class="nav-link" href="#advertising">Measuring marketing effectiveness<small>Attribution, AIDA, strong/weak</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Forecasting</div>
+    <a class="nav-link" href="#forecasting">Forecasting demand<small>Regression, trend, seasonality</small></a>
+    <a class="nav-link" href="#bass">Bass diffusion<small>New product adoption curves</small></a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Integrative Frameworks</div>
+    <a class="nav-link" href="#mads">The MADS framework<small>13-module diagnostic</small></a>
+    <a class="nav-link" href="#kdm">Knowledge-driven marketing<small>The analytics pipeline</small></a>
+
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Meridian Pulse · Theoretical Companion · v1.0</div>
+  <h1 class="hero-title">The theory behind<br>the <em>customer</em></h1>
+  <p class="hero-desc">A practitioner's reference for consumer and marketing analytics — connecting the statistical methods in Meridian Pulse to the commercial questions they were designed to answer. Grounded in engagement experience across 2M+ customer datasets.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><strong>Covers</strong> · CLV, RFM, Segmentation, Propensity, Forecasting, MADS</div>
+    <div class="hero-meta-item"><strong>Reference texts</strong> · Consumer Behaviour & Analytics · Marketing Analytics · Predictably Irrational</div>
+    <div class="hero-meta-item"><strong>Companion tool</strong> · Meridian Pulse</div>
+  </div>
+</div>
+
+<!-- ═══ S1: FOUNDATIONS ═══ -->
+<section class="content-section" id="foundations">
+  <div class="section-eyebrow">01 — Foundations</div>
+  <h2 class="section-title">What consumer analytics actually is</h2>
+  <p class="section-subtitle">The discipline sits at the intersection of data science and marketing theory — and doing it well requires both.</p>
+
+  <p class="body-text">Consumer analytics is not the same as reporting on customers. Reporting tells you what happened. Analytics tells you why it happened, and what is likely to happen next. The distinction matters because the vast majority of commercial "analytics" practice stops at the descriptive layer — dashboards full of counts, averages, and trends that describe the past without explaining it or predicting anything.</p>
+
+  <p class="body-text">The practitioner gap is structural: the person who understands the business question — why are these customers churning? which segments should we invest in? — is typically not the person who can run a logistic regression or cluster analysis. The person who can run the model often lacks the commercial framing to know which question was worth asking. Meridian Pulse is designed to close that gap: to make the statistical methods accessible to the commercial analyst who already knows the business question.</p>
+
+  <div class="pull-quote">
+    <div class="pull-quote-text">"Data without theory is blind. Theory without data is deaf. Consumer analytics operates at their intersection — and the quality of the business insight depends as much on the quality of the theoretical framing as on the sophistication of the statistical method."</div>
+    <div class="pull-quote-attr">Core philosophy · Consumer Behaviour & Analytics</div>
+  </div>
+
+  <p class="body-text"><strong>What distinguishes analytics from reporting</strong> is the analytical mode. Descriptive analytics summarises what is known. Predictive analytics estimates what will happen. Prescriptive analytics recommends what to do. The most commercially valuable work sits at the prescriptive layer — but it depends on the descriptive and predictive layers being correct first.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Four modes of analytical reasoning</h3>
+  <p class="body-text">Analytics operates through four modes of inference, and recognising which mode you are using — and when to switch — is the practitioner skill most textbooks skip:</p>
+
+  <table class="concept-table">
+    <thead><tr><th>Mode</th><th>Direction</th><th>Commercial use</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td>Deductive</td><td>Theory → Data</td><td>Test a pricing hypothesis against transaction data; validate a segment model</td><td>Confirmation bias — you find what you were looking for</td></tr>
+      <tr><td>Inductive</td><td>Data → Theory</td><td>Let purchase patterns suggest segments; discover unexpected churn correlates</td><td>Overfitting — you find patterns that are noise</td></tr>
+      <tr><td>Abductive</td><td>Best explanation</td><td>Interpret an anomaly in the data; hypothesise the mechanism behind a campaign spike</td><td>Narrative fallacy — you construct a plausible story that is wrong</td></tr>
+      <tr><td>Blended</td><td>Iterative</td><td>Hypothesis-driven exploration: generate inductively, test deductively, explain abductively</td><td>Requires disciplined process to avoid all three risks above simultaneously</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">Consulting application</div>
+    <div class="callout-body">At Mahindra, the structural problem was not the absence of data — 2M+ customers were in the system. It was the absence of a blended inference process: the commercial team had hypotheses but no analytical access; the analytical team had tools but no commercial context. The separation between the person who understood the business question and the person who could execute the analysis was the bottleneck, not the technology. This is the problem Meridian Pulse is designed to eliminate.</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The five-stage inference protocol</h3>
+  <p class="body-text">Before running any analysis, apply this diagnostic sequence to avoid common inference failures:</p>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-badge">1</div><div><div class="step-title">Denotation</div><div class="step-text">What does the data literally say? Counts, distributions, ranges. No interpretation yet — only description of what is measurably present.</div></div></div>
+    <div class="step-item"><div class="step-badge">2</div><div><div class="step-title">Indication</div><div class="step-text">What patterns does the data suggest? Correlations, clusters, trends. Still descriptive, but beginning to identify structure in the signal.</div></div></div>
+    <div class="step-item"><div class="step-badge">3</div><div><div class="step-title">Implication</div><div class="step-text">What do these patterns imply about customer behaviour? This is where commercial theory enters — linking the statistical signal to a behavioural explanation.</div></div></div>
+    <div class="step-item"><div class="step-badge">4</div><div><div class="step-title">Questioning</div><div class="step-text">What does the analysis <em>not</em> explain? What anomalies remain? What would falsify the implication? The quality of the insight depends on the quality of the challenge.</div></div></div>
+    <div class="step-item"><div class="step-badge">5</div><div><div class="step-title">Blind spots</div><div class="step-text">What data do you not have? What segments are invisible to your measurement system? The most dangerous analytical errors come from treating the absence of data as evidence of absence.</div></div></div>
+  </div>
+</section>
+
+<!-- ═══ S2: DATA TYPOLOGY ═══ -->
+<section class="content-section" id="data-typology">
+  <div class="section-eyebrow">02 — Data Typology</div>
+  <h2 class="section-title">Understanding what your data actually is</h2>
+  <p class="section-subtitle">The analytical method must match the data type. Applying the wrong method to the wrong data type is one of the most common errors in commercial analytics practice.</p>
+
+  <p class="body-text">Not all customer data is the same, and the differences matter more than most practitioners realise. A loyalty card transaction and a social media sentiment score are both "customer data" — but they measure fundamentally different things, have different measurement properties, and support different analytical claims.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The COIN typology — measurement scales</h3>
+  <p class="body-text">Before choosing an analytical method, establish the measurement scale of your variables. The COIN typology captures the four levels:</p>
+
+  <div class="data-type-grid">
+    <div class="data-type-card">
+      <div class="data-type-label">C — Cardinal</div>
+      <div class="data-type-name">True numerical measurement</div>
+      <div class="data-type-desc">Allows addition, subtraction, multiplication. Zero is meaningful. Revenue (£), units purchased, days since last purchase. Most financial metrics. Supports full arithmetic operations and regression analysis.</div>
+    </div>
+    <div class="data-type-card">
+      <div class="data-type-label">O — Ordinal</div>
+      <div class="data-type-name">Ranked categories</div>
+      <div class="data-type-desc">Order is meaningful; distance between ranks is not. NPS scores, satisfaction ratings (1–5), loyalty tier (Bronze/Silver/Gold). Mean is technically inappropriate; median and mode are correct. Commonly misused in commercial analytics.</div>
+    </div>
+    <div class="data-type-card">
+      <div class="data-type-label">I — Interval</div>
+      <div class="data-type-name">Equal intervals, no true zero</div>
+      <div class="data-type-desc">Distance between values is meaningful; zero is arbitrary. Temperature in Celsius, calendar dates. Rare in commercial customer data but appears in time-series analysis. Addition valid; multiplication meaningless.</div>
+    </div>
+    <div class="data-type-card">
+      <div class="data-type-label">N — Nominal</div>
+      <div class="data-type-name">Named categories</div>
+      <div class="data-type-desc">Labels without inherent order. Channel (online/store/mobile), product category, customer segment name, geography. Supports frequency counts and chi-square tests. Cannot be averaged. Requires dummy variable encoding for regression.</div>
+    </div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Data source typology — what different data reveals</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Source type</th><th>What it captures</th><th>Behavioural vs Purposive</th><th>Key limitation</th></tr></thead>
+    <tbody>
+      <tr><td>Loyalty card / POS</td><td>Actual purchase behaviour — what, when, how much</td><td>Behavioural</td><td>Only captures in-store/registered transactions; invisible to competitor purchases</td></tr>
+      <tr><td>Online transaction</td><td>Digital purchase funnel — browsing, abandonment, conversion</td><td>Behavioural + implicit intent</td><td>Session tracking is increasingly restricted by privacy regulation</td></tr>
+      <tr><td>Survey / CDR</td><td>Stated preferences, attitudes, demographics</td><td>Purposive</td><td>Social desirability bias; attitude-behaviour gap is well-documented</td></tr>
+      <tr><td>Social media</td><td>Expressed sentiment, connections, influence patterns</td><td>Purposive (public statements)</td><td>Active users are not representative; sarcasm defeats simple sentiment models</td></tr>
+      <tr><td>Smart device / IoT</td><td>Real-time behavioural signals — location, usage patterns</td><td>Behavioural (ambient)</td><td>Consent, privacy, and interpretability challenges; data volume vs signal quality</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">The attitude-behaviour gap</div>
+    <div class="callout-body">Survey-based data consistently overstates purchase intent and brand loyalty. Customers report what they think they should say (social desirability bias) and what they genuinely believe about their future behaviour — which turns out to be a poor predictor of it. Behavioural transaction data is almost always a more reliable input for predictive models than stated preferences. When the two conflict, trust the transaction data.</div>
+  </div>
+</section>
+
+<!-- ═══ S3: PURCHASE BEHAVIOUR ═══ -->
+<section class="content-section" id="purchase-behaviour">
+  <div class="section-eyebrow">03 — Purchase Behaviour</div>
+  <h2 class="section-title">The transaction as data</h2>
+  <p class="section-subtitle">Every purchase is a data point about a relationship. Reading it correctly requires knowing what different purchase patterns actually mean.</p>
+
+  <p class="body-text">Commercial analytics often treats the transaction as the unit of analysis — the purchase event itself. But the commercially relevant signal is not the individual transaction; it is the <strong>pattern of transactions over time</strong>. A customer who buys once a year for five years is behaviourally different from a customer who buys monthly for six months and then disappears, even if their total spend is identical. The purchase dynamic is the signal.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Purchase dynamics — four behavioural archetypes</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Archetype</th><th>Pattern</th><th>Commercial implication</th><th>Analytics response</th></tr></thead>
+    <tbody>
+      <tr><td>Sole Loyal</td><td>Consistent purchase from one supplier; no observed switching</td><td>High retention value; low share-of-wallet visibility risk</td><td>Monitor for share-of-wallet leakage; measure category penetration not just brand</td></tr>
+      <tr><td>Sessioner</td><td>Episodic purchasing — active for a period, then dormant, then active again</td><td>Seasonal or life-event driven; apparent churn is often latency</td><td>Cohort-based reactivation models; avoid mislabelling dormancy as defection</td></tr>
+      <tr><td>Oscillator</td><td>Regular switching between two or three suppliers</td><td>Price-sensitive or variety-motivated; acquisition/retention is a revolving door</td><td>Share-of-wallet modelling; understand switching triggers rather than chasing loyalty</td></tr>
+      <tr><td>Stager</td><td>Systematic upgrade/downgrade behaviour through a range</td><td>Ladder-climbing or -descending; strong predictor of upsell and churn</td><td>Next-best-offer modelling; timing of upgrade prompts is critical</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Variety-seeking — derived versus true</h3>
+  <p class="body-text">A customer who switches between products is not necessarily disloyal. <strong>Derived variety-seeking</strong> occurs when switching is functionally motivated — different products for different occasions, different members of a household, or genuine dissatisfaction with a single option. <strong>True variety-seeking</strong> is motivationally driven — the novelty itself is the value, independent of any functional difference. These two types require completely different commercial responses.</p>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--teal)">Derived variety-seeking</div>
+      <div class="col-card-item">Functionally motivated switching</div>
+      <div class="col-card-item">Different products serve different needs</div>
+      <div class="col-card-item">Commercial response: range management, occasion-based communication</div>
+      <div class="col-card-item">Analytics: basket analysis to identify occasion structure</div>
+    </div>
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--amber)">True variety-seeking</div>
+      <div class="col-card-item">Motivationally driven switching; novelty is the value</div>
+      <div class="col-card-item">Optimal Stimulation Level (OSL) drives it</div>
+      <div class="col-card-item">Commercial response: innovation pipeline, limited editions</div>
+      <div class="col-card-item">Analytics: bundle entropy to measure variety orientation</div>
+    </div>
+  </div>
+
+  <div class="callout callout-module">
+    <div class="callout-title">How Pulse uses this</div>
+    <div class="callout-body">Pulse's RFM module uses purchase recency and frequency to detect Sessioner patterns (high frequency followed by silence) versus true churn. The cluster analysis module uses bundle entropy as a feature to identify true variety-seekers in the dataset — customers for whom promotion of a specific product will have low propensity, but category engagement communication will have high propensity.</div>
+  </div>
+</section>
+
+<!-- ═══ S4: LOYALTY ═══ -->
+<section class="content-section" id="loyalty">
+  <div class="section-eyebrow">04 — Loyalty</div>
+  <h2 class="section-title">Loyalty typology — what repeat purchase actually means</h2>
+  <p class="section-subtitle">Repeat purchase is a behaviour. Loyalty is an attitude. The difference between them determines whether your retention investment is creating value or defending inertia.</p>
+
+  <p class="body-text">The most consequential error in loyalty programme design is treating all repeat purchasers as loyal customers. They are not. A customer who buys repeatedly because there is no better option available is not loyal — they are <strong>constrained</strong>. The moment a competitor enters or switching costs fall, they leave. Building retention investment on top of constrained repeat purchase is structurally vulnerable, and the data patterns that distinguish it from genuine loyalty are detectable.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The Dick & Basu four-quadrant model</h3>
+  <p class="body-text">Dick and Basu define loyalty along two independent axes: <strong>relative attitude</strong> (how favourably the customer views your brand relative to competitors) and <strong>repeat purchase behaviour</strong>. The combination produces four distinct loyalty states with very different commercial implications:</p>
+
+  <div class="quad-grid">
+    <div class="quad-cell">
+      <div class="quad-label" style="color:var(--teal)">Composite Loyal</div>
+      <div class="quad-title">High attitude + High repeat</div>
+      <div class="quad-desc">True loyalty. Brand advocates. Resistant to competitive offers. Most valuable to defend; most expensive to acquire from competitors. NPS promoters cluster here.</div>
+    </div>
+    <div class="quad-cell">
+      <div class="quad-label" style="color:var(--purple)">Specious Loyal</div>
+      <div class="quad-title">Low attitude + High repeat</div>
+      <div class="quad-desc">Habitual buyers. Repeat driven by inertia, convenience, or switching costs — not preference. Appear loyal in transaction data but defect when disrupted. Highest mis-investment risk.</div>
+    </div>
+    <div class="quad-cell">
+      <div class="quad-label" style="color:var(--amber)">Latent Loyal</div>
+      <div class="quad-title">High attitude + Low repeat</div>
+      <div class="quad-desc">Prefer you but don't buy. Typically constrained by price, access, or situational factors. High conversion potential — the commercial problem is access, not preference. Often invisible in transaction data.</div>
+    </div>
+    <div class="quad-cell">
+      <div class="quad-label" style="color:var(--red)">Disloyal</div>
+      <div class="quad-title">Low attitude + Low repeat</div>
+      <div class="quad-desc">No preference, no habit. Transactional relationship at best. Retention spend here has near-zero ROI. Acquisition cost recovery is the only commercial question worth asking.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The Specious Loyal trap in consulting practice</div>
+    <div class="callout-body">In retail and FMCG, loyalty programme investments routinely mis-target Specious Loyal customers — high repeat purchasers who are convenient, not committed. The data pattern looks identical to Composite Loyal in basic RFM analysis. The distinguishing signal is competitive switching on promotion: Specious Loyal customers switch on a meaningful competitor offer; Composite Loyal customers do not, or do so at much lower rates. Detecting this requires cross-retailer panel data or, where unavailable, a carefully designed price sensitivity experiment.</div>
+  </div>
+
+  <div class="callout callout-module">
+    <div class="callout-title">How Pulse uses this</div>
+    <div class="callout-body">Pulse's customer segmentation module uses CLV trajectory alongside purchase frequency to flag potential Specious Loyal clusters — customers with high historical frequency but declining recency and low basket diversity. These clusters warrant different retention strategy from Composite Loyal segments and should not receive the same investment in loyalty programme benefits.</div>
+  </div>
+</section>
+
+<!-- ═══ S5: RFM ═══ -->
+<section class="content-section" id="rfm">
+  <div class="section-eyebrow">05 — RFM</div>
+  <h2 class="section-title">RFM — the practitioner's first cut</h2>
+  <p class="section-subtitle">Recency, Frequency, Monetary Value — the three dimensions that reveal more about future customer behaviour than almost any other simple framework.</p>
+
+  <p class="body-text">RFM analysis is one of the most durable tools in commercial analytics because it works: the three metrics together predict future purchase probability with striking reliability, and they are derivable from any transaction database without additional data collection. The framework was originally developed for direct mail optimisation — where print and postage costs made targeting discipline commercially critical — but its logic applies to any situation where marketing spend must be allocated across a heterogeneous customer base.</p>
+
+  <p class="body-text">The mechanics are straightforward. <strong>Recency</strong> (R) measures time elapsed since last purchase — the single strongest predictor of future purchase in most categories. <strong>Frequency</strong> (F) measures number of transactions in a defined period — a proxy for engagement and habit strength. <strong>Monetary</strong> (M) measures average or total spend — a proxy for customer value and price tier. Each customer is scored on all three dimensions, typically using quintile ranks (1–5), and the composite score determines targeting priority and message strategy.</p>
+
+  <div class="formula-block">
+    <div class="formula-label">RFM composite score</div>
+    <div class="formula-main">RFM Score = R_score + F_score + M_score</div>
+    <div class="formula-gloss">Where each score is a quintile rank (1–5, 5 being most recent / most frequent / highest value)
+Weights can be adjusted: e.g. (R × 0.5) + (F × 0.3) + (M × 0.2) for recency-heavy sectors
+Maximum score: 15 (or 100 if normalised)
+Minimum score: 3 (or 0)</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Why recency dominates</h3>
+  <p class="body-text">In most consumer categories, recency is the strongest predictor of future purchase because it reflects current engagement state. A customer who bought last week is in an active relationship with the brand — cognitively engaged, likely to have the product in mind, and statistically more likely to buy again soon. A customer who last bought eighteen months ago has, in most categories, effectively defected — and the cost of reactivation is structurally higher than the cost of retaining the active customer.</p>
+
+  <div class="callout callout-practice">
+    <div class="callout-title">Direct mail application — the Winston principle</div>
+    <div class="callout-body">In direct response marketing, the financial logic of RFM is clear: mail only to customers whose expected response value exceeds the cost of the mailing. Rank customers by RFM score, set a threshold based on break-even response rate, and mail above the threshold only. The model is simple but the commercial discipline it imposes — targeting spend on the most likely responders — improves ROMI substantially over blanket mailing. In digital environments, the same logic applies to email suppression lists and paid retargeting audiences.</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">RFM segment interpretations</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>RFM pattern</th><th>Segment label</th><th>Commercial implication</th></tr></thead>
+    <tbody>
+      <tr><td>High R, High F, High M</td><td>Champions</td><td>Reward and advocate. Highest ROI on any retention spend. Candidate for referral programme.</td></tr>
+      <tr><td>High R, High F, Low M</td><td>Loyal, price-sensitive</td><td>Frequent buyers with small baskets. Cross-sell and basket-build are the commercial priority.</td></tr>
+      <tr><td>High R, Low F, High M</td><td>Big spenders, infrequent</td><td>High-value but episodic. Investigate category occasion — may be event-driven rather than habitual.</td></tr>
+      <tr><td>Low R, High F, High M</td><td>At-risk Champions</td><td>Previously best customers who have gone quiet. Highest priority for win-back intervention.</td></tr>
+      <tr><td>Low R, Low F, Low M</td><td>Lost / Hibernating</td><td>Low ROI on reactivation unless marginal cost of contact is negligible (email). Exclude from paid media.</td></tr>
+      <tr><td>High R, Low F, Low M</td><td>New / Promising</td><td>Recent first-timers. Onboarding and second-purchase conversion are the critical moments.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">The limitation: RFM is behavioural, not attitudinal</div>
+    <div class="callout-body">RFM describes what customers have done, not why they did it or what they intend to do. A high-RFM customer is valuable and likely to remain so — but RFM alone cannot distinguish Composite Loyal customers from Specious Loyal customers. It cannot detect latent competitive switching intent. And in categories with long purchase cycles (automotive, mortgage, insurance), recency scores are structurally misleading. RFM is the right starting point, not the ending point.</div>
+  </div>
+</section>
+
+<!-- ═══ S6: CLV ═══ -->
+<section class="content-section" id="clv">
+  <div class="section-eyebrow">06 — Customer Lifetime Value</div>
+  <h2 class="section-title">The economics of the customer relationship</h2>
+  <p class="section-subtitle">CLV is the single number that connects customer behaviour to business value — and getting it right changes every investment decision that follows from it.</p>
+
+  <p class="body-text">Customer Lifetime Value is the present value of all future cash flows attributable to the customer relationship. It answers the question that every retention and acquisition decision ultimately depends on: how much is this customer — or this type of customer — actually worth? The answer is not the revenue they generate next month. It is the discounted sum of all the margin they are expected to generate across the full tenure of the relationship.</p>
+
+  <p class="body-text">CLV is commercially important for three reasons. First, it provides the <strong>ceiling on acquisition spend</strong> — you cannot rationally pay more to acquire a customer than that customer is worth. Second, it enables <strong>tiered service and investment</strong> — customers with high CLV warrant different treatment, different retention spend, and different risk tolerance on discounting than customers with low CLV. Third, it allows <strong>portfolio valuation</strong> — a business's customer base is an asset, and CLV-based modelling is how that asset is valued.</p>
+
+  <div class="formula-block">
+    <div class="formula-label">CLV — simplified operating formula</div>
+    <div class="formula-main">CLV = (Avg monthly spend × Gross margin %) / Monthly churn rate</div>
+    <div class="formula-gloss">Example: £120 avg spend × 35% margin / 4% monthly churn = £1,050 CLV
+Assumes constant spend and constant churn — both significant simplifications
+For NPV-adjusted version: divide by (monthly churn rate + monthly discount rate)
+Discount rate reflects cost of capital, typically 8–15% annualised → 0.67–1.25% monthly</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The CAC/CLV ratio — the most important metric in commercial strategy</h3>
+
+  <p class="body-text">The ratio of Customer Acquisition Cost (CAC) to Customer Lifetime Value is the fundamental health metric of any customer business. A CAC/CLV ratio above 1.0 means you are paying more to acquire customers than they are worth — a structurally loss-making model. A ratio below 0.33 is considered healthy in subscription businesses, implying a 3× return on acquisition investment. Between 0.33 and 1.0 is the zone of commercial risk — the model works, but any increase in acquisition cost or reduction in retention erodes it rapidly.</p>
+
+  <div class="formula-block">
+    <div class="formula-label">CAC/CLV ratio</div>
+    <div class="formula-main">Ratio = CAC / CLV</div>
+    <div class="formula-gloss">CAC = Total acquisition spend / Number of new customers acquired
+Healthy: ratio ≤ 0.33 (LTV 3× CAC)
+Marginal: 0.33–0.67
+At-risk: 0.67–1.0
+Structurally loss-making: > 1.0
+Payback period (months) = CAC / (Monthly contribution per customer)</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Acquisition versus retention — allocating the marketing budget</h3>
+
+  <p class="body-text">The standard result from CLV-based marketing resource allocation is that retention spend has higher expected return than equivalent acquisition spend in most mature consumer categories — because the marginal cost of retaining an existing customer is lower than the cost of acquiring an equivalent new customer, and because existing customers typically have higher average spend and lower churn probability. The practical implication: in most businesses, the optimal marketing budget allocates more to retention than to acquisition, and the crossover point is calculable from CLV and churn elasticity data.</p>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The NPV complication</div>
+    <div class="callout-body">CLV projections are highly sensitive to assumptions about future churn rates and discount rates. A small change in assumed monthly churn (e.g., from 3% to 4%) produces a large change in projected CLV (£1,400 to £1,050 in the example above — a 25% reduction). In practice, CLV models should always be stress-tested across churn rate scenarios, and the model inputs should be refreshed quarterly as actual churn data accumulates. Treat a CLV number as a distribution with a confidence interval, not a point estimate.</div>
+  </div>
+
+  <div class="callout callout-module">
+    <div class="callout-title">How Pulse computes CLV</div>
+    <div class="callout-body">Pulse v1 uses the simplified formula above, with user-configurable margin and discount rate inputs. Pulse v2 replaces the constant-churn assumption with the BG/NBD probabilistic model, which estimates individual-level purchase probability and expected future transactions based on each customer's observed recency and frequency pattern — producing a CLV distribution rather than a single point estimate, and dramatically improving accuracy for heterogeneous customer populations.</div>
+  </div>
+</section>
+
+<!-- ═══ S7: BG/NBD ═══ -->
+<section class="content-section" id="bgnbd">
+  <div class="section-eyebrow">07 — Probabilistic CLV</div>
+  <h2 class="section-title">BG/NBD — why the standard CLV formula fails at scale</h2>
+  <p class="section-subtitle">When your customer base is heterogeneous — and it always is — the constant-churn CLV formula produces systematically wrong answers. The BG/NBD model fixes this.</p>
+
+  <p class="body-text">The simplified CLV formula assumes that every customer has the same monthly churn probability. In practice, customers are deeply heterogeneous: some have high intrinsic purchase rates and low churn probability; others have low intrinsic purchase rates and high churn probability. Averaging these two populations produces a single churn rate that accurately describes neither, and a CLV estimate that is wrong for almost every individual customer while appearing plausible in aggregate.</p>
+
+  <p class="body-text">The <strong>Beta-Geometric / Negative Binomial Distribution (BG/NBD)</strong> model, developed by Peter Fader and Bruce Hardie at Wharton, resolves this by estimating two separate distributions: one for each customer's underlying purchase rate (how often they transact when active), and one for their dropout probability (whether they have already churned). The model uses each customer's individual recency and frequency history to update these estimates — producing a personalised probability of being still active and an expected number of future transactions.</p>
+
+  <div class="callout callout-theory">
+    <div class="callout-title">The two underlying processes</div>
+    <div class="callout-body">While active, a customer makes purchases following a Poisson process with individual rate λ (purchases per period). This rate varies across customers following a Gamma distribution across the population. After each transaction, a customer may "die" (churn) with probability p. This dropout probability varies across customers following a Beta distribution. The model uses observed (recency, frequency) pairs to estimate the parameters of both distributions — and from those parameters, compute P(active) and E[future transactions] for each individual customer.</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">What changes in Pulse v2</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Aspect</th><th>Pulse v1 (DCF formula)</th><th>Pulse v2 (BG/NBD)</th></tr></thead>
+    <tbody>
+      <tr><td>Churn assumption</td><td>Single population-level rate</td><td>Individual-level probability estimated from behaviour</td></tr>
+      <tr><td>Customer heterogeneity</td><td>Ignored — all customers are equal</td><td>Core model feature — each customer has their own parameters</td></tr>
+      <tr><td>Output</td><td>Point estimate per segment</td><td>Distribution of CLV; P(active) per customer</td></tr>
+      <tr><td>Accuracy on heterogeneous populations</td><td>Poor — underestimates best customers, overestimates worst</td><td>Substantially better — validated on multiple commercial datasets</td></tr>
+      <tr><td>Commercial use</td><td>Segment-level investment decisions</td><td>Individual-level targeting; customer scoring for CRM</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The Mahindra relevance</div>
+    <div class="callout-body">In a 2M+ customer dataset with customers ranging from annual large-equipment buyers to irregular consumable purchasers, a single CLV formula produces meaningless averages. The BG/NBD model — which treats the heterogeneity of the population as data rather than noise — would have produced actionable individual-level scores: which customers are at high risk of having already churned, which are genuinely low-frequency but high-value, and which recent purchasers are likely to be one-time buyers versus long-term relationships. This is the upgrade Pulse v2 implements.</div>
+  </div>
+</section>
+
+<!-- ═══ S8: SEGMENTATION ═══ -->
+<section class="content-section" id="segmentation">
+  <div class="section-eyebrow">08 — Segmentation</div>
+  <h2 class="section-title">Finding the meaningful groups</h2>
+  <p class="section-subtitle">Segmentation is not clustering. Clustering is a statistical method. Segmentation is a commercial decision about which distinctions between customers are worth acting on.</p>
+
+  <p class="body-text">Customer segmentation is one of the most over-applied and under-used tools in commercial analytics. Over-applied because clustering algorithms will always find groups — the question is whether those groups are commercially meaningful, actionable, and stable. Under-used because the output is often a research deliverable rather than a live operational input: segments are defined, presented, and then not embedded in how the business actually allocates marketing spend, service levels, or product development priorities.</p>
+
+  <p class="body-text">Good segmentation satisfies five criteria: segments must be <strong>measurable</strong> (you can observe which customers belong), <strong>substantial</strong> (large enough to justify differentiated treatment), <strong>accessible</strong> (you can reach them with differentiated messages or offers), <strong>differentiable</strong> (they respond differently to different interventions), and <strong>actionable</strong> (the business can actually do something different for them).</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">k-means clustering — methodology and limitations</h3>
+
+  <p class="body-text">k-means is the workhorse segmentation algorithm in commercial analytics because it is fast, interpretable, and works well on large transactional datasets. The algorithm partitions n customers into k clusters by minimising within-cluster variance — assigning each customer to the cluster whose centroid (mean) is closest in the feature space.</p>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-badge">1</div><div><div class="step-title">Feature selection and normalisation</div><div class="step-text">Choose the dimensions that matter commercially — typically RFM metrics, category breadth, price sensitivity indicators. Normalise all features to prevent high-magnitude variables (spend) from dominating low-magnitude ones (frequency). Failure here is the most common cause of meaningless clusters.</div></div></div>
+    <div class="step-item"><div class="step-badge">2</div><div><div class="step-title">Choose k — the number of clusters</div><div class="step-text">Use the elbow method (plot within-cluster sum of squares vs k; identify the inflection point) and the silhouette score (measure of how well-separated clusters are). But also apply commercial judgment: 15 segments that all require different CRM treatment are operationally useless regardless of statistical validity.</div></div></div>
+    <div class="step-item"><div class="step-badge">3</div><div><div class="step-title">Initialise centroids and iterate</div><div class="step-text">k-means is sensitive to initial centroid placement. Use k-means++ initialisation (spreads initial centroids across the data space) to reduce the risk of local optima. Run multiple times with different seeds and select the solution with lowest within-cluster variance.</div></div></div>
+    <div class="step-item"><div class="step-badge">4</div><div><div class="step-title">Interpret and name clusters commercially</div><div class="step-text">Describe each cluster in business language, not statistical language. "Cluster 3: centroid RFM = (4.2, 3.1, 4.8)" is not useful. "High-value recent buyers with moderate frequency — Champions" is actionable. The naming step forces the commercial interpretation that makes segmentation operationally useful.</div></div></div>
+    <div class="step-item"><div class="step-badge">5</div><div><div class="step-title">Validate stability over time</div><div class="step-text">Re-run the clustering on a holdout period and check that similar clusters emerge. Segments that collapse on re-run are artefacts of the specific dataset period, not durable commercial distinctions. Stability is the criterion most often skipped in practice.</div></div></div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Feature extraction — going beyond RFM</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Feature</th><th>What it captures</th><th>Commercial use</th></tr></thead>
+    <tbody>
+      <tr><td>DNA score</td><td>Characteristic purchase pattern (category profile, price tier, timing)</td><td>Identifies behavioural archetypes beyond spend level; enables precision targeting</td></tr>
+      <tr><td>Bundle entropy</td><td>Diversity of categories purchased; measure of variety-seeking</td><td>Distinguishes cross-category buyers from single-category buyers; drives range vs depth strategy</td></tr>
+      <tr><td>Basket analysis (lift)</td><td>Co-purchase probability beyond chance; which products are bought together</td><td>Cross-sell recommendation; planogram optimisation; bundle design</td></tr>
+      <tr><td>Dynamic Topic Modelling</td><td>How the topics of customer activity evolve over time</td><td>Identifies drift in customer interest; early signal of life-stage transition or competitive migration</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ S9: COLLABORATIVE FILTERING ═══ -->
+<section class="content-section" id="collaborative">
+  <div class="section-eyebrow">09 — Recommendation</div>
+  <h2 class="section-title">Collaborative filtering — the mechanics of recommendation</h2>
+  <p class="section-subtitle">Collaborative filtering is how you answer "what else will this customer value?" without asking them.</p>
+
+  <p class="body-text">Collaborative filtering predicts what a customer will purchase or value based on the purchase history of customers who are similar to them. It requires no explicit customer preferences — only the implicit signal of purchase behaviour. The method underlies most commercial recommendation engines, from Amazon's "customers also bought" to Netflix's content suggestions.</p>
+
+  <p class="body-text"><strong>User-based collaborative filtering</strong> finds customers with similar purchase histories to the target customer and recommends products those similar customers have bought that the target has not. <strong>Item-based collaborative filtering</strong> finds products with similar purchase co-occurrence patterns to products the customer has already bought and recommends those. In practice, item-based is more computationally stable at scale and more interpretable to business users.</p>
+
+  <div class="callout callout-theory">
+    <div class="callout-title">Matrix factorisation — the modern approach</div>
+    <div class="callout-body">Modern recommendation systems use matrix factorisation (SVD or ALS) rather than simple neighbourhood-based approaches. The customer-product purchase matrix is decomposed into lower-dimensional representations of customers (their latent preferences) and products (their latent characteristics). The dot product of a customer's latent vector and a product's latent vector predicts purchase probability. This approach handles sparse data better than neighbourhood methods and produces more stable recommendations for new or infrequent customers.</div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">The echo chamber problem</div>
+    <div class="callout-body">Collaborative filtering, by definition, recommends more of what the customer has already bought. Applied without constraint, it creates reinforcing loops — customers who buy Product A get recommended Product B, buy it, get recommended back to A, and the recommendation engine steadily narrows their engagement rather than broadening it. For businesses where category breadth drives higher CLV, recommendation systems should include an exploration-exploitation balance: some fraction of recommendations should intentionally surface products outside the customer's established pattern.</div>
+  </div>
+</section>
+
+<!-- ═══ S10: CONJOINT & PROPENSITY ═══ -->
+<section class="content-section" id="conjoint">
+  <div class="section-eyebrow">10 — Preference Measurement</div>
+  <h2 class="section-title">What customers want — measuring preferences and willingness-to-pay</h2>
+  <p class="section-subtitle">Asking customers what they want produces unreliable answers. The methods in this section infer preferences from choices — which is a much more reliable signal.</p>
+
+  <p class="body-text">The central challenge in measuring customer preferences is that people are poor predictors of their own behaviour. When asked "how much would you pay for this product?", respondents systematically understate their willingness-to-pay (anchoring to low reference points, strategic understatement, hypothetical bias). When asked "would you buy this?", 70% say yes to everything. The methods that actually work infer preference from choice — the behavioural signal, not the stated one.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Conjoint analysis — decomposing product preferences</h3>
+
+  <p class="body-text">Conjoint analysis presents respondents with a series of product alternatives defined by different attribute combinations and asks them to choose or rank. From the pattern of choices, the model decomposes each respondent's implicit valuations of each attribute level — recovering the part-worths that the respondent would not have been able to articulate if asked directly.</p>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--teal)">What conjoint produces</div>
+      <div class="col-card-item">Part-worth utilities per attribute level</div>
+      <div class="col-card-item">Relative importance of each attribute</div>
+      <div class="col-card-item">Willingness-to-pay for feature increments</div>
+      <div class="col-card-item">Segment-level preference heterogeneity</div>
+      <div class="col-card-item">Simulated market share under different configurations</div>
+    </div>
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--amber)">When to use vs alternatives</div>
+      <div class="col-card-item">Use conjoint: new product features, pricing tiers, bundle design</div>
+      <div class="col-card-item">Use discrete choice: mode selection, channel preference</div>
+      <div class="col-card-item">Use Van Westendorp: acceptable price range for an existing product</div>
+      <div class="col-card-item">Use price elasticity: response of demand to price change in existing market</div>
+    </div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Perceived Use Value (PUV) — the practitioner's shortcut</h3>
+
+  <p class="body-text">Where full conjoint analysis is not feasible, the Perceived Use Value framework provides a structured alternative. PUV asks customers to rate the importance of each product attribute on a weighted scale, then rate how well each competitive offering delivers on each attribute. The weighted score across attributes produces a PUV index — a composite measure of perceived value relative to the competitive set.</p>
+
+  <div class="formula-block">
+    <div class="formula-label">PUV — Perceived Use Value</div>
+    <div class="formula-main">PUV = Σ (Attribute importance weight × Delivery rating)</div>
+    <div class="formula-gloss">Attribute importance: respondent rates each attribute 1–10 (normalised to sum to 1)
+Delivery rating: respondent rates brand's delivery on that attribute 1–10
+Sum across all attributes gives brand PUV score
+Compare PUV across competitive set to identify value gaps and premium justification</div>
+  </div>
+</section>
+
+<!-- ═══ S11: PROPENSITY ═══ -->
+<section class="content-section" id="propensity">
+  <div class="section-eyebrow">11 — Propensity Modelling</div>
+  <h2 class="section-title">Propensity modelling — estimating purchase probability</h2>
+  <p class="section-subtitle">Logistic regression is the engine underneath most commercial propensity models — simple, interpretable, and surprisingly robust.</p>
+
+  <p class="body-text">A propensity model estimates the probability that a customer will take a specific action — purchase, churn, respond to an offer, upgrade their tier — given their observable characteristics. The output is a probability score between 0 and 1 for each customer, which enables rank-ordering the customer base by likelihood and targeting only the high-propensity segment.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Logistic regression — why it works for propensity</h3>
+
+  <div class="formula-block">
+    <div class="formula-label">Logistic regression — the propensity formula</div>
+    <div class="formula-main">P(purchase) = 1 / (1 + e^−(β₀ + β₁X₁ + β₂X₂ + ... + βₙXₙ))</div>
+    <div class="formula-gloss">Output is bounded between 0 and 1 (a valid probability)
+X₁...Xₙ are predictor variables (recency, frequency, demographics, engagement)
+β₁...βₙ are coefficients estimated from labelled training data (past purchasers vs non-purchasers)
+Odds ratio: e^β = multiplicative change in odds for one-unit increase in X
+Interpret coefficients in terms of odds ratios for commercial communication</div>
+  </div>
+
+  <p class="body-text">Logistic regression produces interpretable coefficients — you can explain to a commercial stakeholder why a customer scores high on propensity (recent purchase + high frequency + responded to last email campaign), which builds trust in the model and makes it easier to embed in operational CRM workflows.</p>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The PULSE-B01 upgrade: deriving propensity weights statistically</div>
+    <div class="callout-body">Pulse v1 uses heuristic weights for propensity scoring — the four-component composite score uses 0.35/0.30/0.20/0.10 weights derived from consulting judgment. These weights are reasonable starting points but are not statistically derived from outcome data. Pulse v2 (PULSE-B01) replaces these heuristic weights with logistic regression coefficients estimated from labelled purchase/no-purchase outcomes. The coefficients are both more accurate and more defensible to a commercial stakeholder — they are empirically derived, not assumed.</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Survival analysis — modelling time-to-churn</h3>
+
+  <p class="body-text">Where logistic regression predicts the probability of churn as a binary outcome, <strong>survival analysis</strong> models the time until churn — which is a richer question for commercial strategy. The Kaplan-Meier estimator provides non-parametric survival curves; the Cox proportional hazards model estimates the effect of customer covariates on churn rate. The commercial output is a hazard function for each customer: not just "will they churn?" but "when?", enabling proactive intervention before the predicted churn event rather than reactive retention after.</p>
+</section>
+
+<!-- ═══ S12: DECISION MAKING ═══ -->
+<section class="content-section" id="decision">
+  <div class="section-eyebrow">12 — Decision & Deliberation</div>
+  <h2 class="section-title">How customers actually decide</h2>
+  <p class="section-subtitle">The standard decision model is a useful map. The territory is messier — and the mess is systematic.</p>
+
+  <p class="body-text">Consumer decision-making theory has evolved through several paradigms: from the rational utility maximiser of microeconomics, through the cognitive information-processor of decision theory, to the behaviourally influenced, socially embedded, and increasingly algorithm-assisted decision-maker that contemporary consumer analytics must model. Each paradigm adds something; none is complete alone.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The five-stage decision model</h3>
+  <p class="body-text">The standard model describes purchase decisions as a five-stage process. In practice, the stages are compressed, skipped, or bypassed by habit and algorithm — but the framework provides the diagnostic map for identifying where in the purchase journey a commercial intervention is most likely to be effective.</p>
+
+  <div class="numbered-list">
+    <div class="numbered-item"><div class="numbered-num">1</div><div><div class="numbered-title">Problem recognition</div><div class="numbered-text">The customer perceives a gap between their current state and a desired state. Marketing's role at this stage is to surface the problem — making a latent need salient — not to present a solution. Most commercial communication skips this stage and leads with the product, missing customers who haven't yet recognised the problem.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">2</div><div><div class="numbered-title">Information search</div><div class="numbered-text">Internal (memory-based retrieval) and external (active search) information gathering. The composition of the evoked consideration set is determined here — if your brand is not considered at this stage, all subsequent marketing investment is wasted. Brand salience at the point of category entry is the commercial objective.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">3</div><div><div class="numbered-title">Evaluation of alternatives</div><div class="numbered-text">Multi-attribute evaluation using explicit or implicit criteria. PUV modelling applies here — which attributes are most important to which segments? The evaluative criteria that customers apply vary by category involvement, prior experience, and cognitive load available at the moment of evaluation.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">4</div><div><div class="numbered-title">Purchase decision</div><div class="numbered-text">Choice selection and purchase execution. Heavily influenced by situational factors (in-store environment, contextual cues, time pressure, social context) that are independent of brand preference. A customer who intends to buy can be lost at this stage by frictions in the purchase process.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">5</div><div><div class="numbered-title">Post-purchase evaluation</div><div class="numbered-text">Assessment of whether the purchase met expectations. Drives satisfaction, complaint behaviour, word-of-mouth, and repeat purchase probability. The expectations set at stage 3 determine the outcome at stage 5 — overpromising is a CLV-destroying strategy even when it converts at stage 4.</div></div></div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">System 1 vs System 2 — the dual-process framework</h3>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--teal)">System 1 — Fast thinking</div>
+      <div class="col-card-item">Automatic, effortless, associative</div>
+      <div class="col-card-item">Operates without conscious deliberation</div>
+      <div class="col-card-item">Relies on heuristics, habits, and pattern recognition</div>
+      <div class="col-card-item">Dominates low-involvement and habitual purchase</div>
+      <div class="col-card-item">Targets: brand salience, shelf position, packaging recognition</div>
+    </div>
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--purple)">System 2 — Slow thinking</div>
+      <div class="col-card-item">Deliberate, effortful, analytical</div>
+      <div class="col-card-item">Engages for complex, high-stakes, unfamiliar decisions</div>
+      <div class="col-card-item">Susceptible to cognitive fatigue and motivated reasoning</div>
+      <div class="col-card-item">Dominates high-involvement purchase (car, mortgage, B2B)</div>
+      <div class="col-card-item">Targets: feature comparison, testimonials, technical specification</div>
+    </div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Exogenous Cognition — the algorithm-mediated decision</h3>
+
+  <p class="body-text">A structurally new development in consumer decision theory is the increasing delegation of decision-making to external algorithms. A consumer who uses a price comparison site, a recommendation engine, or a personalised social feed is not making a fully autonomous decision — they are making a decision from a choice set that has been pre-filtered and ranked by an algorithm. Their "choice" is partly their own and partly the algorithm's.</p>
+
+  <table class="concept-table">
+    <thead><tr><th>Cognitive state</th><th>Description</th><th>Commercial implication</th></tr></thead>
+    <tbody>
+      <tr><td>EnC (Endogenous)</td><td>Fully autonomous internal decision-making; no algorithmic mediation</td><td>Brand salience and category memory drive entry into consideration set</td></tr>
+      <tr><td>SymC (Symbiotic)</td><td>Human judgment and algorithmic recommendation working together; human remains in control</td><td>Ranking in recommendation engine is critical; reviews and ratings matter</td></tr>
+      <tr><td>SurC (Surrogate)</td><td>Decision fully delegated to algorithm; subscribe-and-save, auto-renewal, programmatic procurement</td><td>Category entry point is the algorithm, not the customer; winning the algorithm is the commercial challenge</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The commercial implication of SurC</div>
+    <div class="callout-body">As more consumer purchase decisions migrate toward SurC — delegated to subscribe-and-save, AI-powered shopping assistants, or procurement automation — the commercial challenge shifts from influencing the consumer to influencing the algorithm. Brand loyalty becomes algorithm placement. The consumer analytics function needs to model not just "how does our customer decide?" but "which algorithm mediates their decision, and what signals does that algorithm optimise for?"</div>
+  </div>
+</section>
+
+<!-- ═══ S13: BEHAVIOURAL LAYER ═══ -->
+<section class="content-section" id="behavioural">
+  <div class="section-eyebrow">13 — The Behavioural Layer</div>
+  <h2 class="section-title">Irrational but predictable — six forces that shape every purchase</h2>
+  <p class="section-subtitle">Customers deviate from rational choice in systematic, predictable ways. The deviations are not bugs in the decision-making system — they are features of how human cognition actually works under conditions of uncertainty and complexity.</p>
+
+  <div class="pull-quote">
+    <div class="pull-quote-text">"The truly important argument here is that we are not only irrational, but predictably irrational — that our irrationality happens the same way, again and again. We can learn from our irrational patterns and try to make better decisions."</div>
+    <div class="pull-quote-attr">Predictably Irrational · Dan Ariely</div>
+  </div>
+
+  <div class="bias-grid">
+    <div class="bias-card">
+      <div class="bias-num">01</div>
+      <div class="bias-name">Arbitrary coherence (Anchoring)</div>
+      <div class="bias-desc">The first number a customer sees becomes an anchor for all subsequent valuation — even if that number is arbitrary and irrelevant. A product displayed at £199 (crossed out) at £99 anchors the evaluation to £199, not to the product's underlying value.</div>
+      <div class="bias-insight">Analytics application: in price sensitivity research, the order in which price options are presented materially affects stated willingness-to-pay. Control for anchoring by randomising option order across respondents.</div>
+    </div>
+    <div class="bias-card">
+      <div class="bias-num">02</div>
+      <div class="bias-name">Relativity — everything is comparative</div>
+      <div class="bias-desc">Customers do not evaluate products in absolute terms; they evaluate them relative to a comparison set. Adding a slightly inferior decoy option makes the target option look better in comparison — the "decoy effect" is a direct application of relativity.</div>
+      <div class="bias-insight">Analytics application: in conjoint studies, the composition of the choice set materially affects part-worth estimates. Real-world choice sets are not controlled experiments — monitor the competitive set as part of price sensitivity tracking.</div>
+    </div>
+    <div class="bias-card">
+      <div class="bias-num">03</div>
+      <div class="bias-name">The FREE! effect</div>
+      <div class="bias-desc">Zero cost is psychologically different from very low cost — not just cheaper, but categorically different. "Free" removes the mental cost-benefit calculation entirely, triggering disproportionate uptake even when the economic value is negligible.</div>
+      <div class="bias-insight">Analytics application: free trials, BOGOF, and zero-delivery-cost offers work differently from equivalent-value discounts. Model them separately in promotional effectiveness analysis — a £0 incremental offer and a 50% discount of £0 value are not analytically equivalent.</div>
+    </div>
+    <div class="bias-card">
+      <div class="bias-num">04</div>
+      <div class="bias-name">Social vs market norms</div>
+      <div class="bias-desc">Social exchange operates under norms of reciprocity and relationship; market exchange operates under norms of price and self-interest. Introducing monetary framing into a social relationship (or vice versa) degrades the relationship — you cannot restore a social norm by paying for it.</div>
+      <div class="bias-insight">Analytics application: loyalty programmes that reward customers financially for relationship behaviours (reviews, referrals) can inadvertently convert social norms into market norms — reducing advocacy when the reward is removed. Monitor NPS trends following reward structure changes.</div>
+    </div>
+    <div class="bias-card">
+      <div class="bias-num">05</div>
+      <div class="bias-name">The endowment effect</div>
+      <div class="bias-desc">Customers assign higher value to things they own than to equivalent things they do not own. Loss aversion amplifies this: the pain of losing something already possessed is approximately twice the pleasure of gaining something of equivalent value.</div>
+      <div class="bias-insight">Analytics application: free trial conversions exploit the endowment effect — by the end of the trial, the customer "owns" the product experience and the prospect of losing it drives conversion. Measure trial cohort conversion rates against non-trial to quantify the endowment premium.</div>
+    </div>
+    <div class="bias-card">
+      <div class="bias-num">06</div>
+      <div class="bias-name">Expectations shape experience</div>
+      <div class="bias-desc">The experience of a product is not independent of the expectations set about it. Higher expectations (created by pricing, branding, or framing) generate measurably better subjective experience — even when the physical product is identical. Placebo pricing is real and commercially exploitable.</div>
+      <div class="bias-insight">Analytics application: post-purchase satisfaction scores are partly a function of pre-purchase expectation-setting, not just product quality. In CLV modelling, over-promising at acquisition is a hidden driver of early churn — the expectations set at acquisition create the benchmark for the post-purchase evaluation at stage 5.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S14: DIGITAL & SOCIAL ═══ -->
+<section class="content-section" id="digital">
+  <div class="section-eyebrow">14 — Digital & Social</div>
+  <h2 class="section-title">Digital behaviour and web analytics</h2>
+  <p class="section-subtitle">The digital funnel is the most measurable sales process in the history of marketing — and the most over-measured, under-interpreted.</p>
+
+  <p class="body-text">Digital analytics generates more data about more behavioural signals than any offline channel. The challenge is not measurement — it is interpretation. Impression counts tell you how many people were exposed. Click rates tell you who acted on the exposure. Neither tells you why, or whether the action would have occurred without the marketing spend. Commercial rigour in digital analytics requires moving beyond activity metrics (impressions, clicks) to outcome metrics (incremental revenue, marginal ROMI) — and the path from the former to the latter requires both better methodology and commercial judgment about what matters.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">The analytics funnel — from community to conversion</h3>
+
+  <div class="funnel-diagram">
+    <div class="funnel-label">Digital analytics funnel — conversion cascade</div>
+    <div class="funnel-step">
+      <div class="funnel-name">Community / Reach</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:90%;background:#5b9ef8">Total addressable audience</div></div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-name">Impressions</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:72%;background:#4ade80">Exposed to content/ad</div></div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-name">Engagements</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:45%;background:#f0a832">Clicked, liked, shared, commented</div></div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-name">Site visits</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:28%;background:#b899fc">Landed on owned channel</div></div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-name">Conversions</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:8%;background:#f472b6">Purchase / sign-up / lead</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Key digital marketing metrics</h3>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-name">ROMI</div>
+      <div class="metric-abbr">Return on Marketing Investment</div>
+      <div class="metric-text">(Incremental revenue − Marketing cost) / Marketing cost. The "incremental" qualifier is critical — and frequently omitted.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-name">CPM</div>
+      <div class="metric-abbr">Cost per Mille (per 1,000 impressions)</div>
+      <div class="metric-text">Media buying efficiency metric. Comparable across channels only when impression quality is controlled. A CPM on a targeted audience is not equivalent to a CPM on a mass audience.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-name">CPA</div>
+      <div class="metric-abbr">Cost per Acquisition</div>
+      <div class="metric-text">Total spend / conversions. Only commercially meaningful when set against CLV — a high CPA on a high-CLV customer is rational; a low CPA on a low-CLV customer may not be.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-name">PPC</div>
+      <div class="metric-abbr">Pay per Click</div>
+      <div class="metric-text">Bidding on search intent. Quality Score (relevance of ad to query) determines cost and placement. Bid optimisation requires CLV-by-keyword data to set rational bid ceilings.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-name">DRM Uplift</div>
+      <div class="metric-abbr">Direct Response Marketing Uplift</div>
+      <div class="metric-text">Incremental response vs control group. The only valid ROMI metric for direct marketing — total response includes customers who would have bought anyway.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-name">TCR</div>
+      <div class="metric-abbr">Text Click-through Rate</div>
+      <div class="metric-text">For email and SMS. Benchmarks vary by category and list quality. Declining TCR in an established programme is an early signal of list fatigue or relevance drift.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">Sentiment analysis limitations</div>
+    <div class="callout-body">Commercial sentiment analysis on social media text has three structural limitations that most implementations underestimate. <strong>Sarcasm</strong> — "Great, another price increase. Really loving this brand." reads as positive to most classifiers. <strong>Social desirability bias</strong> — public social media posts overrepresent positive sentiment because people manage their public presentation. <strong>Attitude-behaviour gap</strong> — expressed sentiment on social media is a weak predictor of actual purchase behaviour, particularly for lower-involvement categories. Treat social sentiment as a brand health indicator, not a demand signal.</div>
+  </div>
+</section>
+
+<!-- ═══ S15: SOCIAL NETWORK ANALYSIS ═══ -->
+<section class="content-section" id="social-network">
+  <div class="section-eyebrow">15 — Social Networks</div>
+  <h2 class="section-title">Social network analysis — mapping influence and diffusion</h2>
+  <p class="section-subtitle">Customers do not make decisions in isolation. The network structure of your customer base determines how information, attitudes, and purchase behaviour spread through it.</p>
+
+  <p class="body-text">Social Network Analysis (SNA) models customers as nodes and relationships as edges, enabling measurement of how well-connected any individual customer is, how quickly information reaches them, and how much influence they have over others. For commercial analytics, the key application is identifying which customers function as hubs of diffusion — customers whose adoption of a product or attitude is likely to spread to others in their network.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Three centrality measures</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Centrality type</th><th>Measures</th><th>Commercial interpretation</th></tr></thead>
+    <tbody>
+      <tr><td>Degree centrality</td><td>Number of direct connections a node has</td><td>High degree = broad first-order reach. Useful for identifying potential brand ambassadors — customers who are connected to many others and can spread messages widely.</td></tr>
+      <tr><td>Closeness centrality</td><td>Average shortest path from a node to all others in the network</td><td>High closeness = information reaches this customer quickly and spreads rapidly from them. Identifies early informers in a diffusion process.</td></tr>
+      <tr><td>Eigenvector (Betweenness) centrality</td><td>Connection to other well-connected nodes; influence quality not just quantity</td><td>High eigenvector = connected to influencers, not just many people. The PageRank logic applied to social graphs — quality of connections, not just count. Most commercially relevant centrality measure for influence identification.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-theory">
+    <div class="callout-title">Homophily and echo chambers</div>
+    <div class="callout-body">Networks exhibit homophily — the tendency for nodes to connect with similar nodes. In consumer networks, this means that your existing customers are likely connected to potential customers who are similar to them — which is why referral programmes targeted at high-CLV customers tend to acquire high-CLV referrals. It also means that information does not travel as freely across demographic or attitudinal boundaries as naive diffusion models assume — a campaign designed to spread through one segment may not penetrate adjacent segments without separate seeding.</div>
+  </div>
+</section>
+
+<!-- ═══ S16: ADVERTISING ═══ -->
+<section class="content-section" id="advertising">
+  <div class="section-eyebrow">16 — Marketing Effectiveness</div>
+  <h2 class="section-title">Measuring marketing effectiveness</h2>
+  <p class="section-subtitle">The two dominant theories of how advertising works produce opposite implications for how it should be measured and evaluated.</p>
+
+  <p class="body-text">Marketing effectiveness is one of the most contested measurement problems in commercial practice. The challenge is causal identification: how much of the sales outcome would have happened without the marketing spend? Attribution models attempt to assign credit for sales to specific marketing touchpoints. The problem is that attribution is technically identification — and in a multi-touchpoint environment with endogenous budget allocation, getting identification right is genuinely hard.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Strong vs weak advertising theory</h3>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--teal)">Strong theory (Jones)</div>
+      <div class="col-card-item">Advertising persuades — it changes attitudes and creates new buyers</div>
+      <div class="col-card-item">Implication: campaigns should drive measurable attitude change</div>
+      <div class="col-card-item">Metric: pre/post attitude surveys, brand consideration uplift</div>
+      <div class="col-card-item">When true: category entry, new product launch, competitive switching</div>
+    </div>
+    <div class="col-card">
+      <div class="col-card-label" style="color:var(--purple)">Weak theory (Ehrenberg)</div>
+      <div class="col-card-item">Advertising reinforces — it keeps existing buyers buying and maintains salience</div>
+      <div class="col-card-item">Implication: campaigns should maintain mental availability; ROI from defence, not conversion</div>
+      <div class="col-card-item">Metric: brand salience in consideration set, category share of voice</div>
+      <div class="col-card-item">When true: established FMCG categories, dominant brands, repeat-purchase contexts</div>
+    </div>
+  </div>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">Attribution models — a hierarchy of accuracy</div>
+    <div class="callout-body">First-touch attribution assigns 100% credit to the first touchpoint — overstates the role of awareness channels. Last-touch assigns 100% to the final touchpoint — overstates the role of closing channels (often paid search or retargeting). Linear attribution splits evenly — no model, just averaging. Time-decay assigns more credit to recent touchpoints. Data-driven attribution (Shapley values) uses actual conversion paths to estimate the marginal contribution of each touchpoint — computationally expensive but methodologically correct. For most commercial analytics contexts, the Shapley approach or a well-calibrated multi-touch model is the appropriate standard; last-touch is almost always wrong but remains the default in many organisations because it is simple to implement.</div>
+  </div>
+
+  <div class="callout callout-module">
+    <div class="callout-title">How Pulse approaches marketing measurement</div>
+    <div class="callout-body">Pulse's ROMI module uses DRM uplift methodology — comparing purchase rates in treatment and control cohorts — as the primary effectiveness metric, rather than attribution-based approaches. This is methodologically more defensible for direct marketing contexts where holdout groups are feasible. For awareness and brand campaigns where holdout testing is impractical, Pulse uses marketing mix modelling (linear regression of sales on spend, controlling for category and seasonal factors) as an approximation of marginal ROMI by channel.</div>
+  </div>
+</section>
+
+<!-- ═══ S17: FORECASTING ═══ -->
+<section class="content-section" id="forecasting">
+  <div class="section-eyebrow">17 — Forecasting Demand</div>
+  <h2 class="section-title">Forecasting demand — from regression to decomposition</h2>
+  <p class="section-subtitle">A demand forecast is only as good as its assumptions about what drives demand. The method must match the data-generating process.</p>
+
+  <p class="body-text">Demand forecasting in a marketing analytics context is not the same as supply chain forecasting, though the methods overlap. The commercial objective is to understand the <strong>drivers</strong> of demand — which factors explain sales variation — not just to predict next period's volume. A regression-based demand model that identifies price, promotion, distribution, and seasonality as drivers gives management levers to pull; a time-series model that just extrapolates historical patterns gives a number but no insight.</p>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Regression-based sales forecasting</h3>
+
+  <div class="formula-block">
+    <div class="formula-label">Demand model — multiple regression</div>
+    <div class="formula-main">Sales = β₀ + β₁(Price) + β₂(Promo) + β₃(Distribution) + β₄(Season) + ε</div>
+    <div class="formula-gloss">β₁ is the price coefficient — negative (higher price → lower volume)
+β₁/Price_mean gives approximate price elasticity at the mean
+β₂ captures promotion uplift in sales units — the incremental effect of promotional spend
+β₃ captures weighted distribution — available in more outlets drives more sales
+β₄ can be dummy variables for months or a Fourier series for smooth seasonality
+ε is the residual — unexplained variation; watch for autocorrelation (Durbin-Watson test)</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Seasonal decomposition</h3>
+
+  <p class="body-text">A time series of sales data can be decomposed into four components: <strong>Trend</strong> (long-run direction), <strong>Seasonality</strong> (regular periodic fluctuation), <strong>Cyclical</strong> (irregular medium-term fluctuation linked to economic cycles), and <strong>Irregular/Residual</strong> (unexplained noise). The classical decomposition separates these components, enabling separate modelling and recombination for forecasting.</p>
+
+  <div class="callout callout-practice">
+    <div class="callout-title">Consulting application — the SCAN*PRO model</div>
+    <div class="callout-body">In retail marketing mix modelling, the SCAN*PRO model and its variants use retail scanner data to estimate the effect of price and promotion on category and brand sales at the store level. The model separates baseline sales (what would have sold without promotion) from promotional uplift — which is the commercially relevant number. For a US auto parts retailer context, SCAN*PRO-style models are the standard approach for justifying promotional pricing decisions with quantified expected ROMI before the promotion runs, not just retrospective attribution after it.</div>
+  </div>
+</section>
+
+<!-- ═══ S18: BASS DIFFUSION ═══ -->
+<section class="content-section" id="bass">
+  <div class="section-eyebrow">18 — New Product Adoption</div>
+  <h2 class="section-title">Bass diffusion — modelling how innovations spread</h2>
+  <p class="section-subtitle">The Bass model is one of the most empirically validated quantitative models in marketing — robust across categories, geographies, and eras.</p>
+
+  <p class="body-text">When forecasting demand for a new product, historical sales data does not exist. The Bass diffusion model solves this by modelling the adoption process itself: new customers adopt through two mechanisms — <strong>innovation</strong> (spontaneous adoption, independent of others already using the product) and <strong>imitation</strong> (adoption driven by social contagion — word-of-mouth and observation of existing adopters). The combination of these two forces produces the characteristic S-shaped adoption curve observed across virtually every technology and consumer innovation category.</p>
+
+  <div class="formula-block">
+    <div class="formula-label">Bass diffusion model</div>
+    <div class="formula-main">f(t) = [p + q·F(t)] × [1 − F(t)]</div>
+    <div class="formula-gloss">f(t) = fraction of potential adopters who adopt in period t
+F(t) = cumulative fraction who have adopted by period t
+p = coefficient of innovation (pure innovator adoption rate; typical range 0.01–0.05)
+q = coefficient of imitation (word-of-mouth effect; typical range 0.3–0.5)
+Market potential m = total eventual adopters (estimated from market sizing)
+Peak adoption time ≈ ln(q/p) / (p + q)</div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Innovation adoption segments (Rogers)</h3>
+
+  <table class="concept-table">
+    <thead><tr><th>Segment</th><th>% of market</th><th>Timing</th><th>Commercial implication</th></tr></thead>
+    <tbody>
+      <tr><td>Innovators</td><td>~2.5%</td><td>Immediate</td><td>Intrinsically motivated; adopt regardless of social proof. Value uniqueness and early access. High word-of-mouth multiplier if activated correctly.</td></tr>
+      <tr><td>Early Adopters</td><td>~13.5%</td><td>Early</td><td>Opinion leaders; watched by the Early Majority. Their adoption is the social signal that unlocks mass-market diffusion. Most commercially valuable segment to target in launch.</td></tr>
+      <tr><td>Early Majority</td><td>~34%</td><td>Pre-peak</td><td>Pragmatic; require social proof before adopting. The "chasm" between Early Adopters and Early Majority is the critical growth barrier for new products.</td></tr>
+      <tr><td>Late Majority</td><td>~34%</td><td>Post-peak</td><td>Sceptical; adopt only under social pressure or when alternatives disappear. Price-sensitive. Represent volume but low margin.</td></tr>
+      <tr><td>Laggards</td><td>~16%</td><td>Late</td><td>Tradition-bound; adopt only when forced. Low commercial value in innovation context; may be high value in late-stage, mature-category pricing.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ S19: MADS ═══ -->
+<section class="content-section" id="mads">
+  <div class="section-eyebrow">19 — Integrative Framework</div>
+  <h2 class="section-title">The MADS framework — a 13-module diagnostic</h2>
+  <p class="section-subtitle">MADS (Multi-dimensional Analytical Decision Schema) integrates the preceding frameworks into a single diagnostic tool for analysing any purchase context.</p>
+
+  <p class="body-text">The limitation of applying any single consumer analytics framework in isolation is that it captures one dimension of a complex, multi-determined behaviour. RFM captures purchase history but not motivation. Conjoint captures stated preferences but not habitual shortcuts. The MADS framework resolves this by defining 13 analytical modules that cover the full range of factors influencing consumer decisions, and providing a deployment model for weighting them appropriately for any given purchase context.</p>
+
+  <div class="mads-grid">
+    <div class="mads-card"><div class="mads-num">Module 01</div><div class="mads-name">Behavioural biases</div><div class="mads-desc">Loyalty types, variety-seeking, OSL, purchase dynamics</div></div>
+    <div class="mads-card"><div class="mads-num">Module 02</div><div class="mads-name">Exogenous Cognition</div><div class="mads-desc">Algorithm mediation; EnC/SymC/SurC states</div></div>
+    <div class="mads-card"><div class="mads-num">Module 03</div><div class="mads-name">Utility-hedonic blend</div><div class="mads-desc">PUV; non-polar utility-hedonic integration</div></div>
+    <div class="mads-card"><div class="mads-num">Module 04</div><div class="mads-name">Economic factors</div><div class="mads-desc">Price sensitivity; spending power; budget constraints</div></div>
+    <div class="mads-card"><div class="mads-num">Module 05</div><div class="mads-name">Deliberation-impulse</div><div class="mads-desc">System 1/2 blend; TPB; impulse drivers</div></div>
+    <div class="mads-card"><div class="mads-num">Module 06</div><div class="mads-name">Image and semiotics</div><div class="mads-desc">Brand image; ICH; sign types; conditioning</div></div>
+    <div class="mads-card"><div class="mads-num">Module 07</div><div class="mads-name">Marketing communication</div><div class="mads-desc">AIDA; strong/weak theory; PKM; ad effectiveness</div></div>
+    <div class="mads-card"><div class="mads-num">Module 08</div><div class="mads-name">Heuristics & perceptual bias</div><div class="mads-desc">Framing effects; cognitive schemas; anchoring</div></div>
+    <div class="mads-card"><div class="mads-num">Module 09</div><div class="mads-name">Socio-cultural factors</div><div class="mads-desc">Reference groups; culture; rituals; norms</div></div>
+    <div class="mads-card"><div class="mads-num">Module 10</div><div class="mads-name">Socio-familial milieu</div><div class="mads-desc">SFM; lifecycle stage; syncratic vs autonomic decisions</div></div>
+    <div class="mads-card"><div class="mads-num">Module 11</div><div class="mads-name">Consumer ethics</div><div class="mads-desc">ABG framework; ethical typology; data custodianship</div></div>
+    <div class="mads-card"><div class="mads-num">Module 12</div><div class="mads-name">Emotion</div><div class="mads-desc">Basic (5) and self-conscious (5) emotion categories</div></div>
+    <div class="mads-card"><div class="mads-num">Module 13</div><div class="mads-name">Psychological biases</div><div class="mads-desc">Ariely's six forces; loss aversion; endowment; relativity</div></div>
+  </div>
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin:28px 0 10px">Deployment model — context determines weighting</h3>
+
+  <p class="body-text">The MADS deployment model places the primary driver of the specific purchase decision at the centre of the diagnostic, with other modules arranged by relevance (distance) and importance (circle size). The configuration changes radically by purchase context:</p>
+
+  <table class="concept-table">
+    <thead><tr><th>Purchase context</th><th>Primary driver (centre)</th><th>High-weight modules</th><th>Low-weight modules</th></tr></thead>
+    <tbody>
+      <tr><td>High-involvement pre-purchase (family car, B2B procurement)</td><td>Deliberation-impulse (M05)</td><td>ExC (M02), utility-hedonic (M03), economic (M04), SFM (M10)</td><td>Impulse drivers, pure emotion, simple conditioning</td></tr>
+      <tr><td>High-involvement in-store (luxury retail, electronics)</td><td>Image/semiotics (M06) + SFM (M10)</td><td>Deliberation-impulse (M05), emotion (M12), heuristics (M08)</td><td>Pure economic, socio-cultural context, ExC</td></tr>
+      <tr><td>Low-involvement habitual (FMCG, convenience grocery)</td><td>Behavioural bias (M01)</td><td>Heuristics (M08), utility-hedonic (M03), economic (M04)</td><td>Deliberation (M05), SFM (M10), ethics (M11)</td></tr>
+      <tr><td>Digital/subscription (SaaS, streaming, e-commerce)</td><td>ExC (M02)</td><td>Deliberation-impulse (M05), economic (M04), communication (M07)</td><td>Socio-cultural (M09), SFM (M10), semiotics (M06)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">MADS in consulting practice</div>
+    <div class="callout-body">The MADS framework's commercial value is as a diagnostic framework for structuring a consumer insights brief — ensuring that the analytical team considers the full range of factors before defaulting to a standard methodology. In practice, the discipline of asking "which modules are most relevant here?" before selecting the analytical method prevents the common error of applying the same segmentation model to purchase contexts with fundamentally different decision architectures. A CLV-based RFM model designed for an FMCG replenishment context is structurally inappropriate for a high-involvement B2B procurement context, even if both involve repeated transactions.</div>
+  </div>
+</section>
+
+<!-- ═══ S20: KDM ═══ -->
+<section class="content-section" id="kdm">
+  <div class="section-eyebrow">20 — Knowledge-Driven Marketing</div>
+  <h2 class="section-title">Knowledge-driven marketing — the full analytics pipeline</h2>
+  <p class="section-subtitle">The analytics process is not complete when the model runs. It is complete when the insight changes a commercial decision.</p>
+
+  <p class="body-text">Knowledge-Driven Marketing (KDM) is defined as prescriptive analytics that combines data insight with scholarly marketing theory to generate commercially actionable recommendations. It represents the mature form of consumer analytics practice — beyond reporting (what happened?), beyond prediction (what will happen?), to prescription (what should we do about it?).</p>
+
+  <p class="body-text">The KDM process is an eight-stage pipeline. The commercial value of each stage depends on the quality of its predecessor — poor data harvest produces poor configuration options; weak interpretation produces wrong marketing outcomes regardless of how well the intermediate stages were executed. The discipline is end-to-end, not just analytical.</p>
+
+  <div class="numbered-list">
+    <div class="numbered-item"><div class="numbered-num">1</div><div><div class="numbered-title">Data harvest</div><div class="numbered-text">Identify, access, and quality-check the relevant data sources — transactional, behavioural, purposive. Apply the COIN typology to understand measurement scales. Flag missing segments and data gaps as explicit analytical limitations.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">2</div><div><div class="numbered-title">Configure</div><div class="numbered-text">Set up the analytical environment: define the time window, the customer universe, the outcome variable, and the feature set. Analytical rigour at this stage prevents expensive misdirection later — configuring the wrong question produces a perfectly executed wrong answer.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">3</div><div><div class="numbered-title">Enact</div><div class="numbered-text">Run the analysis: clustering, regression, propensity scoring, CLV calculation. Apply the five-stage inference protocol throughout. Document all analytical choices and their rationale.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">4</div><div><div class="numbered-title">Results</div><div class="numbered-text">Output the statistical findings in raw form: coefficients, cluster centroids, propensity scores, CLV distributions. This is the output of the model, not the insight — the distinction matters for how results are communicated to commercial stakeholders.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">5</div><div><div class="numbered-title">Validate</div><div class="numbered-text">Test model performance on holdout data: prediction accuracy, lift curves, stability over time. A model that has not been validated is a hypothesis, not a finding. In commercial practice, validation is the step most often skipped under time pressure — and the step whose absence is most likely to create expensive errors.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">6</div><div><div class="numbered-title">Interpret</div><div class="numbered-text">Translate statistical results into commercial language. What does a cluster centroid mean about the customers in it? What does a coefficient value imply about price sensitivity? This step requires both quantitative literacy and commercial understanding simultaneously.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">7</div><div><div class="numbered-title">Sense-make</div><div class="numbered-text">Apply the MADS framework and theoretical context. Does the finding align with or contradict established consumer behaviour theory? If it contradicts, is the data reliable enough to revise the theory, or is the finding an artefact? Build the narrative that connects the data to the business question.</div></div></div>
+    <div class="numbered-item"><div class="numbered-num">8</div><div><div class="numbered-title">Marketing outcome</div><div class="numbered-text">Translate the insight into a specific commercial decision: which segment to target, at what price point, with which message, through which channel, with what expected ROMI. This is the only stage that creates commercial value — all preceding stages are instrumental to it.</div></div></div>
+  </div>
+
+  <div class="pull-quote">
+    <div class="pull-quote-text">"The barriers to knowledge-driven marketing are not primarily technological — they are organisational. Silos between data scientists and marketing strategists, between analytical capability and commercial judgment, produce the most expensive errors in consumer analytics practice. Closing that gap is the work."</div>
+    <div class="pull-quote-attr">Knowledge-Driven Marketing · Consumer Behaviour & Analytics</div>
+  </div>
+
+  <div class="callout callout-module">
+    <div class="callout-title">How Meridian Pulse operationalises KDM</div>
+    <div class="callout-body">Meridian Pulse is built around the KDM pipeline: data ingestion (harvest + configure), analytical modules (enact + results), and interpretive output (validate + interpret). The module architecture explicitly separates what the model produces from what it means commercially. Every analytical output in Pulse is accompanied by an interpretation layer — the business framing that connects the statistical result to the commercial decision. This is the design principle that distinguishes Pulse from a data visualisation tool: it produces prescriptive outputs, not just descriptive charts.</div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">Data ethics and custodianship</div>
+    <div class="callout-body">Consumer data is collected under an implicit covenant — customers share data in exchange for personalisation, convenience, and better offers. Where that covenant is violated (data used for purposes the customer did not anticipate, shared without consent, retained longer than necessary), the commercial damage is asymmetric: trust, once broken, is very expensive to recover. Regulation (GDPR, CCPA) sets a floor; good data custodianship sets a higher standard. Analytics practice should treat the ethical use of consumer data not as a compliance question but as a commercial one: what level of data use is consistent with the long-term value of the customer relationship?</div>
+  </div>
+
+</section>
+
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.content-section, .hero');
+const sidebarBody = document.querySelector('.sidebar-body');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const id = e.target.id;
+      const active = document.querySelector(`.nav-link[href="#${id}"]`);
+      if (active) {
+        active.classList.add('active');
+        // Scroll the sidebar to keep the active item visible
+        const itemTop = active.offsetTop;
+        const itemBottom = itemTop + active.offsetHeight;
+        const bodyTop = sidebarBody.scrollTop;
+        const bodyBottom = bodyTop + sidebarBody.clientHeight;
+        if (itemTop < bodyTop + 40 || itemBottom > bodyBottom - 40) {
+          sidebarBody.scrollTo({ top: itemTop - sidebarBody.clientHeight / 2, behavior: 'smooth' });
+        }
+      }
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

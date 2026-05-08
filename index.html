@@ -110,6 +110,32 @@ body.light .platform-hero, body.light .module-card { background: #ffffff; border
 body.light .mc-desc { color: #4a4e60; }
 body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
 .theme-toggle-m{position:fixed;bottom:20px;right:20px;background:rgba(14,16,24,.9);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(220,230,252,.7);cursor:pointer;font-size:11px;padding:6px 12px;z-index:999;backdrop-filter:blur(8px)}
+
+/* ── Preview module cards ── */
+.module-card.preview {
+  opacity: 0.55;
+  cursor: default;
+  position: relative;
+}
+.module-card.preview:hover {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.65;
+}
+.preview-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 2px 7px;
+  margin-left: 6px;
+}
 </style>
 </head>
 <body>
@@ -163,9 +189,9 @@ body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
   <div class="wf-modules">
     <div class="wf-mod-chip" style="color:#22d3b8;border-color:rgba(34,211,184,0.3)">◈ Meridian Price</div>
     <div class="wf-mod-chip" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">⬟ Meridian Pulse</div>
-    <div class="wf-mod-chip" style="color:#f5a524;border-color:rgba(245,165,36,0.3)">▦ Meridian Ledger</div>
-    <div class="wf-mod-chip" style="color:#fb7185;border-color:rgba(251,113,133,0.3)">⊹ Meridian Org</div>
-    <div class="wf-mod-chip" style="color:#4ade80;border-color:rgba(74,222,128,0.3)">⬡ Meridian Flow</div>
+    <div class="wf-mod-chip" style="color:#f5a524;border-color:rgba(245,165,36,0.15);opacity:0.5">▦ Meridian Ledger</div>
+    <div class="wf-mod-chip" style="color:#fb7185;border-color:rgba(251,113,133,0.15);opacity:0.5">⊹ Meridian Org</div>
+    <div class="wf-mod-chip" style="color:#4ade80;border-color:rgba(74,222,128,0.15);opacity:0.5">⬡ Meridian Flow</div>
   </div>
   <div class="wf-arrow">→</div>
   <div class="wf-node">
@@ -177,7 +203,7 @@ body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
 
 <div class="section" id="modules">
   <div class="section-label">Analytical modules</div>
-  <h2>Eight modules. One platform.</h2>
+  <h2>Six modules. One platform.</h2>
   <p class="section-sub">Each module is purpose-built for a specific strategy consulting engagement archetype. Load your data once in Bridge — send it to any module.</p>
 
   <div class="module-grid">
@@ -235,11 +261,11 @@ body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
       </div>
     </a>
 
-    <!-- Ledger — ACTIVATED -->
-    <a href="ledger/" class="module-card">
+    <!-- Ledger — PREVIEW -->
+    <a href="ledger/" class="module-card preview" title="Preview — early build, capabilities in progress">
       <div class="mc-head">
         <div class="mc-icon" style="background:rgba(245,165,36,0.15);color:#f5a524">▦</div>
-        <span class="mc-badge" style="background:rgba(245,165,36,0.12);color:#f5a524;border:1px solid rgba(245,165,36,0.25)">Phase 3 · Live</span>
+        <span class="mc-badge" style="background:rgba(245,165,36,0.08);color:#f5a524;border:1px solid rgba(245,165,36,0.15)">Preview<span class="preview-label">early build</span></span>
       </div>
       <div class="mc-name" style="color:#f5a524">Meridian Ledger</div>
       <div class="mc-desc">Commercial finance diagnostics. Revenue bridge, P&L decomposition, working capital health, and cash flow waterfall.</div>
@@ -252,11 +278,11 @@ body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
       </div>
     </a>
 
-    <!-- Org — ACTIVATED -->
-    <a href="org/" class="module-card">
+    <!-- Org — PREVIEW -->
+    <a href="org/" class="module-card preview" title="Preview — early build, capabilities in progress">
       <div class="mc-head">
         <div class="mc-icon" style="background:rgba(251,113,133,0.15);color:#fb7185">⊹</div>
-        <span class="mc-badge" style="background:rgba(251,113,133,0.12);color:#fb7185;border:1px solid rgba(251,113,133,0.25)">Phase 3 · Live</span>
+        <span class="mc-badge" style="background:rgba(251,113,133,0.08);color:#fb7185;border:1px solid rgba(251,113,133,0.15)">Preview<span class="preview-label">early build</span></span>
       </div>
       <div class="mc-name" style="color:#fb7185">Meridian Org</div>
       <div class="mc-desc">HR and operating model analytics. Span of control, layer benchmarking, attrition analysis, capability investment mapping.</div>
@@ -270,11 +296,11 @@ body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
     </a>
 
 
-    <!-- Flow — ACTIVATED -->
-    <a href="flow/" class="module-card">
+    <!-- Flow — PREVIEW -->
+    <a href="flow/" class="module-card preview" title="Preview — early build, capabilities in progress">
       <div class="mc-head">
         <div class="mc-icon" style="background:rgba(74,222,128,0.15);color:#4ade80">⬡</div>
-        <span class="mc-badge" style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25)">Phase 4 · Live</span>
+        <span class="mc-badge" style="background:rgba(74,222,128,0.08);color:#4ade80;border:1px solid rgba(74,222,128,0.15)">Preview<span class="preview-label">early build</span></span>
       </div>
       <div class="mc-name" style="color:#4ade80">Meridian Flow</div>
       <div class="mc-desc">Supply chain and operations analytics. Inventory health (ABC/XYZ), demand forecasting, EOQ optimisation, stockout risk scoring.</div>

@@ -210,6 +210,23 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
 @media(max-width:860px){.sidebar{display:none}.grid-4{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr}}
+
+/* ── Light mode ── */
+body.light{
+  --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0ede8;--surface3:#e8e4dc;
+  --border:#d8d4cc;--border2:#ccc8bc;--border3:#bbb4a8;
+  --text:#1a1c24;--text2:#4a4e60;--text3:#8a8e9a;--dim:#e8e4dc;
+}
+body.light .sidebar{background:#16181f;border-color:#d0ccc4}
+body.light .main{background:#f5f4f0}
+body.light .card{background:#ffffff;border-color:#d8d4cc}
+body.light .kpi{background:#f0ede8;border-color:#d8d4cc}
+body.light .data-table th{background:#f0ede8;color:#6a6e7a}
+body.light .data-table td{border-color:#e8e4dc;color:#4a4e60}
+body.light .insight{color:#2a2e3a}
+body.light .topbar{background:#ffffff;border-color:#d8d4cc}
+.theme-toggle{background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);cursor:pointer;font-family:var(--mono);font-size:10px;padding:5px 10px;transition:all .15s;margin-left:auto}
+.theme-toggle:hover{border-color:var(--pulse);color:var(--text)}
 </style>
 </head>
 <body>
@@ -261,6 +278,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <span class="topbar-title">Meridian</span>
     <span class="topbar-sep">/</span>
     <span class="topbar-mod" id="topMod">Pulse · P1 · Segments</span>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">◐ Light</button>
     <div class="ds-pill"><div class="ds-dot"></div><span id="dsLabel">Renova Home · 2,000 customers</span></div>
   </div>
 
@@ -814,6 +832,17 @@ const MOD_LABELS = {
   data:'Pulse · Data'
 };
 const L1=['p1','p2','p3'], L2=['p4','p5','p6'], L3=['p7','p8','p9'];
+
+// Light/dark mode
+(function(){
+  if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
+})();
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = document.body.classList.contains('light') ? '◑ Dark' : '◐ Light';
+}
 
 function showMod(id) {
   document.querySelectorAll('.module-panel').forEach(p=>p.classList.remove('active'));

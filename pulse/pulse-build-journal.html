@@ -141,6 +141,20 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sprint-outcome{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:5px}
 
 @media(max-width:800px){.shell{grid-template-columns:1fr}.sidebar{display:none}.section{padding:32px 20px}.hero{padding:36px 20px}}
+
+/* ── Light mode ── */
+body.light {
+  --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0ede8;--surface3:#e8e4dc;
+  --border:#d8d4cc;--border2:#ccc8bc;--border3:#bbb4a8;
+  --text:#1a1c24;--text2:#4a4e60;--text3:#8a8e9a;
+}
+.light .sidebar{background:#1a1c24}
+.light .topbar{background:#ffffff}
+.light .card{background:#ffffff}
+.light .kpi{background:#f5f4f0}
+
+.theme-toggle{background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text2);cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:5px 10px;transition:all .15s}
+.theme-toggle:hover{border-color:var(--pulse,var(--accent,#5b9ef8));color:var(--text)}
 </style>
 </head>
 <body>
@@ -584,6 +598,19 @@ const obs = new IntersectionObserver(entries=>{
   });
 },{threshold:0.3});
 sections.forEach(s=>obs.observe(s));
+
+// Light/dark mode
+(function(){
+  const t = localStorage.getItem('theme');
+  if (t === 'light') document.body.classList.add('light');
+})();
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = document.body.classList.contains('light') ? '◑ Dark' : '◐ Light';
+}
+
 </script>
 </body>
 </html>

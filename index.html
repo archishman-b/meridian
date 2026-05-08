@@ -99,6 +99,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   .promises{grid-template-columns:1fr}
   .workflow{flex-direction:column}
 }
+
+/* Scrollbar hide */
+.wf-modules::-webkit-scrollbar, nav::-webkit-scrollbar { display: none; }
+.wf-modules, nav { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Light mode */
+body.light { background: #f5f3ee; color: #1a1c24; }
+body.light .platform-hero, body.light .module-card { background: #ffffff; border-color: #d8d4cc; }
+body.light .mc-desc { color: #4a4e60; }
+body.light .wf-bar { background: #f0ede8; border-color: #d8d4cc; }
+.theme-toggle-m{position:fixed;bottom:20px;right:20px;background:rgba(14,16,24,.9);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(220,230,252,.7);cursor:pointer;font-size:11px;padding:6px 12px;z-index:999;backdrop-filter:blur(8px)}
 </style>
 </head>
 <body>
@@ -440,5 +451,10 @@ const hash = window.location.hash;
 if (hash) setTimeout(() => { const el = document.querySelector(hash); if (el) el.scrollIntoView({behavior:'smooth'}); }, 100);
 </script>
 
+<button class="theme-toggle-m" id="themeBtnM" onclick="toggleThemeM()">◐ Light</button>
+<script>
+(function(){if(localStorage.getItem('mtheme')==='light') document.body.classList.add('light')})();
+function toggleThemeM(){document.body.classList.toggle('light');localStorage.setItem('mtheme',document.body.classList.contains('light')?'light':'dark');document.getElementById('themeBtnM').textContent=document.body.classList.contains('light')?'◑ Dark':'◐ Light';}
+</script>
 </body>
 </html>
